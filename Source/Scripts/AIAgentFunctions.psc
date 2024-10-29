@@ -36,3 +36,4 @@ Actor[] function findAllNearbyAgents() Global Native
 int function sendAllVoices() Global Native
 
 int function  testAddAllNPCAround() Global Native
+int function  testRemoveAll() Global Native

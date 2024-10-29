@@ -70,9 +70,17 @@ Event OnKeyDown(int keyCode)
 		  Return
 		EndIf
 
-		;SpawnAgent("Mastered Puppet","male","nord");
-
-		;return;
+		if (false)	; this is for test purposes
+			if (!followingHerika)
+				followingHerika=true;
+				AIAgentFunctions.testAddAllNPCAround()
+			else
+				followingHerika=false;
+				AIAgentFunctions.testRemoveAll()
+			endif
+		endif
+		
+		return;
 		
 		if (!followingHerika)
 			followingHerika=true;
