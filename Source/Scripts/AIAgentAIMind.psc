@@ -632,19 +632,29 @@ EndFunction
 
 int Function stayAtPlace(Actor npc,String taskid) global
 
-	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
-	Package sandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
-	Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+	
+	;Package sandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+	;Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+		
+	;Actor finalActor=npc;
+	;finalActor.SetFactionRank(sandboxFaction,1)
+	;ActorUtil.AddPackageOverride(finalActor, sandboxPackage, 98,0)
+	
+	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; Package sandboxPackage 
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 		
 	Actor finalActor=npc;
-	finalActor.SetFactionRank(sandboxFaction,1)
-	ActorUtil.AddPackageOverride(finalActor, sandboxPackage, 98,0)
+	finalActor.SetFactionRank(FollowFaction,1)
+	ActorUtil.AddPackageOverride(finalActor, FollowPlayerPackage, 98,0)
+	
+	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
 
 EndFunction
 
 
 int Function CombatPlayer(Actor npc) global
 	Debug.Trace("CombatPlayer "+npc.GetDisplayName())
+	
 	npc.SetActorValue("Aggression",1)
 	npc.SetRelationshipRank(Game.GetPlayer(), -4)
 	npc.startCombat(Game.GetPlayer())
@@ -655,6 +665,7 @@ endFunction
 	
 function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 	ResetPackages(npc);
+	
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	npc.SetFactionRank(TraveToFaction,1)
@@ -671,6 +682,21 @@ function SendInstruction(Actor npc, String instruction) global
 	
 	AIAgentFunctions.logMessageForActor(instruction,"instruction",npc.GetDisplayName())
 	Debug.Trace("[AIFF] Instruction to: "+npc.GetDisplayName()+ ", "+instruction);
+
+endFunction
+
+
+function SetDisposition(Actor npc, String disposition) global
+	
+	Debug.Trace("[AIFF] SetDisposition Start: "+npc.GetDisplayName()+ ", "+disposition);
+	if (disposition=="defiant")
+		npc.DrawWeapon();
+	elseif (disposition=="furious")
+		npc.setAlert()
+		npc.DrawWeapon();
+	EndIf
+	
+	Debug.Trace("[AIFF] SetDisposition End: "+npc.GetDisplayName()+ ", "+disposition);
 
 endFunction
 
