@@ -66,12 +66,14 @@ int			_toggleAnimation
 bool		_animationstate			= false
 
 
+int			_toggle1OID_Rereg
+
 event OnConfigInit()
-	ModName="AI-FF"
+	ModName="CHIM"
 	Pages = new string[1]
 	Pages[0] = "Configuration"
 	
-	Debug.Notification("[AIFF] Updating menu ... v2.8");
+	Debug.Notification("[CHIM] Updating menu ... v2.9");
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
 	_sound_volume				= 75 
@@ -90,12 +92,16 @@ event OnConfigInit()
 	endIf
 	if (CurrentVersion<26)
 		;controlScript.setSoulgazeModeNative(1)
+	endIf
+	if (CurrentVersion<29)
+		SetTitleText("CHIM")
 		
 	endIf
+	ConsoleUtil.ExecuteCommand("setstage SKI_ConfigManagerInstance 1")
 endEvent
 
 int function GetVersion()
-	return 28
+	return 29
 endFunction
 
 event OnVersionUpdate(int a_version)
@@ -139,6 +145,7 @@ event OnPageReset(string a_page)
 	_slider_postclip	= AddSliderOption("Skip milliseconds at end",_sound_postclip,"{0}" )
 	_slider_ds			= AddSliderOption("AI Voice Distance Scale ",_sound_ds,"{1}" )
 	_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
+	;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	
 	AddEmptyOption();
 	AddEmptyOption();
@@ -192,7 +199,7 @@ event OnOptionSliderOpen(int a_option)
 	if (a_option == _slider_lip_res)
 		SetSliderDialogStartValue(_lip_res)
 		SetSliderDialogDefaultValue(500)
-		SetSliderDialogRange(100, 1000)
+		SetSliderDialogRange(0, 1000)
 		SetSliderDialogInterval(10)
 	endIf
 	
@@ -485,6 +492,10 @@ event OnOptionSelect(int a_option)
 		
 		SetToggleOptionValue(a_option, _animationstate)
 	endIf
+	if (a_option == _toggle1OID_Rereg)
+		ConsoleUtil.ExecuteCommand("SetStage SKI_ConfigManagerInstance 1")
+		ShowMessage("Close menu")
+	endIf
 endEvent
 
 event OnOptionHighlight(int a_option)
@@ -551,4 +562,9 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _toggleAnimation)
 		SetInfoText("Enable animations. If useing openanimation replacer or custom animations you should disable it to prevent CTD")
 	endIf
+	
+	if (a_option == _toggle1OID_Rereg)
+		SetInfoText("Mod name has changed. This will reset MCM to show new name. May affect other mods. Will call setstage SKI_ConfigManagerInstance 1")
+	endIf
+	
 endEvent

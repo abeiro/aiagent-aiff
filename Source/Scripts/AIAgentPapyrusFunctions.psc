@@ -28,7 +28,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 	If(keyCode == _currentKeyVoice)
 		if (!UI.IsMenuOpen("Book Menu"))
 			AIAgentFunctions.stopRecording(_currentKeyVoice)
-			Debug.Notification("[AIFF] Recording end");
+			Debug.Notification("[CHIM] Recording end");
 		endif
 	endif
 EndEvent
@@ -53,34 +53,37 @@ Event OnKeyDown(int keyCode)
    If(keyCode == _currentKeyVoice)
    
 	if (UI.IsMenuOpen("Book Menu"))
-		;Debug.Notification("[AIFF] lazy reader...");
+		;Debug.Notification("[CHIM] lazy reader...");
 		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
 	else
         AIAgentFunctions.recordSoundEx(_currentKeyVoice)
-		Debug.Notification("[AIFF] recording....");
+		Debug.Notification("[CHIM] recording....");
 	endif
   EndIf
   If(keyCode == _currentFollowKey)
   
 	if (UI.IsMenuOpen("Book Menu"))
-		;Debug.Notification("[AIFF] lazy reader...");
+		;Debug.Notification("[CHIM] lazy reader...");
 		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
 	else
 		If Utility.IsInMenuMode()
 		  Return
 		EndIf
 
-		if (false)	; this is for test purposes
+		if (true)	; this is for test purposes
 			if (!followingHerika)
 				followingHerika=true;
+				Debug.Notification("[CHIM] Everyone added...");
 				AIAgentFunctions.testAddAllNPCAround()
 			else
+				Debug.Notification("[CHIM] Everyone removed..");
 				followingHerika=false;
 				AIAgentFunctions.testRemoveAll()
 			endif
+			return;
 		endif
 		
-		return;
+		
 		
 		if (!followingHerika)
 			followingHerika=true;
@@ -106,7 +109,7 @@ Event OnKeyDown(int keyCode)
 				player.EvaluatePackage()
 				;player.ForceActorValue("SpeedMult",leader.GetActorValue("SpeedMult"));
 				Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-				Debug.Notification("[AIFF] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
+				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
 			else
 				
 				Actor horse=PO3_SKSEFunctions.GetMount(player)
@@ -128,7 +131,7 @@ Event OnKeyDown(int keyCode)
 				;player.KeepOffsetFromActor(leader, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 1350, afFollowRadius = 100)
 				;RegisterForSingleUpdate(3.0)
 				
-				Debug.Notification("[AIFF] "+player.GetDisplayName()+" is horse-following "+leader.GetDisplayName())
+				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is horse-following "+leader.GetDisplayName())
 			
 			endif
 		
@@ -138,7 +141,7 @@ Event OnKeyDown(int keyCode)
 			Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 			player.RemoveFromFaction(FollowFaction)
 			AIAgentAIMind.ResetPackages(player);
-			Debug.Notification("[AIFF] Player Unfollowing ");
+			Debug.Notification("[CHIM] Player Unfollowing ");
 			Game.SetPlayerAiDriven(false)
 			Game.EnablePlayerControls()
 			followingHerika=false;
@@ -269,9 +272,9 @@ bool Function setNewActionMode( int mode)
 	
 
 	if (mode==0)
-		Debug.Notification("[AIFF] Action mode is off");
+		Debug.Notification("[CHIM] Action mode is off");
 	else
-		Debug.Notification("[AIFF] Action mode is on");
+		Debug.Notification("[CHIM] Action mode is on");
 	endif
 	
 	InitTSE();	
@@ -306,7 +309,7 @@ EndFunction
 
 
 Function InitTSE() 
-	Debug.Notification("[AIFF] Player script initialized")
+	Debug.Notification("[CHIM] Player script initialized")
     RegisterForTrackedStatsEvent() ; Before we can use OnTrackedStatsEvent we must register.
 endFunction
 

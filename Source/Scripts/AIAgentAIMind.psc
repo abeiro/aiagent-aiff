@@ -52,7 +52,7 @@ function MoveToTarget(Actor npc, ObjectReference akTarget) global
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw)
 	ActorUtil.AddPackageOverride(npc, MoveToPackage, 99, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[AIFF] Moving to "+akTarget.GetDisplayName())
+	Debug.Notification("[CHIM] Moving to "+akTarget.GetDisplayName())
 	AIAgentFunctions.logMessageForActor("started_moving@"+akTarget.GetDisplayName(),"status_msg",npc.GetDisplayName())
 
 endFunction
@@ -74,8 +74,8 @@ function MoveToTargetEnd(Actor npc) global
 
 	string taskid = JDB.solveStr(".aiff.currentTaskId");
 
-	Debug.Notification("[AIFF] End of move: "+npc.GetDisplayName())	
-	Debug.Trace("[AIFF] End of move: "+npc.GetDisplayName()+" taskid:"+taskid)	
+	Debug.Notification("[CHIM] End of move: "+npc.GetDisplayName())	
+	Debug.Trace("[CHIM] End of move: "+npc.GetDisplayName()+" taskid:"+taskid)	
 	
 
 endFunction
@@ -91,7 +91,7 @@ function TakeASeat(Actor npc, ObjectReference akTarget) global
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[AIFF] Sitting at "+akTarget.GetDisplayName())
+	Debug.Notification("[CHIM] Sitting at "+akTarget.GetDisplayName())
 	
 
 endFunction
@@ -105,7 +105,7 @@ function TakeASeatEnd(Actor npc) global
 	npc.EvaluatePackage()
 	PO3_SKSEFunctions.SetLinkedRef(npc,None)
 	AIAgentFunctions.commandEnded("TakeASeat")
-	Debug.Notification("[AIFF] End of sit: "+npc.GetDisplayName())
+	Debug.Notification("[CHIM] End of sit: "+npc.GetDisplayName())
 	
 
 endFunction
@@ -127,7 +127,7 @@ endFunction
 function StartWait(Actor npc) global
 
 
-	Debug.Trace("[AIFF] "+npc.GetDisplayName()+" waits" )
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" waits" )
 
 	Package WaitPackage = Game.GetFormFromFile(0x02021F, "AIAgent.esp") as Package ; Package WaitPackage
 	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
@@ -138,7 +138,7 @@ function StartWait(Actor npc) global
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[AIFF] "+npc.GetDisplayName()+" waits" )
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" waits" )
 	
 
 endFunction
@@ -152,7 +152,7 @@ function EndWait(Actor npc) global
 	npc.EvaluatePackage()
 	
 	AIAgentFunctions.commandEnded("WaitHere")
-	Debug.Notification("[AIFF] End of wait: "+npc.GetDisplayName())
+	Debug.Notification("[CHIM] End of wait: "+npc.GetDisplayName())
 
 endFunction
 
@@ -171,7 +171,7 @@ function Follow(Actor npc, ObjectReference akTarget) global
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
 	ActorUtil.AddPackageOverride(npc, FollowPackage, 100, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[AIFF] Following  "+akTarget.GetDisplayName())
+	Debug.Notification("[CHIM] Following  "+akTarget.GetDisplayName())
 
 	
 	
@@ -204,7 +204,7 @@ function StopCurrent(Actor npc) global
 	
 	npc.EnableAI(true) 
 	SheatheWeapon(npc)
-	Debug.Notification("[AIFF] Stopped all actions")
+	Debug.Notification("[CHIM] Stopped all actions")
 
 endFunction
 
@@ -235,7 +235,7 @@ function TravelToTargetPlayer(Actor npc, ObjectReference akTarget,String place) 
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Trace("[AIFF] "+npc.GetDisplayName()+ " starts travel to "+place);
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 endFunction
 
 function TravelToLocation(Actor npc, ObjectReference akTarget,String place) global
@@ -248,7 +248,7 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[AIFF] "+npc.GetDisplayName()+ " starts travel to "+place)
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
 endFunction
 
 function TravelToTargetEnd(Actor npc) global
@@ -261,15 +261,24 @@ function TravelToTargetEnd(Actor npc) global
 	npc.EvaluatePackage()
 	
 	AIAgentFunctions.commandEndedForActor("TravelTo",npc.GetDisplayName())
-	Debug.Notification("[AIFF] End travelling for "+npc.GetDisplayName() )
+	Debug.Notification("[CHIM] End travelling for "+npc.GetDisplayName() )
 
 endFunction
 
 function OpenInventory(Actor npc) global
+	Faction CurrentFollowerFaction=Game.GetForm(0x5c84e) as Faction
+	Debug.Notification("[CHIM] OpenInventory "+npc.GetDisplayName() )
 	if (npc.IsPlayerTeammate())
-		npc.OpenInventory(true);
+		if (npc.GetFactionRank(CurrentFollowerFaction)>-1)
+			Debug.Trace("[CHIM] Call OpenInventory "+npc.GetDisplayName() )
+			npc.OpenInventory(true);
+		else	
+			Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() )
+			npc.ShowBarterMenu();
+		endif
 	else
-		npc.OpenInventory(true);
+		Debug.Trace("[CHIM] Call ShowGiftMenu "+npc.GetDisplayName() )
+		npc.ShowGiftMenu(true,None,false,false);
 	endif
 endFunction
 
@@ -297,10 +306,10 @@ function AttackTarget(Actor npc, ObjectReference akTarget) global
 		ActorUtil.AddPackageOverride(npc, AttackPackage, 99, 0)
 		npc.EvaluatePackage()
 		;npc.startCombat(targetAsActor);
-		Debug.Notification("[AIFF] "+npc.GetDisplayName()+" attacks "+akTarget.GetDisplayName())
+		Debug.Notification("[CHIM] "+npc.GetDisplayName()+" attacks "+akTarget.GetDisplayName())
 		AIAgentFunctions.logMessageForActor("command@Attack@"+akTarget.GetDisplayName()+"@"+npc.GetDisplayName()+" engages fair combat with "+akTarget.GetDisplayName(),"funcret",npc.GetDisplayName())
 	else
-		Debug.Notification("[AIFF] Could not reach target "+akTarget.GetDisplayName());
+		Debug.Notification("[CHIM] Could not reach target "+akTarget.GetDisplayName());
 		;AIAgentFunctions.logMessage("command@Attack@"+akTarget.GetDisplayName()+"@"+npc.GetDisplayName()+" cannot attack "+akTarget.GetDisplayName(),"funcret")
 		
 	EndIf
@@ -319,7 +328,7 @@ function AttackTargetEnd(Actor npc) global
 	PO3_SKSEFunctions.SetLinkedRef(npc,None)
 	
 	AIAgentFunctions.commandEndedForActor("Attack",npc.GetDisplayName())
-	Debug.Notification("[AIFF] end attack command:  "+npc.GetDisplayName() )
+	Debug.Notification("[CHIM] end attack command:  "+npc.GetDisplayName() )
 
 endFunction
 
@@ -327,50 +336,36 @@ function StartCombat(Actor npc,ObjectReference victim) global
 
 
 	Actor victimasActor = victim as Actor
-	Debug.Trace("[AIFF] starting combat:  "+npc.GetDisplayName()+ " vs "+victim.GetDisplayName(),1)
+	Debug.Trace("[CHIM] starting combat:  "+npc.GetDisplayName()+ " vs "+victim.GetDisplayName(),1)
 		
 	npc.startCombat(victimasActor);
 
-	Debug.Notification("[AIFF] starting combat:  "+npc.GetDisplayName()+ " vs "+victim.GetDisplayName())
+	Debug.Notification("[CHIM] starting combat:  "+npc.GetDisplayName()+ " vs "+victim.GetDisplayName())
 
 endFunction
 
 
 function SendExternalEvent(String npcname,String command,String parm) global
 
-	int handle = ModEvent.Create("AIFF_CommandReceived")
+	int handle = ModEvent.Create("CHIM_CommandReceived")
 	if (handle)
 		ModEvent.PushString(handle, npcname)
 		ModEvent.PushString(handle, command)
 		ModEvent.PushString(handle, parm)
 		ModEvent.Send(handle)
-		Debug.Notification("[AIFF] External command sent "+command+"@"+parm)
+		Debug.Notification("[CHIM] External command sent "+command+"@"+parm)
 
 	endIf
 endFunction
 
 function SendExternalEventNPC(String npcname,String actionName) global
 
-	;if (actionName=="Add" || actionName=="add")
-	;	Keyword AIAssisted = Game.GetFormFromFile(0x217a8,"AIAgent.esp") as Keyword	; 
-	;	Actor agent=AIAgentFunctions.getAgentByName(npcname) as Actor
-	;	int i= AIAgentFunctions.setAIKeyWord(agent);
-	;	Utility.wait(1)
-
-	;	Debug.Trace("[AIFF] Keyword added "+agent+" "+AIAssisted+ " result:" +i)
-		
-	;elseif (actionName=="Remove")
-	;	Keyword AIAssisted = Game.GetFormFromFile(0x217a8,"AIAgent.esp") as Keyword	; 
-	;	Form agent=AIAgentFunctions.getAgentByName(npcname) as Form
-	;	PO3_SKSEFunctions.RemoveKeywordOnForm(agent,AIAssisted)
-	;endif
-
-	int handle = ModEvent.Create("AIFF_NPC")
+	int handle = ModEvent.Create("CHIM_NPC")
 	if (handle)
 		ModEvent.PushString(handle, npcname)
 		ModEvent.PushString(handle, actionName)
 		ModEvent.Send(handle)
-		Debug.Trace("[AIFF] AIFF_NPC "+npcname+" "+actionName)
+		Debug.Trace("[CHIM] CHIM_NPC "+npcname+" "+actionName)
 	endIf
 endFunction
 
@@ -378,24 +373,24 @@ endFunction
 function SendExternalEventChat(String npcname,String text) global
 
 
-	int handle = ModEvent.Create("AIFF_TextReceived")
+	int handle = ModEvent.Create("CHIM_TextReceived")
 	if (handle)
 		ModEvent.PushString(handle, npcname)
 		ModEvent.PushString(handle, text)
 		ModEvent.Send(handle)
-		Debug.Trace("[AIFF] AIFF_TextReceived sent "+npcname+"@"+text)
+		Debug.Trace("[CHIM] CHIM_TextReceived sent "+npcname+"@"+text)
 	endIf
 
 endFunction
 
 
 function SayToPlayer(Actor npc) global
-	Debug.Notification("[AIFF] Use new queue mode")
+	Debug.Notification("[CHIM] Use new queue mode")
 	;Topic fixedTopic=Game.GetFormFromFile(0x00638E, "AddDiagToReplace.esp") as Topic ; AASPGQuestDialogue2Topic1B1Topic
 	;if (fixedTopic)
 	;	npc.Say(fixedTopic,npc,false)
 	;else
-	;	Debug.Notification("[AIFF] Topic Not found")
+	;	Debug.Notification("[CHIM] Topic Not found")
 	;endIf
 
 endFunction
@@ -403,12 +398,12 @@ endFunction
 
 function WaitHere(Actor npc) global
 	
-	Debug.Notification("[AIFF] "+npc.GetDisplayName())+" will wait here";
+	Debug.Notification("[CHIM] "+npc.GetDisplayName())+" will wait here";
 	;Topic fixedTopic=Game.GetFormFromFile(0x00638E, "AddDiagToReplace.esp") as Topic ; AASPGQuestDialogue2Topic1B1Topic
 	;if (fixedTopic)
 	;	npc.Say(fixedTopic,npc,false)
 	;else
-	;	Debug.Notification("[AIFF] Topic Not found")
+	;	Debug.Notification("[CHIM] Topic Not found")
 	;endIf
 
 endFunction
@@ -491,9 +486,9 @@ function EquipSpellOnPlayer(int spellFormId) global
 	if (Game.GetPlayer().HasSpell(spellToEquip))
 		Game.GetPlayer().EquipSpell(spellToEquip, 0) ; Gives BoundBow to player if they don't have it
 		Game.GetPlayer().DrawWeapon()
-		Debug.Notification("[AIFF] Equipping spell "+spellToEquip.GetName())
+		Debug.Notification("[CHIM] Equipping spell "+spellToEquip.GetName())
 	else
-		Debug.Notification("[AIFF] You must learn "+spellToEquip.GetName())
+		Debug.Notification("[CHIM] You must learn "+spellToEquip.GetName())
 	endif
 endFunction
 
@@ -514,7 +509,7 @@ endFunction
 ;; WIP RPQG functions
 
 
-ObjectReference Function FindFarthestReferenceAroundPlayer(float radius) global 
+ObjectReference Function FindFarthestReferenceAroundPlayer(int type ,float radius) global 
     ; Get the player reference
     Actor PlayerRef = Game.GetPlayer()
 
@@ -527,13 +522,13 @@ ObjectReference Function FindFarthestReferenceAroundPlayer(float radius) global
 
     ; Iterate through all references (0 is for actors, but you can adjust for other types)
     int i = 0
-    int numActors = playerCell.GetNumRefs(0) ; 0 is for actors, adjust for other types if needed
+    int numActors = playerCell.GetNumRefs(type) ; 0 is for actors, adjust for other types if needed
 
     while i < numActors
-        ObjectReference ref = playerCell.GetNthRef(i, 0) ; 0 is for actors, can use 1 for other object types
-
+        ObjectReference ref = playerCell.GetNthRef(i, type) ; 0 is for actors, can use 1 for other object types
+		;Debug.trace("Found "+ref.getDisplayName());
         ; Ensure the reference exists and is within the specified radius
-        if (ref && ref.GetDistance(PlayerRef) <= radius)
+        if (ref && ref.GetDistance(PlayerRef) <= radius && ref.getDisplayName()!="" && ref.Is3dLoaded())
             float currentDistance = ref.GetDistance(PlayerRef)
 
             ; If the current reference is farther than the previous farthest, update the farthestRef
@@ -558,10 +553,18 @@ ObjectReference Function FindFarthestReferenceAroundPlayer(float radius) global
 EndFunction
 
 
-int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int FormIdWeapon,String taskid) global
+int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int FormIdWeapon,Int place,String taskid) global
 
 	
-	ObjectReference ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(6000)
+	
+	ObjectReference ref;
+	
+	if (place==0)
+		ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(0,6000)
+	else
+		ref=Game.GetForm(place) as ObjectReference
+	endif
+	
 	if (ref)
 		Debug.Trace("spawning "+npcName+" / FormIdNPC "+FormIdNPC+ " / FormIdClothing:"+FormIdClothing+" / FormIdWeapon: "+FormIdWeapon);		
 		ActorBase finalNpcToSpawn ;
@@ -583,15 +586,19 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		finalActor.SetDisplayName(npcName,1)
 		finalActor.SetActorValue("Aggression",0);
 		finalActor.EvaluatePackage()
+		finalActor.AddItem(mainWeapon,1,true)
 		finalActor.EquipItem(mainWeapon,false,true)
 		;AIAgentAIMind.StartWait(finalActor)
 		AIAgentFunctions.setDrivenByAIA(finalActor,false)
 
 		;ObjectReference currentloc = AIAgentFunctions.getLocationMarkerFor(Game.GetPlayer().GetCurrentLocation())
-		;Debug.Trace("* [AIFF X] Marker "+currentloc.GetFormId());
+		;Debug.Trace("* [CHIM X] Marker "+currentloc.GetFormId());
 
 		AIAgentFunctions.logMessageForActor("spawned@"+finalActor.GetDisplayName(),"status_msg",finalActor.GetDisplayName())
 
+		Sound aiqueststart = Game.GetForm(0x00018538) as Sound	; ImperialMalePreset01
+		aiqueststart.Play(Game.GetPlayer())
+		Debug.Notification("[CHIM] Mysterious encounter starts!");
 		return 0
 	EndIf
 
@@ -599,24 +606,70 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 EndFunction
 
 
-int Function SpawnItem(string itemname,string itembase,string locationMarker ,String taskid) global
+int Function SpawnItem(string itemname,int itembase,int locationMarker ,String taskid) global
 
 	Debug.Trace("spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
-	ObjectReference ref=Game.GetForm(0x55e4f)  as ObjectReference	; Helgen
-	Armor itemToSpawn=Game.GetForm(0x9171b)	as Armor; Necklace
+	
+	ObjectReference ref
+	if (locationMarker==0)
+		ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(0,1024)
+	else 
+		ref=Game.GetForm(locationMarker)  as ObjectReference;
+	endif
+
+
+	String referencename=ref.GetDisplayName();
+	if (referencename=="")
+		referencename=ref.GetName();
+	endif
+	
+	
+	Armor itemToSpawnBase=Game.GetForm(itembase)	as Armor; Necklace
+	itemToSpawnBase.SetName(itemname)
+
+	Armor itemToSpawn =itemToSpawnBase.TempClone() as Armor;
+	
+	EffectShader shader=Game.GetForm(0x00092de7)  as EffectShader	
+	Enchantment ench=Game.GetForm(0x0010fb84)  as Enchantment	
+	VisualEffect veff=Game.GetForm(0x0008cc8a)  as VisualEffect	
+	Spell spellitem=Game.GetForm(0x043323)  as Spell	
+	
 	Faction AIAssisted = Game.GetFormFromFile(0x021d0b,"AIAgent.esp") as Faction	; 
 	Sound hintSound =Game.GetForm(0x000dce94)  as Sound	; Nirn sound
 	
+	itemToSpawn.SetEnchantment(ench); must be done to base
+
+	
 	if (ref)
-		ObjectReference finalItem=ref.PlaceAtMe(itemToSpawn,1,true,false) 
+		;ObjectReference finalItem=Game.GetPlayer().PlaceAtMe(itemToSpawn,1,true,true) 
+		;finalItem.MoveToNode(Game.GetPlayer(),"h")
+		ObjectReference finalItem=ref.PlaceAtMe(itemToSpawn,1,true,true) 
+		
 		finalItem.SetDisplayName(itemname,true)
 		finalItem.SetFactionOwner(AIAssisted)
-		hintSound.Play(finalItem)
-		Game.getPlayer().AddToFaction(AIAssisted);
-		;finalItem.MoveTo(ref,0,0,0); Randomize this
-		;finalItem.SetGoldValue(501)
+		Game.getPlayer().AddToFaction(AIAssisted); So item is not marked as stolen
+		
+		if (finalItem.Is3DLoaded())
+			float deltaX=Utility.RandomFloat(-1, 1)
+			float deltaY=Utility.RandomFloat(-1, 1)
+			float deltaZ=Utility.RandomFloat(1,1)*512
+			finalItem.MoveTo(ref, 0,0,deltaZ)
+			finalItem.SetAngle(0,-180,0)
+		Endif
+		
+		finalItem.SetScale(2)
+		finalItem.Enable()
+		
 		AIAgentFunctions.logMessage("spawned_item@"+itemname,"status_msg")
-		Debug.Trace("spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
+		Debug.Trace("spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID"+finalItem.GetFormId());
+		
+		if (finalItem.Is3DLoaded())
+			veff.Play(finalItem);
+			hintSound.Play(finalItem)
+		endif
+		
+		Debug.Notification("Something is hidding near "+referencename);	
+		;Debug.Notification("Something is hidding nearby");	
 		return 0
 	EndIf
 
@@ -630,6 +683,26 @@ int Function MoveToPlayer(Actor npc,String taskid) global
 
 EndFunction
 
+int Function Sandbox(Actor npc,String taskid) global
+
+	Package sandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+	Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+
+	
+	ActorUtil.RemovePackageOverride(npc, sandboxPackage)
+	npc.RemoveFromFaction(sandboxFaction)
+	
+
+	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 	
+	Actor finalActor=npc;
+	finalActor.SetFactionRank(sandboxFaction,1)
+	ActorUtil.AddPackageOverride(finalActor, sandboxPackage, 98,0)
+	
+	finalActor.EvaluatePackage();
+	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
+endFunction
+
 int Function stayAtPlace(Actor npc,String taskid) global
 
 	
@@ -640,14 +713,14 @@ int Function stayAtPlace(Actor npc,String taskid) global
 	;finalActor.SetFactionRank(sandboxFaction,1)
 	;ActorUtil.AddPackageOverride(finalActor, sandboxPackage, 98,0)
 	
-	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; Package sandboxPackage 
+	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 		
 	Actor finalActor=npc;
 	finalActor.SetFactionRank(FollowFaction,1)
 	ActorUtil.AddPackageOverride(finalActor, FollowPlayerPackage, 98,0)
-	
-	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
+	finalActor.EvaluatePackage();
+	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
 
 EndFunction
 
@@ -674,44 +747,47 @@ function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 	npc.EvaluatePackage()
 	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" leaves the place while talking","instruction",npc.GetDisplayName())
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[AIFF] "+npc.GetDisplayName()+ " starts travel to "+place);
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 
 endFunction
 
 function SendInstruction(Actor npc, String instruction) global
 	
 	AIAgentFunctions.logMessageForActor(instruction,"instruction",npc.GetDisplayName())
-	Debug.Trace("[AIFF] Instruction to: "+npc.GetDisplayName()+ ", "+instruction);
+	Debug.Trace("[CHIM] Instruction to: "+npc.GetDisplayName()+ ", "+instruction);
 
 endFunction
 
 
 function SetDisposition(Actor npc, String disposition) global
 	
-	Debug.Trace("[AIFF] SetDisposition Start: "+npc.GetDisplayName()+ ", "+disposition);
+	Debug.Trace("[CHIM] SetDisposition Start: "+npc.GetDisplayName()+ ", "+disposition);
 	if (disposition=="defiant")
-		npc.DrawWeapon();
+		npc.setAlert()
+		npc.SetRelationshipRank(Game.GetPlayer(), -1)
+		
 	elseif (disposition=="furious")
 		npc.setAlert()
-		npc.DrawWeapon();
+		npc.SetRelationshipRank(Game.GetPlayer(), -1)
+		
 	EndIf
 	
-	Debug.Trace("[AIFF] SetDisposition End: "+npc.GetDisplayName()+ ", "+disposition);
+	Debug.Trace("[CHIM] SetDisposition End: "+npc.GetDisplayName()+ ", "+disposition);
 
 endFunction
 
 function Despawn(Actor npc) global
 
-	Debug.Trace("[AIFF] Despawn "+npc.GetDisplayName());
+	Debug.Trace("[CHIM] Despawn "+npc.GetDisplayName());
 	
 	ObjectReference WIDeadBodyCleanupCellMarker  = Game.GetForm(0x001037f2) as ObjectReference  ; Beggar
 
-	Debug.Trace("[AIFF] Reset "+npc.GetDisplayName());
+	Debug.Trace("[CHIM] Reset "+npc.GetDisplayName());
 	npc.Moveto(WIDeadBodyCleanupCellMarker)
 	npc.KillSilent()
-	Debug.Trace("[AIFF] Despawned: "+npc.GetDisplayName());
+	Debug.Trace("[CHIM] Despawned: "+npc.GetDisplayName());
 	
-	
+	return 
 	Faction AttackFaction=Game.GetFormFromFile(0x01B6C1 , "AIAgent.esp") as Faction ; Faction AttackFaction
 	Faction TravelFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
@@ -747,5 +823,26 @@ function Despawn(Actor npc) global
 	ActorUtil.ClearPackageOverride(npc)
 	
 	
-	
 endFunction
+
+int Function EndQuestNotification(String title,String taskid) global
+	Debug.Notification("[CHIM] Mysterious encounter ends!. "+title);
+	Sound aiqueststart = Game.GetForm(0x00018538) as Sound	; Pututum
+	aiqueststart.Play(Game.GetPlayer())
+	
+EndFunction
+
+Function AddDelayedHint(ObjectReference finalItem) global
+	
+	VisualEffect veff=Game.GetForm(0x0008cc8a)  as VisualEffect	
+	Sound hintSound =Game.GetForm(0x000dce94)  as Sound	; Nirn sound
+		
+	if (finalItem.Is3DLoaded())
+		veff.Play(finalItem);
+		hintSound.Play(finalItem)
+	Endif
+		
+	Debug.Trace("spawned_item_activated"+finalItem.GetDisplayName());
+		
+
+EndFunction
