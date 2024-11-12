@@ -244,7 +244,7 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	npc.SetFactionRank(TraveToFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
-	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 99, 0)
+	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
@@ -560,7 +560,11 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 	ObjectReference ref;
 	
 	if (place==0)
-		ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(0,6000)
+		if (Game.GetPlayer().IsInInterior())
+			ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(40,6000);kFurniture =40
+		else
+			ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(0,6000)
+		endif
 	else
 		ref=Game.GetForm(place) as ObjectReference
 	endif
@@ -576,15 +580,25 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		Weapon mainWeapon=Game.GetForm(FormIdWeapon)	as Weapon
 		
 		
-		Actor finalActor=ref.PlaceAtMe(finalNpcToSpawn,1,true,false) as Actor
+		Actor finalActor=ref.PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
 		
+		float deltaX=Utility.RandomFloat(-5, 5)
+		float deltaY=Utility.RandomFloat(-5, 5)
+		float deltaZ=Utility.RandomFloat(1,1)*1
+		finalActor.MoveTo(ref, 0,0,deltaZ)
+		finalActor.SetAngle(0,-180,0)
+			
 		finalActor.RemoveAllItems();
+		finalActor.SetActorValue("Aggression",0)
 		finalActor.RemoveFromAllFactions();
 		finalActor.MakePlayerFriend();
 		finalActor.SetRelationshipRank(Game.GetPlayer(), 1)
+		
+		finalActor.enable();
+		
 		finalActor.SetOutfit(clothing,false)
 		finalActor.SetDisplayName(npcName,1)
-		finalActor.SetActorValue("Aggression",0);
+		
 		finalActor.EvaluatePackage()
 		finalActor.AddItem(mainWeapon,1,true)
 		finalActor.EquipItem(mainWeapon,false,true)
@@ -703,23 +717,33 @@ int Function Sandbox(Actor npc,String taskid) global
 	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
 endFunction
 
-int Function stayAtPlace(Actor npc,String taskid) global
+int Function stayAtPlace(Actor npc,int followPlayer,String taskid) global
 
-	
-	;Package sandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
-	;Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+	if (followPlayer==0)
+		Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+		Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+
+		Package WaitPackage = Game.GetFormFromFile(0x02021F, "AIAgent.esp") as Package ; Package WaitPackage
+		Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
+
+		Actor finalActor=npc;	
+		finalActor.SetFactionRank(WaitFaction,1)
+		finalActor.SetFactionRank(SandboxFaction,1)
+		ActorUtil.AddPackageOverride(finalActor, SandboxPackage, 98,0)
+		ActorUtil.AddPackageOverride(finalActor, WaitPackage, 99,0)
+		finalActor.EvaluatePackage();
+	elseif (followPlayer==1)
 		
-	;Actor finalActor=npc;
-	;finalActor.SetFactionRank(sandboxFaction,1)
-	;ActorUtil.AddPackageOverride(finalActor, sandboxPackage, 98,0)
+		Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+		Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+			
+		Actor finalActor=npc;
+		finalActor.SetFactionRank(FollowFaction,1)
+		ActorUtil.AddPackageOverride(finalActor, FollowPlayerPackage, 98,0)
+		finalActor.EvaluatePackage();
+	endif
 	
-	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
-	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-		
-	Actor finalActor=npc;
-	finalActor.SetFactionRank(FollowFaction,1)
-	ActorUtil.AddPackageOverride(finalActor, FollowPlayerPackage, 98,0)
-	finalActor.EvaluatePackage();
+	
 	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
 
 EndFunction
@@ -743,7 +767,7 @@ function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	npc.SetFactionRank(TraveToFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
-	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 99, 0)
+	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
 	npc.EvaluatePackage()
 	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" leaves the place while talking","instruction",npc.GetDisplayName())
 	;Debug.Notification("Mission MoveToTarget start")
@@ -753,7 +777,7 @@ endFunction
 
 function SendInstruction(Actor npc, String instruction) global
 	
-	AIAgentFunctions.logMessageForActor(instruction,"instruction",npc.GetDisplayName())
+	AIAgentFunctions.requestMessageForActor(instruction,"instruction",npc.GetDisplayName())
 	Debug.Trace("[CHIM] Instruction to: "+npc.GetDisplayName()+ ", "+instruction);
 
 endFunction
