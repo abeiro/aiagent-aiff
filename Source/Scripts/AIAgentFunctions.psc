@@ -1,9 +1,10 @@
 Scriptname AIAgentFunctions
 
+;Main Functions
 int function sendMessage(String a_msg,String a_type) Global Native		; Send message as user input and expects an IA response
 int function commandEnded(String command)  Global Native
 int function commandEndedForActor(String command,string npc)  Global Native
-int function getHerikaFormId()  Global Native
+
 int function recordSoundEx(int bindedKey)  Global Native
 int function stopRecording(int bindedKey)  Global Native
 int function setNewActionMode(int mode)  Global Native
@@ -17,23 +18,31 @@ int function hardResetExpression() Global Native
 int function shotAndUpload(String hints,int mode) Global Native
 int function isGameVR() Global Native									; 1 if VR
 
+; Conf opts send
 int function setConf(String code,float float_value,int int_value,String string_value) Global Native
-int function get_conf_i(String code) Global Native
-int function setDrivenByAI() Global Native
-int function setDrivenByAIA(Actor forcedActor,bool salutation) Global Native
 
-int function removeAgentByName(String name) Global Native
+;Internal
+int function get_conf_i(String code) Global Native
 
 int function setAIKeyWord(Actor targetActor) Global Native
 
+; Agent functions
+int function setDrivenByAI() Global Native
+int function setDrivenByAIA(Actor forcedActor,bool salutation) Global Native
+int function removeAgentByName(String name) Global Native
 Actor function getClosestAgent() Global Native
 Actor function getAgentByName(String npcName) Global Native
-
-ObjectReference function getLocationMarkerFor(Location loc) Global Native
-
 Actor[] function findAllNearbyAgents() Global Native
 
-int function sendAllVoices() Global Native
+; Helpers
+ObjectReference function getLocationMarkerFor(Location loc) Global Native
+ObjectReference function getNearestDoor() global Native
+ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restriction=true) global Native
 
+; Test functions
+int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native
 int function  testRemoveAll() Global Native
+
+; Legacy 
+int function getHerikaFormId()  Global Native

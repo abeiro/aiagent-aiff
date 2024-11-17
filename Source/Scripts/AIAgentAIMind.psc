@@ -227,6 +227,7 @@ function TravelToTargetPlayer(Actor npc, ObjectReference akTarget,String place) 
 	Game.SetPlayerAiDriven(true)
 	Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
 	ResetPackages(npc);
+	
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	npc.SetFactionRank(TraveToFaction,1)
@@ -522,21 +523,27 @@ ObjectReference Function FindFarthestReferenceAroundPlayer(int type ,float radiu
 
     ; Iterate through all references (0 is for actors, but you can adjust for other types)
     int i = 0
-    int numActors = playerCell.GetNumRefs(type) ; 0 is for actors, adjust for other types if needed
+    int numActors = playerCell.GetNumRefs(0) ; 0 is for actors, adjust for other types if needed
 
     while i < numActors
-        ObjectReference ref = playerCell.GetNthRef(i, type) ; 0 is for actors, can use 1 for other object types
-		;Debug.trace("Found "+ref.getDisplayName());
-        ; Ensure the reference exists and is within the specified radius
-        if (ref && ref.GetDistance(PlayerRef) <= radius && ref.getDisplayName()!="" && ref.Is3dLoaded())
-            float currentDistance = ref.GetDistance(PlayerRef)
+        ObjectReference ref = playerCell.GetNthRef(i, 0) ; 0 is for actors, can use 1 for other object types
+		
+		if (ref && ref.Is3dLoaded())
+			Debug.trace("Found "+ref.getDisplayName()+ " / type "+ref.getType()+ " / "+ref.getName()+ " / "+ref.GetBaseObject().getType());
+			if (ref.GetBaseObject().getType()== 27 || ref.GetBaseObject().getType()== 32 || ref.GetBaseObject().getType()== 48 || ref.GetBaseObject().getType()== 46 || ref.GetBaseObject().getType()==23 || ref.GetBaseObject().getType()==41 || ref.GetBaseObject().getType()==26|| ref.GetBaseObject().getType()==103|| ref.GetBaseObject().getType()==38)
+			; Ensure the reference exists and is within the specified radius
+				if (ref.GetDistance(PlayerRef) <= radius && ref.getDisplayName()!=""  && !Game.GetPlayer().HasLOS(ref) && ref.getType()==type)
+					Debug.trace("Found "+ref.getDisplayName()+ " / type "+ref.getType()+ " / "+ref.getName()+ " / "+ref.GetBaseObject().getType());
+					float currentDistance = ref.GetDistance(PlayerRef)
 
-            ; If the current reference is farther than the previous farthest, update the farthestRef
-            if currentDistance > maxDistance
-                farthestRef = ref
-                maxDistance = currentDistance
-            endif
-        endif
+					; If the current reference is farther than the previous farthest, update the farthestRef
+					if currentDistance > maxDistance
+						farthestRef = ref
+						maxDistance = currentDistance
+					endif
+				endif
+			Endif
+		endif
 
         i += 1
     endwhile
@@ -555,15 +562,18 @@ EndFunction
 
 int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int FormIdWeapon,Int place,String taskid) global
 
-	
-	
 	ObjectReference ref;
-	
+	bool move=true;
 	if (place==0)
 		if (Game.GetPlayer().IsInInterior())
-			ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(40,6000);kFurniture =40
+			ref=AIAgentFunctions.getNearestDoor();
+			if (!ref)
+				ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
+			else 
+				move=false;
+			endif
 		else
-			ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(0,6000)
+			ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,false);
 		endif
 	else
 		ref=Game.GetForm(place) as ObjectReference
@@ -582,12 +592,14 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		Actor finalActor=ref.PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
 		
-		float deltaX=Utility.RandomFloat(-5, 5)
-		float deltaY=Utility.RandomFloat(-5, 5)
-		float deltaZ=Utility.RandomFloat(1,1)*1
-		finalActor.MoveTo(ref, 0,0,deltaZ)
-		finalActor.SetAngle(0,-180,0)
-			
+		if (move) 
+			float deltaX=Utility.RandomFloat(-5, 5)
+			float deltaY=Utility.RandomFloat(-5, 5)
+			float deltaZ=Utility.RandomFloat(1,1)*1
+			finalActor.MoveTo(ref, 0,0,deltaZ)
+			finalActor.SetAngle(0,-180,0)
+		endif;
+		
 		finalActor.RemoveAllItems();
 		finalActor.SetActorValue("Aggression",0)
 		finalActor.RemoveFromAllFactions();
@@ -610,10 +622,75 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 
 		AIAgentFunctions.logMessageForActor("spawned@"+finalActor.GetDisplayName(),"status_msg",finalActor.GetDisplayName())
 
-		Sound aiqueststart = Game.GetForm(0x00018538) as Sound	; ImperialMalePreset01
-		aiqueststart.Play(Game.GetPlayer())
-		Debug.Notification("[CHIM] Mysterious encounter starts!");
+		if (place==0)
+			Sound aiqueststart = Game.GetForm(0x00018538) as Sound	; Pututum
+			aiqueststart.Play(Game.GetPlayer())
+		endif
 		return 0
+	EndIf
+
+	return -1
+EndFunction
+
+int Function SpawnBook(string itemname,int itembase,int locationMarker ,String taskid,String content) global
+
+	Debug.Trace("spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
+	String locationName;
+	ObjectReference ref
+	if (locationMarker==0)
+		ref=AIAgentFunctions.findLocationsToSafeSpawn(4096)
+		locationName=ref.GetDisplayName();
+	else 
+		ref=Game.GetForm(locationMarker)  as ObjectReference;
+		locationName=ref.GetDisplayName();
+	endif
+
+	Book itemToSpawnBase=Game.GetFormFromFile(0x022d30, "AIAgent.esp") as Book ; Package Travelto
+	
+	VisualEffect veff=Game.GetForm(0x0008cc8a)  as VisualEffect	
+	Faction AIAssisted = Game.GetFormFromFile(0x021d0b,"AIAgent.esp") as Faction	; 
+	
+	Sound hintSound =Game.GetFormFromFile(0x0237F4,"AIAgent.esp")  as Sound	
+	
+	if (ref)
+		String referencename=ref.GetDisplayName();
+		if (referencename=="")
+			referencename=ref.GetName();
+		endif
+		
+		;ObjectReference finalItem=Game.GetPlayer().PlaceAtMe(itemToSpawn,1,true,true) 
+		;finalItem.MoveToNode(Game.GetPlayer(),"h")
+		ObjectReference finalItem=ref.PlaceAtMe(itemToSpawnBase,1,true,true) 
+		
+		finalItem.SetDisplayName(itemname,true)
+		finalItem.SetFactionOwner(AIAssisted)
+		Game.getPlayer().AddToFaction(AIAssisted); So item is not marked as stolen
+		
+		if (finalItem.Is3DLoaded())
+			float deltaX=Utility.RandomFloat(-1, 1)
+			float deltaY=Utility.RandomFloat(-1, 1)
+			float deltaZ=Utility.RandomFloat(1,1)*0
+			finalItem.MoveTo(ref, 0,0,deltaZ)
+			finalItem.SetAngle(0,-180,0)
+		Endif
+		
+		finalItem.SetScale(2)
+		finalItem.Enable()
+		Utility.wait(5)
+		AIAgentFunctions.logMessage("spawned_book@"+itemname+"@success@"+locationName,"status_msg")
+		Debug.Trace("spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID"+finalItem.GetFormId());
+		
+		if (finalItem.Is3DLoaded())
+			veff.Play(finalItem);
+			hintSound.Play(finalItem)
+		endif
+		
+		Debug.Notification("Something is hidding near "+referencename);	
+		
+		;Debug.Notification("Something is hidding nearby");	
+		return 0
+	else
+		AIAgentFunctions.logMessage("spawned_book@"+itemname+"@error","status_msg")
 	EndIf
 
 	return -1
@@ -626,37 +703,33 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 	
 	ObjectReference ref
 	if (locationMarker==0)
-		ref=AIAgentAIMind.FindFarthestReferenceAroundPlayer(0,1024)
+		ref=AIAgentFunctions.findLocationsToSafeSpawn(4096)
 	else 
 		ref=Game.GetForm(locationMarker)  as ObjectReference;
 	endif
 
-
-	String referencename=ref.GetDisplayName();
-	if (referencename=="")
-		referencename=ref.GetName();
-	endif
-	
-	
-	Armor itemToSpawnBase=Game.GetForm(itembase)	as Armor; Necklace
-	itemToSpawnBase.SetName(itemname)
-
-	Armor itemToSpawn =itemToSpawnBase.TempClone() as Armor;
-	
-	EffectShader shader=Game.GetForm(0x00092de7)  as EffectShader	
-	Enchantment ench=Game.GetForm(0x0010fb84)  as Enchantment	
-	VisualEffect veff=Game.GetForm(0x0008cc8a)  as VisualEffect	
-	Spell spellitem=Game.GetForm(0x043323)  as Spell	
-	
-	Faction AIAssisted = Game.GetFormFromFile(0x021d0b,"AIAgent.esp") as Faction	; 
-	Sound hintSound =Game.GetForm(0x000dce94)  as Sound	; Nirn sound
-	
-	itemToSpawn.SetEnchantment(ench); must be done to base
-
-	
 	if (ref)
-		;ObjectReference finalItem=Game.GetPlayer().PlaceAtMe(itemToSpawn,1,true,true) 
-		;finalItem.MoveToNode(Game.GetPlayer(),"h")
+		String referencename=ref.GetDisplayName();
+		if (referencename=="")
+			referencename=ref.GetName();
+		endif
+		
+		
+		Armor itemToSpawnBase=Game.GetForm(itembase)	as Armor; Necklace
+		itemToSpawnBase.SetName(itemname)
+
+		Armor itemToSpawn =itemToSpawnBase.TempClone() as Armor;
+		
+		EffectShader shader=Game.GetForm(0x00092de7)  as EffectShader	
+		Enchantment ench=Game.GetForm(0x0010fb84)  as Enchantment	
+		VisualEffect veff=Game.GetForm(0x0008cc8a)  as VisualEffect	
+		Spell spellitem=Game.GetForm(0x043323)  as Spell	
+		
+		Faction AIAssisted = Game.GetFormFromFile(0x021d0b,"AIAgent.esp") as Faction	; 
+		Sound hintSound =Game.GetFormFromFile(0x0237F4,"AIAgent.esp")  as Sound	
+		
+		itemToSpawn.SetEnchantment(ench); must be done to base
+		
 		ObjectReference finalItem=ref.PlaceAtMe(itemToSpawn,1,true,true) 
 		
 		finalItem.SetDisplayName(itemname,true)
@@ -666,7 +739,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		if (finalItem.Is3DLoaded())
 			float deltaX=Utility.RandomFloat(-1, 1)
 			float deltaY=Utility.RandomFloat(-1, 1)
-			float deltaZ=Utility.RandomFloat(1,1)*512
+			float deltaZ=Utility.RandomFloat(1,1)*-1
 			finalItem.MoveTo(ref, 0,0,deltaZ)
 			finalItem.SetAngle(0,-180,0)
 		Endif
@@ -674,7 +747,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		finalItem.SetScale(2)
 		finalItem.Enable()
 		
-		AIAgentFunctions.logMessage("spawned_item@"+itemname,"status_msg")
+		AIAgentFunctions.logMessage("spawned_item@"+itemname+"@success@"+referencename,"status_msg")
 		Debug.Trace("spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID"+finalItem.GetFormId());
 		
 		if (finalItem.Is3DLoaded())
@@ -685,6 +758,8 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		Debug.Notification("Something is hidding near "+referencename);	
 		;Debug.Notification("Something is hidding nearby");	
 		return 0
+	else
+		AIAgentFunctions.logMessage("spawned_item@"+itemname+"@error","status_msg")
 	EndIf
 
 	return -1
@@ -692,7 +767,14 @@ EndFunction
 
 int Function MoveToPlayer(Actor npc,String taskid) global
 
-	AIAgentAIMind.MoveToTarget(npc,Game.GetPlayer());
+	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+			
+	Actor finalActor=npc;
+	finalActor.SetFactionRank(FollowFaction,1)
+	ActorUtil.AddPackageOverride(finalActor, FollowPlayerPackage, 75,0)
+		
+	AIAgentAIMind.MoveToTarget(npc,Game.GetPlayer()); 
 	AIAgentFunctions.logMessageForActor("moving@"+npc.GetDisplayName()+"@"+taskid,"status_msg",npc.GetDisplayName())
 
 EndFunction
@@ -719,6 +801,9 @@ endFunction
 
 int Function stayAtPlace(Actor npc,int followPlayer,String taskid) global
 
+	Utility.wait(1)
+	ResetPackages(npc);
+	Utility.wait(1)
 	if (followPlayer==0)
 		Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
 		Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
@@ -761,16 +846,21 @@ int Function CombatPlayer(Actor npc) global
 endFunction
 	
 function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
+	Debug.Trace("TravelToTarget called: "+npc.GetDisplayName())
 	ResetPackages(npc);
-	
+	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" leaves the place while talking","suggestion",npc.GetDisplayName())
+	Utility.wait(5);
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	npc.SetFactionRank(TraveToFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
 	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
 	npc.EvaluatePackage()
-	AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" leaves the place while talking","instruction",npc.GetDisplayName())
+	
 	;Debug.Notification("Mission MoveToTarget start")
+	if (place=="")
+		place="a Unknown Place";
+	endif;
 	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 
 endFunction
@@ -782,6 +872,13 @@ function SendInstruction(Actor npc, String instruction) global
 
 endFunction
 
+
+function SendSuggestion(Actor npc, String instruction) global
+	
+	AIAgentFunctions.requestMessageForActor(instruction,"suggestion",npc.GetDisplayName())
+	Debug.Trace("[CHIM] Suggestion to: "+npc.GetDisplayName()+ ", "+instruction);
+
+endFunction
 
 function SetDisposition(Actor npc, String disposition) global
 	
@@ -870,3 +967,6 @@ Function AddDelayedHint(ObjectReference finalItem) global
 		
 
 EndFunction
+
+
+	
