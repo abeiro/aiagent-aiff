@@ -1,19 +1,19 @@
 ;BEGIN FRAGMENT CODE - Do not edit anything between this and the end comment
-;NEXT FRAGMENT INDEX 4
-Scriptname PF_AIAgentSandboxPackage_02020CE2 Extends Package Hidden
+;NEXT FRAGMENT INDEX 2
+Scriptname PF_AIAgentFollowPlayerPackag_0202226D Extends Package Hidden
 
-;BEGIN FRAGMENT Fragment_2
-Function Fragment_2(Actor akActor)
+;BEGIN FRAGMENT Fragment_1
+Function Fragment_1(Actor akActor)
 ;BEGIN CODE
-Debug.Trace("AIAgentSandboxPackage start")
+Debug.Trace("AIAgentFollowPlayerPackage changed")
 ;END CODE
 EndFunction
 ;END FRAGMENT
 
-;BEGIN FRAGMENT Fragment_3
-Function Fragment_3(Actor akActor)
+;BEGIN FRAGMENT Fragment_2
+Function Fragment_2(Actor akActor)
 ;BEGIN CODE
-Debug.Trace("AIAgentSandboxPackage changed")
+Debug.Trace("AIAgentFollowPlayerPackage start")
 ;END CODE
 EndFunction
 ;END FRAGMENT
@@ -21,7 +21,7 @@ EndFunction
 ;BEGIN FRAGMENT Fragment_0
 Function Fragment_0(Actor akActor)
 ;BEGIN CODE
-Debug.Trace("AIAgentSandboxPackage end")
+Debug.Trace("AIAgentFollowPlayerPackage end")
 ;END CODE
 EndFunction
 ;END FRAGMENT
