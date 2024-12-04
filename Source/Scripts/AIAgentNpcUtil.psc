@@ -95,8 +95,13 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		destBase.SetHairColor(hairColor)
 	
 		ColorForm sourcecolor=PO3_SKSEFunctions.GetHairColor(source);
-		PO3_SKSEFunctions.SetHairColor(dest,sourcecolor )
-	
+		if (dest.Is3DLoaded())
+			PO3_SKSEFunctions.SetHairColor(dest,sourcecolor )
+		endif
+		
+		; Will apply later
+		StorageUtil.SetFormValue(dest, "CustomHairColor", sourcecolor)
+		
 
 		TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 3)
 		if txst

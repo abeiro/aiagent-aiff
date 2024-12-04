@@ -70,7 +70,7 @@ Event OnKeyDown(int keyCode)
 		  Return
 		EndIf
 
-		if (true)	; this is for test purposes
+		if (false)	; this is for test purposes
 			if (!followingHerika)
 				followingHerika=true;
 				Debug.Notification("[CHIM] Everyone added...");

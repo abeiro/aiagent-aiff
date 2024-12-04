@@ -57,11 +57,16 @@ function MoveToTarget(Actor npc, ObjectReference akTarget) global
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Faction MoveToFaction=Game.GetFormFromFile(0x01A69B, "AIAgent.esp") as Faction ; Faction MoveToTarget
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x21245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
+	
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	npc.RemoveFromFaction(FollowFaction)
+
+
 	npc.SetFactionRank(MoveToFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw)
 	ActorUtil.AddPackageOverride(npc, MoveToPackage, 99, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[CHIM] Moving to "+akTarget.GetDisplayName())
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" is moving to "+akTarget.GetDisplayName())
 	AIAgentFunctions.logMessageForActor("started_moving@"+akTarget.GetDisplayName(),"status_msg",npc.GetDisplayName())
 
 endFunction
@@ -342,7 +347,7 @@ function AttackTarget(Actor npc, ObjectReference akTarget) global
 	;npc.SetPlayerTeammate(false,true);
 	if (targetAsActor)
 		PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
-		ActorUtil.AddPackageOverride(npc, AttackPackage, 99, 0)
+		ActorUtil.AddPackageOverride(npc, AttackPackage, 100, 0)
 		npc.EvaluatePackage()
 		;npc.startCombat(targetAsActor);
 		Debug.Notification("[CHIM] "+npc.GetDisplayName()+" attacks "+akTarget.GetDisplayName())
@@ -607,22 +612,29 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			ref=AIAgentFunctions.getNearestDoor();
 			if (!ref)
 				ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
-			else 
+				Debug.Trace("[CHIM] Interior. spawning on safe spawn")
+			else
+				Debug.Trace("[CHIM] Interior. spawning on nearest door")			
 				move=false;
 			endif
 		else
 			ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,false);
+			Debug.Trace("[CHIM] Exterior. spawning on safe spawn")
 		endif
 	else
 		ref=Game.GetForm(place) as ObjectReference
+		Debug.Trace("[CHIM] Spawning on designed location "+ref.GetName())
 	endif
 	
 	
 	if (ref)
-		Debug.Trace("spawning "+npcName+" / FormIdNPC "+FormIdNPC+ " / FormIdClothing:"+FormIdClothing+" / FormIdWeapon: "+FormIdWeapon+" / FormIdNPCSource: "+FormIdNPCSource);		
+		Debug.Trace("[CHIM] spawning "+npcName+" / FormIdNPC "+FormIdNPC+ " / FormIdClothing:"+FormIdClothing+" / FormIdWeapon: "+FormIdWeapon+" / FormIdNPCSource: "+FormIdNPCSource);		
 		ActorBase finalNpcToSpawn ;
 		
 		finalNpcToSpawn = Game.GetFormFromFile(FormIdNPC, "AIAgent.esp") as ActorBase ; We should choose a correct template here
+		if (!finalNpcToSpawn)
+			finalNpcToSpawn  = Game.GetForm(FormIdNPC) as ActorBase 
+		endif;
 		;finalNpcToSpawn = Game.GetForm(FormIdNPC) as ActorBase
 	
 		Outfit clothing 
@@ -630,7 +642,13 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		Weapon mainWeapon=Game.GetForm(FormIdWeapon)	as Weapon
 	
-		Actor finalActor=Game.GetPlayer().PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
+		Actor finalActor;
+		if (place==0)
+			;finalActor=Game.GetPlayer().PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
+			finalActor=ref.PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
+		else
+			finalActor=ref.PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
+		endif
 		
 		
 		finalActor.RemoveAllItems();
@@ -649,12 +667,12 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		finalActor.EvaluatePackage()
 		finalActor.AddItem(mainWeapon,1,true)
 		finalActor.EquipItem(mainWeapon,false,true)
-		finalActor.SetScale(0.01)
+		;finalActor.SetScale(0.01)
 		finalActor.Enable(true)
 		
 		ActorBase source = Game.GetForm(FormIdNPCSource) as ActorBase; Will use this actor base as source to copy hair.
 		Actor finalSourceActor=Game.GetPlayer().PlaceAtMe(source,1,true,true) as Actor; Spawn source actor instance
-		Debug.Trace("[CHIN] Source actorbase is "+finalSourceActor.GetName())
+		Debug.Trace("[CHIN] Source actorbase is "+source.GetFormID())
 
 
 		;CopyApearanceFromTo(finalSourceActor,finalActor);
@@ -663,23 +681,23 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		
 		if (place==0)
-			float deltaX=Utility.RandomFloat(-5, 5)
-			float deltaY=Utility.RandomFloat(-5, 5)
-			float deltaZ=Utility.RandomFloat(1,1)*1
-			finalActor.MoveTo(ref, 0,0,deltaZ)
+			;finalActor.MoveTo(ref)
 			finalActor.SetAngle(0,-180,0)
 		else
-			finalActor.MoveTo(ref)
+			;finalActor.DisableNoWait();
+			;finalActor.MoveTo(ref)
+			;finalActor.EnableNoWait();
+			;MoveToTarget(finalActor,ref)
 		endif
 		
 		
-		finalActor.SetScale(1)
+		;finalActor.SetScale(1)
 		
 		finalSourceActor.Disable(); Remove source actor as is not needed anymore.
 		
 		AIAgentFunctions.setDrivenByAIA(finalActor,false)
 
-		
+		; Info purposes
 		ActorBase instancedActBase=getProperActorBase(finalActor);
 		int hp = getProperActorBase(finalActor).GetNumHeadParts()
 		Debug.Trace("HeadParts Num : "+hp)
@@ -699,7 +717,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		AIAgentFunctions.logMessageForActor("spawned@"+finalActor.GetDisplayName()+"@"+finalActor.GetFormId(),"status_msg",finalActor.GetDisplayName())
 
 		
-		Debug.Trace("[CHIM] "+finalActor.GetDisplayName()+" is at "+finalActor.GetCurrentLocation().GetName())
+		Debug.Trace("[CHIM] Spaned "+finalActor.GetDisplayName()+" at "+finalActor.GetCurrentLocation().GetName())
 		return 0
 	EndIf
 
@@ -882,7 +900,6 @@ int Function Sandbox(Actor npc,String taskid) global
 
 	Package sandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
 	Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
-
 		
 	npc.SetFactionRank(sandboxFaction,1)
 	ActorUtil.AddPackageOverride(npc, sandboxPackage, 100,0)
@@ -904,7 +921,7 @@ int Function stayAtPlace(Actor npc,int followPlayer,String taskid) global
 		Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
 		Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
 		npc.SetFactionRank(SandboxFaction,1)
-		ActorUtil.AddPackageOverride(npc, SandboxPackage, 100,0)
+		ActorUtil.AddPackageOverride(npc, SandboxPackage, 99,0)
 		npc.EvaluatePackage();
 	elseif (followPlayer==1)
 		
@@ -936,15 +953,19 @@ endFunction
 function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 	Debug.Trace("TravelToTarget called: "+npc.GetDisplayName())
 	ResetPackages(npc);
-	AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" leaves the place while talking","instruction",npc.GetDisplayName())
+	;AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" is leaving the place","instruction",npc.GetDisplayName())
 	Utility.wait(5);
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
-	
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+
 	npc.RemoveFromFaction(sandboxFaction)
+	npc.RemoveFromFaction(FollowFaction)
 	
 	npc.SetFactionRank(TraveToFaction,1)
+	
+	
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
 	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
 	npc.EvaluatePackage()
@@ -952,6 +973,7 @@ function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 	;Debug.Notification("Mission MoveToTarget start")
 	if (place=="")
 		place="a Unknown Place";
+		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has left the place","infoaction",npc.GetDisplayName())
 	endif;
 	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 
@@ -1062,6 +1084,17 @@ Function AddDelayedHint(ObjectReference finalItem) global
 	Endif
 		
 	Debug.Trace("[CHIM] spawned_item_activated: "+finalItem.GetDisplayName()+" at "+finalItem.GetCurrentLocation().GetName());
+		
+
+EndFunction
+
+Function AddDelayedNPC(Actor akActor) global
+
+	if (StorageUtil.HasFormValue(akActor,"CustomHairColor"))
+		ColorForm HairColor=StorageUtil.GetFormValue(akActor, "CustomHairColor") as ColorForm
+		PO3_SKSEFunctions.SetHairColor(akActor,HairColor )	
+		Debug.Trace("[CHIM] AddDelayedNPC: "+akActor.GetDisplayName()+" at "+HairColor.GetName());
+	endif
 		
 
 EndFunction
