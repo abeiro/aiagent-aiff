@@ -83,6 +83,20 @@ Event OnKeyDown(int keyCode)
 			return;
 		endif
 		
+		if (false) 
+			Debug.Notification("[CHIM] Sending all actors names");
+			Form[] allActors=PO3_SKSEFunctions.GetAllForms(43)
+			Debug.Trace("Total "+allActors.Length);
+			int lengthA=allActors.Length
+			int i=0;
+			while i < lengthA
+				Form j=allActors[i] as Form
+				Debug.Trace("Adding NPC "+j.GetName());
+				AIAgentFunctions.logMessage(j.GetName(),"util_npcname")
+				i=i+1
+			endwhile
+			return
+		endif
 		
 		
 		if (!followingHerika)

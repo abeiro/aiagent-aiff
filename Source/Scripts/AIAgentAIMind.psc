@@ -81,6 +81,7 @@ function MoveToTargetEnd(Actor npc) global
 		AIAgentFunctions.logMessageForActor("reached_destination@"+npc.GetDisplayName(),"status_msg",npc.GetDisplayName())
 	endif
 	
+	Utility.Wait(3);
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Faction MoveToFaction=Game.GetFormFromFile(0x01A69B, "AIAgent.esp") as Faction ; Faction MoveToTarget
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x21245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
@@ -334,8 +335,14 @@ function AttackTarget(Actor npc, ObjectReference akTarget) global
 	ResetPackages(npc);
 	Package AttackPackage = Game.GetFormFromFile(0x01B6C2 , "AIAgent.esp") as Package 
 	Faction AttackFaction=Game.GetFormFromFile(0x01B6C1 , "AIAgent.esp") as Faction 
-	npc.SetFactionRank(AttackFaction,1)
 	
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	
+	npc.SetFactionRank(AttackFaction,1)
+	npc.RemoveFromFaction(SandboxFaction)
+	npc.RemoveFromFaction(FollowFaction)
+
 	Actor targetAsActor = akTarget as Actor
 	
 	;Faction WEPlayerEnemy=Game.GetForm(0x0001DD0F) as Faction ; WEPlayerEnemy
