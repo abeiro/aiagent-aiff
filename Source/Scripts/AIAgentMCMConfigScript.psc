@@ -72,30 +72,13 @@ int			_toggle1OID_Rereg
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
 
-int			_toggleResetNPC
-int			_toggleAddAllNowNPC
-
-int			_toggleAddAllNPC 
-bool		_toggleAddAllNPCState			= false
-
-int			_slider_max_distance_inside
-float		_max_distance_inside		= 1200.0
-
-int			_slider_max_distance_outside
-float		_max_distance_outside		= 2400.0
-
-int			_slider_bored_period
-float		_bored_period		= 60.0
-
-
 event OnConfigInit()
 	ModName="CHIM"
-	Pages = new string[3]
+	Pages = new string[2]
 	Pages[0] = "Main"
-	Pages[1] = "AutoAdd"
-	Pages[2] = "Sound"
-	
-	Debug.Notification("[CHIM] Updating menu ... v3.4");
+	Pages[1] = "Sound"
+	Debug.Trace("CHIM: OnConfigInit")
+	Debug.Notification("[CHIM] Updating menu ... v3.5");
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
 	_sound_volume				= 75 
@@ -123,16 +106,22 @@ event OnConfigInit()
 endEvent
 
 int function GetVersion()
-	return 34
+	return 35
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
-	if (a_version >= 2 && CurrentVersion < 34)
+	if (a_version >= 2 && CurrentVersion < 35)
 		OnConfigInit()
+		
+		; Clear any AutoActivate related settings from existing saves
+		if (CurrentVersion < 35)
+			controlScript.setConf("_max_distance_inside", 0.0)
+			controlScript.setConf("_max_distance_outside", 0.0)
+			controlScript.setConf("_bored_period", 0.0)
+			controlScript.setConf("_toggleAddAllNPC", 0)
+		endif
 	endIf
-
-
 endEvent
 
 
@@ -169,19 +158,6 @@ event OnPageReset(string a_page)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
-	endif
-	
-	if (a_page=="AutoActivate")
-		_toggleAddAllNPC		= AddToggleOption("Auto Activate add all NPCs around to framework", _toggleAddAllNPCState)
-		AddEmptyOption();
-		_toggleResetNPC		= AddToggleOption("Remove all NPCs from framework", false)
-		_toggleAddAllNowNPC	= AddToggleOption("Add all current NPCs around to framework", false)
-		
-		_slider_bored_period	= AddSliderOption("Bored event period",_bored_period,"{0}" )
-		
-		AddEmptyOption();
-		_slider_max_distance_inside	= AddSliderOption("Distance (interiors) to AI controlled speech",_max_distance_inside,"{0}" )
-		_slider_max_distance_outside	= AddSliderOption("Distance (exteriors) to AI controlled speech",_max_distance_outside,"{0}" )
 	endif
 	
 
@@ -252,26 +228,6 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(1)
 	endIf
 	
-	if (a_option == _slider_max_distance_inside)
-		SetSliderDialogStartValue(_max_distance_inside)
-		SetSliderDialogDefaultValue(1200)
-		SetSliderDialogRange(10, 5000)
-		SetSliderDialogInterval(1)
-	endIf
-	
-	if (a_option == _slider_max_distance_outside)
-		SetSliderDialogStartValue(_max_distance_outside)
-		SetSliderDialogDefaultValue(2400)
-		SetSliderDialogRange(10, 5000)
-		SetSliderDialogInterval(1)
-	endIf
-	
-	if (a_option == _slider_bored_period)
-		SetSliderDialogStartValue(_bored_period)
-		SetSliderDialogDefaultValue(60)
-		SetSliderDialogRange(15, 600)
-		SetSliderDialogInterval(1)
-	endIf
 endEvent
 
 event OnOptionSliderAccept(int a_option, float a_value)
@@ -313,24 +269,6 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
 	
-	if (a_option == _slider_max_distance_inside)
-		_max_distance_inside = a_value
-		controlScript.setConf("_max_distance_inside",_max_distance_inside)
-		SetSliderOptionValue(a_option, a_value, "{1}")
-	endIf
-	
-	if (a_option == _slider_max_distance_outside)
-		_max_distance_outside = a_value
-		controlScript.setConf("_max_distance_outside",_max_distance_outside)
-		SetSliderOptionValue(a_option, a_value, "{1}")
-	endIf
-	
-	if (a_option == _slider_bored_period)
-		_bored_period = a_value
-		controlScript.setConf("_bored_period",_bored_period)
-		SetSliderOptionValue(a_option, a_value, "{1}")
-	endIf
-	
 endEvent
 	
 	
@@ -353,18 +291,6 @@ event OnGameReload()
 	controlScript.setConf("_lip_int",_lip_int)
 	controlScript.setConf("_lip_res",_lip_res)
 	controlScript.setConf("_timeout",_timeout_int)
-
-	controlScript.setConf("_max_distance_inside",_max_distance_inside)
-	controlScript.setConf("_max_distance_outside",_max_distance_outside)
-	
-	controlScript.setConf("_bored_period",_bored_period)
-	
-	if (_toggleAddAllNPCState)
-		controlScript.setConf("_toggleAddAllNPC",1)
-	else
-		controlScript.setConf("_toggleAddAllNPC",0)
-	endif
-
 	
 	if (_animationstate)
 		controlScript.setConf("_animations",1)
@@ -590,16 +516,6 @@ event OnOptionSelect(int a_option)
 		ShowMessage("Close menu")
 	endIf
 	
-	if (a_option == _toggleResetNPC)
-		AIAgentFunctions.testRemoveAll()
-		ShowMessage("Done")
-	endIf
-	
-	if (a_option == _toggleAddAllNowNPC)
-		AIAgentFunctions.testAddAllNPCAround()
-		ShowMessage("Done")
-	endIf
-	
 	if (a_option == _toggleInvertHeading)
 		_invertheadingstate = !_invertheadingstate
 		
@@ -610,18 +526,6 @@ event OnOptionSelect(int a_option)
 		endif
 		
 		SetToggleOptionValue(a_option, _invertheadingstate)
-	endIf
-	
-	if (a_option == _toggleAddAllNPC)
-		_toggleAddAllNPCState = !_toggleAddAllNPCState
-		
-		if (_toggleAddAllNPCState)
-			controlScript.setConf("_toggleAddAllNPC",1)
-		else
-			controlScript.setConf("_toggleAddAllNPC",0)
-		endif
-		
-		SetToggleOptionValue(a_option, _toggleAddAllNPCState)
 	endIf
 endEvent
 
@@ -697,32 +601,4 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _toggleInvertHeading)
 		SetInfoText("When using 3D sound, try inverting the heading. This may resolve issues where NPCs in front are heard at a lower volume.")
 	endIf
-	
-	if (a_option == _toggleResetNPC)
-		SetInfoText("Removes all NPCs from framework. Confs and Bios are kept untouched")
-	endIf
-	
-	if (a_option == _toggleAddAllNowNPC)
-		SetInfoText("Will add (almost) all NPCs around to framework. Will be executed once right now.")
-	endIf
-	
-	if (a_option == _slider_max_distance_inside)
-		SetInfoText("AIs below this distance in interiors can start talking")
-	endIf
-	
-	if (a_option == _slider_max_distance_outside)
-		SetInfoText("AIs below this distance in exteriors can start talking")
-	endIf
-	
-	if (a_option == _toggleAddAllNPC)
-		SetInfoText("Will add automagically (almost) all NPCs around to framework. ")
-	endIf
-	
-	if (a_option == _slider_bored_period)
-		SetInfoText("A bored event (random NPC will start to talk) every x seconds.")
-	endIf
-	
-	
-	
-	
 endEvent
