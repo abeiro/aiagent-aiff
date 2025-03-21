@@ -52,14 +52,14 @@ bool		_toggleState7			= true
 
 
 int			_slider_lip_res
-float			_lip_res				= 500.0
+float		_lip_res				= 500.0
 
 int			_slider_lip_int
 float		_lip_int				= 1.0
 
 
-int 	_slider_timeout
-float	_timeout_int				= 30.0
+int 		_slider_timeout
+float		_timeout_int				= 30.0
 
 
 int			_toggleAnimation
@@ -68,12 +68,34 @@ bool		_animationstate			= false
 
 int			_toggle1OID_Rereg
 
+
+int			_toggleInvertHeading
+bool		_invertheadingstate			= false
+
+int			_toggleResetNPC
+int			_toggleAddAllNowNPC
+
+int			_toggleAddAllNPC 
+bool		_toggleAddAllNPCState			= false
+
+int			_slider_max_distance_inside
+float		_max_distance_inside		= 1200.0
+
+int			_slider_max_distance_outside
+float		_max_distance_outside		= 2400.0
+
+int			_slider_bored_period
+float		_bored_period		= 60.0
+
+
 event OnConfigInit()
 	ModName="CHIM"
-	Pages = new string[1]
-	Pages[0] = "Configuration"
+	Pages = new string[3]
+	Pages[0] = "Main"
+	Pages[1] = "AutoAdd"
+	Pages[2] = "Sound"
 	
-	Debug.Notification("[CHIM] Updating menu ... v2.9");
+	Debug.Notification("[CHIM] Updating menu ... v3.4");
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
 	_sound_volume				= 75 
@@ -101,12 +123,12 @@ event OnConfigInit()
 endEvent
 
 int function GetVersion()
-	return 29
+	return 34
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
-	if (a_version >= 2 && CurrentVersion < 29)
+	if (a_version >= 2 && CurrentVersion < 34)
 		OnConfigInit()
 	endIf
 
@@ -128,37 +150,57 @@ EndFunction
 event OnPageReset(string a_page)
 
 	SetCursorFillMode(LEFT_TO_Right)
-	_keymapOID_K7		= AddKeyMapOption("Activate AI", _myKey7)
-	_keymapOID_K = AddKeyMapOption("Text Chat with AI", _myKey)	
-	_keymapOID_K2 = AddKeyMapOption("Voice Chat with AI/Summarize Book", _myKey2)	
-	;_toggle1OID_B		= AddToggleOption("Enable AI Voice (TTS)", _toggleState1)
-	_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
-	_keymapOID_K3		= AddKeyMapOption("Follow and Unfollow NPC/Summarize book", _myKey3)
-	;_toggle1OID_D		= AddToggleOption("Use Custom Voicetype or standard", _toggleState3)
-	_keymapOID_K4		= AddKeyMapOption("Have AI NPC Write Diary Entry", _myKey4)
-	_keymapOID_K5		= AddKeyMapOption("Change AI/LLM Model", _myKey5)
-	_keymapOID_K6		= AddKeyMapOption("Soulgaze", _myKey6)
 	
 	
-	_slider_volume		= AddSliderOption("AI Voice Volume", _sound_volume,"{0}")
-	_slider_preclip		= AddSliderOption("Skip milliseconds at begin",_sound_preclip,"{0}" )
-	_slider_postclip	= AddSliderOption("Skip milliseconds at end",_sound_postclip,"{0}" )
-	_slider_ds			= AddSliderOption("AI Voice Distance Scale ",_sound_ds,"{1}" )
-	_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
-	;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
+	if (a_page=="Main" || a_page=="")
+		_keymapOID_K7		= AddKeyMapOption("Activate AI", _myKey7)
+		_keymapOID_K = AddKeyMapOption("Text Chat with AI", _myKey)	
+		_keymapOID_K2 = AddKeyMapOption("Voice Chat with AI/Summarize Book", _myKey2)	
+		;_toggle1OID_B		= AddToggleOption("Enable AI Voice (TTS)", _toggleState1)
+		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
+		_keymapOID_K3		= AddKeyMapOption("Follow and Unfollow NPC/Summarize book", _myKey3)
+		;_toggle1OID_D		= AddToggleOption("Use Custom Voicetype or standard", _toggleState3)
+		_keymapOID_K4		= AddKeyMapOption("Have AI NPC Write Diary Entry", _myKey4)
+		_keymapOID_K5		= AddKeyMapOption("Change AI/LLM Model", _myKey5)
+		_keymapOID_K6		= AddKeyMapOption("Soulgaze", _myKey6)
+		
+		_slider_timeout	= AddSliderOption("AIAgent connection timeout ",_timeout_int,"{1}" )
+		_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
+		
+		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
+		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
+	endif
 	
-	AddEmptyOption();
-	AddEmptyOption();
-	AddEmptyOption();
+	if (a_page=="AutoActivate")
+		_toggleAddAllNPC		= AddToggleOption("Auto Activate add all NPCs around to framework", _toggleAddAllNPCState)
+		AddEmptyOption();
+		_toggleResetNPC		= AddToggleOption("Remove all NPCs from framework", false)
+		_toggleAddAllNowNPC	= AddToggleOption("Add all current NPCs around to framework", false)
+		
+		_slider_bored_period	= AddSliderOption("Bored event period",_bored_period,"{0}" )
+		
+		AddEmptyOption();
+		_slider_max_distance_inside	= AddSliderOption("Distance (interiors) to AI controlled speech",_max_distance_inside,"{0}" )
+		_slider_max_distance_outside	= AddSliderOption("Distance (exteriors) to AI controlled speech",_max_distance_outside,"{0}" )
+	endif
 	
-	_slider_timeout	= AddSliderOption("AIAgent connection timeout ",_timeout_int,"{1}" )
-	_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
+
+	if (a_page=="Sound")
+		_slider_volume		= AddSliderOption("AI Voice Volume", _sound_volume,"{0}")
+		_slider_ds			= AddSliderOption("AI Voice Distance Scale ",_sound_ds,"{1}" )
+		
+		_slider_preclip		= AddSliderOption("Skip milliseconds at begin",_sound_preclip,"{0}" )
+		_slider_postclip	= AddSliderOption("Skip milliseconds at end",_sound_postclip,"{0}" )
+		
+		
+		AddEmptyOption();
+		_slider_lip_res	= AddSliderOption("Resolution of lip anim.",_lip_res,"{0}" )
+		_slider_lip_int			= AddSliderOption("Intensity of lip anim ",_lip_int,"{1}" )
+		;AddEmptyOption();
+		_toggleInvertHeading	= AddToggleOption("3D sound invert heading",_invertheadingstate)
 	
-	AddEmptyOption();
-	AddEmptyOption();
-	_slider_lip_res	= AddSliderOption("Resolution of lip anim.",_lip_res,"{0}" )
-	_slider_lip_int			= AddSliderOption("Intensity of lip anim ",_lip_int,"{1}" )
-	
+	endif
+
 endEvent
 
 event OnOptionSliderOpen(int a_option)
@@ -210,6 +252,26 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(1)
 	endIf
 	
+	if (a_option == _slider_max_distance_inside)
+		SetSliderDialogStartValue(_max_distance_inside)
+		SetSliderDialogDefaultValue(1200)
+		SetSliderDialogRange(10, 5000)
+		SetSliderDialogInterval(1)
+	endIf
+	
+	if (a_option == _slider_max_distance_outside)
+		SetSliderDialogStartValue(_max_distance_outside)
+		SetSliderDialogDefaultValue(2400)
+		SetSliderDialogRange(10, 5000)
+		SetSliderDialogInterval(1)
+	endIf
+	
+	if (a_option == _slider_bored_period)
+		SetSliderDialogStartValue(_bored_period)
+		SetSliderDialogDefaultValue(60)
+		SetSliderDialogRange(15, 600)
+		SetSliderDialogInterval(1)
+	endIf
 endEvent
 
 event OnOptionSliderAccept(int a_option, float a_value)
@@ -251,6 +313,24 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
 	
+	if (a_option == _slider_max_distance_inside)
+		_max_distance_inside = a_value
+		controlScript.setConf("_max_distance_inside",_max_distance_inside)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+	
+	if (a_option == _slider_max_distance_outside)
+		_max_distance_outside = a_value
+		controlScript.setConf("_max_distance_outside",_max_distance_outside)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+	
+	if (a_option == _slider_bored_period)
+		_bored_period = a_value
+		controlScript.setConf("_bored_period",_bored_period)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+	
 endEvent
 	
 	
@@ -273,6 +353,19 @@ event OnGameReload()
 	controlScript.setConf("_lip_int",_lip_int)
 	controlScript.setConf("_lip_res",_lip_res)
 	controlScript.setConf("_timeout",_timeout_int)
+
+	controlScript.setConf("_max_distance_inside",_max_distance_inside)
+	controlScript.setConf("_max_distance_outside",_max_distance_outside)
+	
+	controlScript.setConf("_bored_period",_bored_period)
+	
+	if (_toggleAddAllNPCState)
+		controlScript.setConf("_toggleAddAllNPC",1)
+	else
+		controlScript.setConf("_toggleAddAllNPC",0)
+	endif
+
+	
 	if (_animationstate)
 		controlScript.setConf("_animations",1)
 	else
@@ -496,6 +589,40 @@ event OnOptionSelect(int a_option)
 		ConsoleUtil.ExecuteCommand("SetStage SKI_ConfigManagerInstance 1")
 		ShowMessage("Close menu")
 	endIf
+	
+	if (a_option == _toggleResetNPC)
+		AIAgentFunctions.testRemoveAll()
+		ShowMessage("Done")
+	endIf
+	
+	if (a_option == _toggleAddAllNowNPC)
+		AIAgentFunctions.testAddAllNPCAround()
+		ShowMessage("Done")
+	endIf
+	
+	if (a_option == _toggleInvertHeading)
+		_invertheadingstate = !_invertheadingstate
+		
+		if (_invertheadingstate)
+			controlScript.setConf("_invertheadingstate",1)
+		else
+			controlScript.setConf("_invertheadingstate",0)
+		endif
+		
+		SetToggleOptionValue(a_option, _invertheadingstate)
+	endIf
+	
+	if (a_option == _toggleAddAllNPC)
+		_toggleAddAllNPCState = !_toggleAddAllNPCState
+		
+		if (_toggleAddAllNPCState)
+			controlScript.setConf("_toggleAddAllNPC",1)
+		else
+			controlScript.setConf("_toggleAddAllNPC",0)
+		endif
+		
+		SetToggleOptionValue(a_option, _toggleAddAllNPCState)
+	endIf
 endEvent
 
 event OnOptionHighlight(int a_option)
@@ -566,5 +693,36 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _toggle1OID_Rereg)
 		SetInfoText("Mod name has changed. This will reset MCM to show new name. May affect other mods. Will call setstage SKI_ConfigManagerInstance 1")
 	endIf
+	
+	if (a_option == _toggleInvertHeading)
+		SetInfoText("When using 3D sound, try inverting the heading. This may resolve issues where NPCs in front are heard at a lower volume.")
+	endIf
+	
+	if (a_option == _toggleResetNPC)
+		SetInfoText("Removes all NPCs from framework. Confs and Bios are kept untouched")
+	endIf
+	
+	if (a_option == _toggleAddAllNowNPC)
+		SetInfoText("Will add (almost) all NPCs around to framework. Will be executed once right now.")
+	endIf
+	
+	if (a_option == _slider_max_distance_inside)
+		SetInfoText("AIs below this distance in interiors can start talking")
+	endIf
+	
+	if (a_option == _slider_max_distance_outside)
+		SetInfoText("AIs below this distance in exteriors can start talking")
+	endIf
+	
+	if (a_option == _toggleAddAllNPC)
+		SetInfoText("Will add automagically (almost) all NPCs around to framework. ")
+	endIf
+	
+	if (a_option == _slider_bored_period)
+		SetInfoText("A bored event (random NPC will start to talk) every x seconds.")
+	endIf
+	
+	
+	
 	
 endEvent

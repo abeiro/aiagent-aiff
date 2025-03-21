@@ -182,3 +182,7 @@ function CopyApearanceFromTo(Actor source, Actor dest) global
 		Debug.Trace("CHIM ADV] CopyApearanceFromTo cancelled");
 	Endif
 endFunction
+
+Function NpcPlayIdle(Actor ref,string animation) Global
+	Debug.SendAnimationEvent(ref,animation)
+EndFunction

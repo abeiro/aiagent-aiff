@@ -28,6 +28,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 	If(keyCode == _currentKeyVoice)
 		if (!UI.IsMenuOpen("Book Menu"))
 			AIAgentFunctions.stopRecording(_currentKeyVoice)
+			;WebSocketSTT.StopRecordVoice(_currentKeyVoice);
 			Debug.Notification("[CHIM] Recording end");
 		endif
 	endif
@@ -57,6 +58,7 @@ Event OnKeyDown(int keyCode)
 		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
 	else
         AIAgentFunctions.recordSoundEx(_currentKeyVoice)
+		;WebSocketSTT.StartRecordVoice(_currentKeyVoice);
 		Debug.Notification("[CHIM] recording....");
 	endif
   EndIf

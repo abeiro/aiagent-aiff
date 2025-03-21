@@ -6,6 +6,9 @@ Actor herika
 Keyword property ActorTypeNPC auto
 Actor lastTarget
 
+;FavorDialogueScript Property DialogueFavorGeneric Auto
+
+
 function Test() global
 
 Debug.Notification("Ok");
@@ -503,7 +506,9 @@ endFunction
 
 function PrepareForDialog(Actor npc) global
 	; Before LLM response. User just talked.
-	
+	if (!npc.IsOnMount())
+		npc.QueueNiNodeUpdate()
+	endif
 	;AIAgentFaceReset.resetFace(npc);
 	
 
@@ -524,8 +529,18 @@ endFunction
 
 function EndDialogueClear(Actor npc) global
 	npc.ClearLookAt()
-	npc.EvaluatePackage()
 	
+	
+	;Topic NullTopic = Game.GetFormFromFile(0x01dc74, "AIAgent.esp") as Topic 
+	;npc.Say(NullTopic)
+
+endFunction
+
+function EndDialogueClearScene(Actor npc) global
+	npc.ClearLookAt()
+	Topic nulltopic=Game.GetFormFromFile(0x01DC74, "AIAgent.esp") as Topic
+	npc.Say(nulltopic)
+
 	;Topic NullTopic = Game.GetFormFromFile(0x01dc74, "AIAgent.esp") as Topic 
 	;npc.Say(NullTopic)
 
