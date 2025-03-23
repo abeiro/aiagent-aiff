@@ -106,7 +106,7 @@ event OnConfigInit()
 endEvent
 
 int function GetVersion()
-	return 35
+	return 36
 endFunction
 
 event OnVersionUpdate(int a_version)
@@ -115,10 +115,10 @@ event OnVersionUpdate(int a_version)
 		OnConfigInit()
 		
 		; Clear any AutoActivate related settings from existing saves
-		if (CurrentVersion < 35)
+		if (CurrentVersion < 36)
 			controlScript.setConf("_max_distance_inside", 0.0)
 			controlScript.setConf("_max_distance_outside", 0.0)
-			controlScript.setConf("_bored_period", 0.0)
+			controlScript.setConf("_bored_period", 120.0)
 			controlScript.setConf("_toggleAddAllNPC", 0)
 		endif
 	endIf
