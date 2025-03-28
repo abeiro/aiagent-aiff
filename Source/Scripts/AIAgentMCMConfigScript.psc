@@ -87,15 +87,20 @@ float		_max_distance_outside		= 2400.0
 int			_slider_bored_period
 float		_bored_period		= 60.0
 
+int _toggleRechat_policy_asap
+bool  _rechat_policy_asap = true
+
+int _toggle_npc_go_near
+bool  _toggle_npc_go_near_state = true
 
 event OnConfigInit()
 	ModName="CHIM"
 	Pages = new string[3]
 	Pages[0] = "Main"
-	Pages[1] = "AutoAdd"
+	Pages[1] = "Behavior"
 	Pages[2] = "Sound"
 	
-	Debug.Notification("[CHIM] Updating menu ... v3.4");
+	Debug.Notification("[CHIM] Updating menu ... v3.5");
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
 	_sound_volume				= 75 
@@ -117,18 +122,28 @@ event OnConfigInit()
 	endIf
 	if (CurrentVersion<29)
 		SetTitleText("CHIM")
-		
 	endIf
+	
+	if (CurrentVersion<35)
+		controlScript.setConf("_rechat_policy_asap",1)
+		_rechat_policy_asap=true
+	endIf
+	
+	if (CurrentVersion<37)
+		StorageUtil.SetIntValue(None, "AIAgentNpcWalkNear",1);
+		_toggle_npc_go_near_state=true
+	endIf
+	
 	ConsoleUtil.ExecuteCommand("setstage SKI_ConfigManagerInstance 1")
 endEvent
 
 int function GetVersion()
-	return 34
+	return 37
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
-	if (a_version >= 2 && CurrentVersion < 34)
+	if (a_version >= 2 && CurrentVersion < 37)
 		OnConfigInit()
 	endIf
 
@@ -171,17 +186,20 @@ event OnPageReset(string a_page)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
 	
-	if (a_page=="AutoActivate")
-		_toggleAddAllNPC		= AddToggleOption("Auto Activate add all NPCs around to framework", _toggleAddAllNPCState)
+	if (a_page=="Behavior")
+		_toggleAddAllNPC		= AddToggleOption("Auto Activate ON/OFF", _toggleAddAllNPCState)
 		AddEmptyOption();
-		_toggleResetNPC		= AddToggleOption("Remove all NPCs from framework", false)
-		_toggleAddAllNowNPC	= AddToggleOption("Add all current NPCs around to framework", false)
+		_toggleResetNPC		= AddToggleOption("Remove all NPCs", false)
+		_toggleAddAllNowNPC	= AddToggleOption("Add all current NPCs", false)
 		
 		_slider_bored_period	= AddSliderOption("Bored event period",_bored_period,"{0}" )
+		_toggleRechat_policy_asap	= AddToggleOption("Rechat policy asap", _rechat_policy_asap)
 		
-		AddEmptyOption();
+		
 		_slider_max_distance_inside	= AddSliderOption("Distance (interiors) to AI controlled speech",_max_distance_inside,"{0}" )
 		_slider_max_distance_outside	= AddSliderOption("Distance (exteriors) to AI controlled speech",_max_distance_outside,"{0}" )
+		
+		_toggle_npc_go_near	= AddToggleOption("NPCs walk near player", _toggle_npc_go_near_state)
 	endif
 	
 
@@ -192,12 +210,13 @@ event OnPageReset(string a_page)
 		_slider_preclip		= AddSliderOption("Skip milliseconds at begin",_sound_preclip,"{0}" )
 		_slider_postclip	= AddSliderOption("Skip milliseconds at end",_sound_postclip,"{0}" )
 		
-		
+		_toggleInvertHeading	= AddToggleOption("3D sound invert heading",_invertheadingstate)
 		AddEmptyOption();
+		
 		_slider_lip_res	= AddSliderOption("Resolution of lip anim.",_lip_res,"{0}" )
 		_slider_lip_int			= AddSliderOption("Intensity of lip anim ",_lip_int,"{1}" )
 		;AddEmptyOption();
-		_toggleInvertHeading	= AddToggleOption("3D sound invert heading",_invertheadingstate)
+		
 	
 	endif
 
@@ -365,6 +384,11 @@ event OnGameReload()
 		controlScript.setConf("_toggleAddAllNPC",0)
 	endif
 
+	if (_rechat_policy_asap)
+		controlScript.setConf("_rechat_policy_asap",1)
+	else
+		controlScript.setConf("_rechat_policy_asap",0)
+	endif
 	
 	if (_animationstate)
 		controlScript.setConf("_animations",1)
@@ -623,6 +647,30 @@ event OnOptionSelect(int a_option)
 		
 		SetToggleOptionValue(a_option, _toggleAddAllNPCState)
 	endIf
+	
+	if (a_option == _toggleRechat_policy_asap)
+		_rechat_policy_asap = !_rechat_policy_asap
+		if (_rechat_policy_asap)
+			controlScript.setConf("_rechat_policy_asap",1)
+		else
+			controlScript.setConf("_rechat_policy_asap",0)
+		endif
+		SetToggleOptionValue(a_option, _rechat_policy_asap)
+
+	endif
+	
+	
+	if (a_option == _toggle_npc_go_near)
+		_toggle_npc_go_near_state = !_toggle_npc_go_near_state
+		if (_toggle_npc_go_near_state)
+			StorageUtil.SetIntValue(None, "AIAgentNpcWalkNear",1);
+		else
+			StorageUtil.SetIntValue(None, "AIAgentNpcWalkNear",0);
+		endif
+		SetToggleOptionValue(a_option, _toggle_npc_go_near_state)
+
+	endif
+	
 endEvent
 
 event OnOptionHighlight(int a_option)
@@ -650,13 +698,13 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Use this to force an AI NPC to summarize the currenet events into their diary. NEEDS ACTIONS ENABLED!")
 	endIf
 	if (a_option == _keymapOID_K5)
-		SetInfoText("Change AI/LLM. Models should be selected in the AI-FF server configuration wizard.")
+		SetInfoText("Change AI/LLM. Models should be selected in the CHIM server configuration wizard.")
 	endIf
 	if (a_option == _keymapOID_K6)
 		SetInfoText("Take a screeshot and sends to an ITT AI service to summarize what is shown.")
 	endIf
 	if (a_option == _keymapOID_K7)
-		SetInfoText("Imports the NPC you are looking at into AI-FF. Can use it to turn their AI on and off.")
+		SetInfoText("Imports the NPC you are looking at into CHIM. Can use it to turn their AI on and off.")
 	endIf
 	if (a_option == _slider_volume)
 		SetInfoText("Sets AI NPC speech volume.")
@@ -675,11 +723,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _slider_lip_int)
-		SetInfoText("WIP for debug/testing")
+		SetInfoText("Lip modifier intensity. Set lower if mouth opens too much ")
 	endIf
 	
 	if (a_option == _slider_lip_res)
-		SetInfoText("WIP for debug/testing")
+		SetInfoText("Lip modifier resolution. Set lower if movement is too laggy. Lower uses more CPU. Find your sweet spot.")
 	endIf
 	
 	if (a_option == _slider_timeout)
@@ -687,7 +735,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggleAnimation)
-		SetInfoText("Enable animations. If useing openanimation replacer or custom animations you should disable it to prevent CTD")
+		SetInfoText("Enable animations. If using openanimation replacer or custom animations you should disable it to prevent CTDs")
 	endIf
 	
 	if (a_option == _toggle1OID_Rereg)
@@ -695,7 +743,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggleInvertHeading)
-		SetInfoText("When using 3D sound, try inverting the heading. This may resolve issues where NPCs in front are heard at a lower volume.")
+		SetInfoText("When using 3D sound, try inverting the heading. This may resolve issues where NPCs in front are heard at a lower volume. (Need people to help solve this)")
 	endIf
 	
 	if (a_option == _toggleResetNPC)
@@ -722,7 +770,12 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("A bored event (random NPC will start to talk) every x seconds.")
 	endIf
 	
+	if (a_option == _toggleRechat_policy_asap)
+		SetInfoText("When enabled rechat event will be fired on first LLM response.")
+	endIf
 	
-	
+	if (a_option == _toggle_npc_go_near)
+		SetInfoText("When enabled, NPCs subtly walk toward the player to avoid having dialogues occur too far away. Only works when player is sitting")
+	endIf
 	
 endEvent
