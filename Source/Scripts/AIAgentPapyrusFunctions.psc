@@ -361,8 +361,6 @@ Bool Function SafeProcess(bool allowMenuMode = false)
    && (!UI.IsMenuOpen("Crafting Menu")) \
    && (!UI.IsMenuOpen("MessageBoxMenu")) \
    && (!UI.IsMenuOpen("ContainerMenu")) \
-   && (!UI.IsMenuOpen("InventoryMenu")) \
-   && (!UI.IsMenuOpen("BarterMenu")) \
    && (!UI.IsTextInputEnabled()) \
    && (!UI.IsMenuOpen("LootMenu")) \
    && (!UI.IsMenuOpen("RaceSex Menu")) \
@@ -373,8 +371,6 @@ Bool Function SafeProcess(bool allowMenuMode = false)
       ;Crafting Menu to block when crafting menus are open - game is not paused so IsInMenuMode does not work
       ;MessageBoxMenu to block when message boxes are open - while they pause the game, they do not trigger IsInMenuMode
       ;ContainerMenu to block when containers are accessed - while they pause the game, they do not trigger IsInMenuMode
-      ;InventoryMenu to block when inventory is open - when used with Skyrim Souls
-      ;BarterMenu to block when buy items in shop - when used with Skyrim Souls
       ;IsTextInputEnabled to block when editable text fields are open
 	  ;LootMenu to block when looting - when used with Quick Loot
 	  ;RaceSex Menu to block during character creation - when used with RaceMenu
