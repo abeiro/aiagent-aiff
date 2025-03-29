@@ -356,7 +356,6 @@ endEvent
 
 Bool Function SafeProcess(bool allowMenuMode = false)
    If (allowMenuMode || !Utility.IsInMenuMode()) \
-   && (!UI.IsMenuOpen("Dialogue Menu")) \
    && (!UI.IsMenuOpen("Console")) \
    && (!UI.IsMenuOpen("Crafting Menu")) \
    && (!UI.IsMenuOpen("MessageBoxMenu")) \
@@ -366,7 +365,6 @@ Bool Function SafeProcess(bool allowMenuMode = false)
    && (!UI.IsMenuOpen("RaceSex Menu")) \
    && (!UI.IsMenuOpen("listmenu"))
       ;IsInMenuMode to block when game is paused with menus open
-      ;Dialogue Menu to block when dialog is open
       ;Console to block when console is open - console does not trigger IsInMenuMode and thus needs its own check
       ;Crafting Menu to block when crafting menus are open - game is not paused so IsInMenuMode does not work
       ;MessageBoxMenu to block when message boxes are open - while they pause the game, they do not trigger IsInMenuMode
