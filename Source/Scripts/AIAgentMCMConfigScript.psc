@@ -87,6 +87,25 @@ float		_max_distance_outside		= 2400.0
 int			_slider_bored_period
 float		_bored_period		= 60.0
 
+; default settings
+int			_myKeyDefault					= -1
+int			_myKey2Default					= -1
+int			_myKey3Default					= -1
+int			_myKey4Default					= -1
+int			_myKey5Default					= -1
+int			_myKey6Default					= -1
+int			_myKey7Default					= -1
+bool		_toggleState2Default			= false
+float		_sound_volumeDefault			= 75.0
+float		_sound_preclipDefault			= 100.0
+float		_sound_postclipDefault			= 0.0
+float		_sound_dsDefault				= 1.0
+bool		_toggleState7Default			= true
+float		_lip_resDefault					= 500.0
+float		_lip_intDefault					= 1.0
+float		_timeout_intDefault				= 30.0
+bool		_animationstateDefault			= false
+bool		_invertheadingstateDefault		= false
 
 event OnConfigInit()
 	ModName="CHIM"
@@ -375,162 +394,185 @@ event OnGameReload()
 	
 endEvent
 
+event OnOptionDefault(int a_option)
+	if (a_option == _keymapOID_K)
+		controlScript.removeBinding(_myKey)
+		_myKey = _myKeyDefault
+		SetKeymapOptionValue(a_option, _myKey)
+		controlScript.doBinding(_myKey)
+
+	elseif (a_option == _keymapOID_K2)
+		controlScript.removeBinding(_myKey2)
+		_myKey2 = _myKey2Default
+		SetKeymapOptionValue(a_option, _myKey2)
+		controlScript.doBinding2(_myKey2)
+
+	elseif (a_option == _keymapOID_K3)
+		controlScript.removeBinding(_myKey3)
+		_myKey3 = _myKey3Default
+		SetKeymapOptionValue(a_option, _myKey3)
+		controlScript.doBinding3(_myKey3)
+
+	elseif (a_option == _keymapOID_K4)
+		controlScript.removeBinding(_myKey4)
+		_myKey4 = _myKey4Default
+		SetKeymapOptionValue(a_option, _myKey4)
+		controlScript.doBinding4(_myKey4)
+
+	elseif (a_option == _keymapOID_K5)
+		controlScript.removeBinding(_myKey5)
+		_myKey5 = _myKey5Default
+		SetKeymapOptionValue(a_option, _myKey5)
+		controlScript.doBinding5(_myKey5)
+
+	elseif (a_option == _keymapOID_K6)
+		controlScript.removeBinding(_myKey6)
+		_myKey6 = _myKey6Default
+		SetKeymapOptionValue(a_option, _myKey6)
+		controlScript.doBinding6(_myKey6)
+
+	elseif (a_option == _keymapOID_K7)
+		controlScript.removeBinding(_myKey7)
+		_myKey7 = _myKey7Default
+		SetKeymapOptionValue(a_option, _myKey7)
+		controlScript.doBinding7(_myKey7)
+
+	elseif (a_option == _toggle1OID_C)
+		_toggleState2 = _toggleState2Default
+		SetToggleOptionValue(a_option, _toggleState2)
+
+	elseif (a_option == _slider_timeout)
+		_timeout_int = _timeout_intDefault
+		SetSliderOptionValue(a_option, _timeout_int, "{1}")
+
+	elseif (a_option == _toggleAnimation)
+		_animationstate = _animationstateDefault
+		SetToggleOptionValue(a_option, _animationstate)
+
+	elseif (a_option == _toggle1OID_E)
+		_toggleState7 = _toggleState7Default
+		SetToggleOptionValue(a_option, _toggleState7)
+
+	elseif (a_option == _slider_volume)
+		_sound_volume = _sound_volumeDefault
+		SetSliderOptionValue(a_option, _sound_volume, "{1}")
+
+	elseif (a_option == _slider_ds)
+		_sound_ds = _sound_dsDefault
+		SetSliderOptionValue(a_option, _sound_ds, "{1}")
+
+	elseif (a_option == _slider_preclip)
+		_sound_preclip = _sound_preclipDefault
+		SetSliderOptionValue(a_option, _sound_preclip, "{1}")
+
+	elseif (a_option == _slider_postclip)
+		_sound_postclip = _sound_postclipDefault
+		SetSliderOptionValue(a_option, _sound_postclip, "{1}")
+
+	elseif (a_option == _slider_lip_res)
+		_lip_res = _lip_resDefault
+		SetSliderOptionValue(a_option, _lip_res, "{1}")
+
+	elseif (a_option == _slider_lip_int)
+		_lip_int = _lip_intDefault
+		SetSliderOptionValue(a_option, _lip_int, "{1}")
+
+	elseif (a_option == _toggleInvertHeading)
+		_invertheadingstate = _invertheadingstateDefault
+		SetToggleOptionValue(a_option, _invertheadingstate)
+	endIf
+endEvent
+
 event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl, string a_conflictName)
 	{Called when a key has been remapped}
 
-	if (a_option == _keymapOID_K)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
-			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
-
-			continue = ShowMessage(msg, true, "$Yes", "$No")
+	bool continue = true
+	if (a_conflictControl != "" && a_keyCode != 1)
+		string msg
+		if (a_conflictName != "")
+			msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+		else
+			msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
 		endIf
 
-		if (continue)
+		continue = ShowMessage(msg, true, "$Yes", "$No")
+	endIf
+
+	; clear if escape key
+	if (a_keyCode == 1)
+		a_keyCode = -1
+	endIf
+
+	if (continue)
+		if (a_option == _keymapOID_K)
+			controlScript.removeBinding(_myKey)
 			_myKey = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K2)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K2)
+			controlScript.removeBinding(_myKey2)
 			_myKey2 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding2(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K3)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K3)
+			controlScript.removeBinding(_myKey3)
 			_myKey3 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding3(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K4)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K4)
+			controlScript.removeBinding(_myKey4)
 			_myKey4 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding4(a_keyCode)
-		endIf
-	endIf
-	
-	if (a_option == _keymapOID_K5)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K5)
+			controlScript.removeBinding(_myKey5)
 			_myKey5 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding5(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K6)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K6)
+			controlScript.removeBinding(_myKey6)
 			_myKey6 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding6(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K7)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K7)
+			controlScript.removeBinding(_myKey7)
 			_myKey7 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding7(a_keyCode)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 	endIf
 endEvent
