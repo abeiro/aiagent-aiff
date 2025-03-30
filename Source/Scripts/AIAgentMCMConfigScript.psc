@@ -72,21 +72,6 @@ int			_toggle1OID_Rereg
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
 
-int			_toggleResetNPC
-int			_toggleAddAllNowNPC
-
-int			_toggleAddAllNPC 
-bool		_toggleAddAllNPCState			= false
-
-int			_slider_max_distance_inside
-float		_max_distance_inside		= 1200.0
-
-int			_slider_max_distance_outside
-float		_max_distance_outside		= 2400.0
-
-int			_slider_bored_period
-float		_bored_period		= 60.0
-
 ; default settings
 int			_myKeyDefault					= -1
 int			_myKey2Default					= -1
