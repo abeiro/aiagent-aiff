@@ -72,6 +72,9 @@ int			_toggle1OID_Rereg
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
 
+int			_togglePauseDialogue
+bool		_pauseDialogueState			= false
+
 ; default settings
 int			_myKeyDefault					= -1
 int			_myKey2Default					= -1
@@ -91,6 +94,7 @@ float		_lip_intDefault					= 1.0
 float		_timeout_intDefault				= 30.0
 bool		_animationstateDefault			= false
 bool		_invertheadingstateDefault		= false
+bool		_pauseDialogueStateDefault		= false
 
 event OnConfigInit()
 	ModName="CHIM"
@@ -194,6 +198,7 @@ event OnPageReset(string a_page)
 		_slider_lip_int			= AddSliderOption("Intensity of lip anim ",_lip_int,"{1}" )
 		;AddEmptyOption();
 		_toggleInvertHeading	= AddToggleOption("3D sound invert heading",_invertheadingstate)
+		_togglePauseDialogue	= AddToggleOption("Pause dialogue during game pauses",_pauseDialogueState)
 	
 	endif
 
@@ -317,6 +322,13 @@ event OnGameReload()
 	else
 		controlScript.setConf("_animations",0)
 	endif
+	
+	if (_pauseDialogueState)
+		controlScript.setConf("_pause_dialogue_when_menu_open",1)
+	else
+		controlScript.setConf("_pause_dialogue_when_menu_open",0)
+	endif
+	
 	controlScript.setSoulgazeModeNative(_toggleState7 as Int)
 	
 endEvent
@@ -407,6 +419,10 @@ event OnOptionDefault(int a_option)
 	elseif (a_option == _toggleInvertHeading)
 		_invertheadingstate = _invertheadingstateDefault
 		SetToggleOptionValue(a_option, _invertheadingstate)
+
+	elseif (a_option == _togglePauseDialogue)
+		_pauseDialogueState = _pauseDialogueStateDefault
+		SetToggleOptionValue(a_option, _pauseDialogueState)
 	endIf
 endEvent
 
@@ -570,6 +586,18 @@ event OnOptionSelect(int a_option)
 		
 		SetToggleOptionValue(a_option, _invertheadingstate)
 	endIf
+
+	if (a_option == _togglePauseDialogue)
+		_pauseDialogueState = !_pauseDialogueState
+		
+		if (_pauseDialogueState)
+			controlScript.setConf("_pause_dialogue_when_menu_open",1)
+		else
+			controlScript.setConf("_pause_dialogue_when_menu_open",0)
+		endif
+		
+		SetToggleOptionValue(a_option, _pauseDialogueState)
+	endIf
 endEvent
 
 event OnOptionHighlight(int a_option)
@@ -643,5 +671,9 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _toggleInvertHeading)
 		SetInfoText("When using 3D sound, try inverting the heading. This may resolve issues where NPCs in front are heard at a lower volume.")
+	endIf
+
+	if (a_option == _togglePauseDialogue)
+		SetInfoText("Enable to pause dialogue during game pauses. Disable to allow dialogue to continue during game pauses.")
 	endIf
 endEvent
