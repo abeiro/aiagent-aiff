@@ -234,47 +234,47 @@ Event OnUpdate()
     EndIf
 Endevent
 
-bool Function removeBinding(int keycode) 
+Function removeBinding(int keycode) 
 	UnregisterForKey(keycode)
 EndFunction
 
-bool Function doBinding(int keycode) 
+Function doBinding(int keycode) 
 	_currentKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding2(int keycode) 
+Function doBinding2(int keycode) 
 	
 	_currentKeyVoice=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding3(int keycode) 
+Function doBinding3(int keycode) 
 	
 	_currentFollowKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding4(int keycode) 
+Function doBinding4(int keycode) 
 	
 	_currentDiaryKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding5(int keycode) 
+Function doBinding5(int keycode) 
 	
 	_currentCModelKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding6(int keycode) 
+Function doBinding6(int keycode) 
 	
 	_currentCSoulgaze=keycode
 	RegisterForKey(keycode)
 
 EndFunction
 
-bool Function doBinding7(int keycode) 
+Function doBinding7(int keycode) 
 	
 	_currentCtl=keycode
 	RegisterForKey(keycode)
