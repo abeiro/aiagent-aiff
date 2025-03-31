@@ -72,6 +72,11 @@ int			_toggle1OID_Rereg
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
 
+int			_togglePauseDialogue
+bool		_pauseDialogueState			= false
+
+
+; Auto Activate related
 int			_toggleResetNPC
 int			_toggleAddAllNowNPC
 
@@ -87,20 +92,45 @@ float		_max_distance_outside		= 2400.0
 int			_slider_bored_period
 float		_bored_period		= 60.0
 
-int _toggleRechat_policy_asap
-bool  _rechat_policy_asap = true
+int 		_toggleRechat_policy_asap
+bool  		_rechat_policy_asap = true
 
-int _toggle_npc_go_near
-bool  _toggle_npc_go_near_state = true
+int 		_toggle_npc_go_near
+bool  		_toggle_npc_go_near_state = true
+
+; default settings
+int			_myKeyDefault					= -1
+int			_myKey2Default					= -1
+int			_myKey3Default					= -1
+int			_myKey4Default					= -1
+int			_myKey5Default					= -1
+int			_myKey6Default					= -1
+int			_myKey7Default					= -1
+bool		_toggleState2Default			= false
+float		_sound_volumeDefault			= 75.0
+float		_sound_preclipDefault			= 100.0
+float		_sound_postclipDefault			= 0.0
+float		_sound_dsDefault				= 1.0
+bool		_toggleState7Default			= true
+float		_lip_resDefault					= 500.0
+float		_lip_intDefault					= 1.0
+float		_timeout_intDefault				= 30.0
+bool		_animationstateDefault			= false
+bool		_invertheadingstateDefault		= false
+bool		_pauseDialogueStateDefault		= false
+
 
 event OnConfigInit()
 	ModName="CHIM"
-	Pages = new string[3]
+	Pages = new string[2]
 	Pages[0] = "Main"
 	Pages[1] = "Behavior"
 	Pages[2] = "Sound"
 	
-	Debug.Notification("[CHIM] Updating menu ... v3.5");
+
+	Debug.Trace("CHIM: OnConfigInit")
+	Debug.Notification("[CHIM] Updating menu ... v3.7");
+	
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
 	_sound_volume				= 75 
@@ -130,6 +160,7 @@ event OnConfigInit()
 	endIf
 	
 	if (CurrentVersion<37)
+		_bored_period=60
 		StorageUtil.SetIntValue(None, "AIAgentNpcWalkNear",1);
 		_toggle_npc_go_near_state=true
 	endIf
@@ -138,16 +169,25 @@ event OnConfigInit()
 endEvent
 
 int function GetVersion()
+
 	return 37
+
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
 	if (a_version >= 2 && CurrentVersion < 37)
 		OnConfigInit()
+		
+		; Clear any AutoActivate related settings from existing saves
+		if (CurrentVersion < 37)
+			controlScript.setConf("_max_distance_inside", 0.0)
+			controlScript.setConf("_max_distance_outside", 0.0)
+			controlScript.setConf("_bored_period", 60)
+			controlScript.setConf("_toggleAddAllNPC", 0)
+		endif
 	endIf
-
-
 endEvent
 
 
@@ -186,6 +226,7 @@ event OnPageReset(string a_page)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
 	
+
 	if (a_page=="Behavior")
 		_toggleAddAllNPC		= AddToggleOption("Auto Activate ON/OFF", _toggleAddAllNPCState)
 		AddEmptyOption();
@@ -216,7 +257,11 @@ event OnPageReset(string a_page)
 		_slider_lip_res	= AddSliderOption("Resolution of lip anim.",_lip_res,"{0}" )
 		_slider_lip_int			= AddSliderOption("Intensity of lip anim ",_lip_int,"{1}" )
 		;AddEmptyOption();
-		
+
+
+		_toggleInvertHeading	= AddToggleOption("3D sound invert heading",_invertheadingstate)
+		_togglePauseDialogue	= AddToggleOption("Pause dialogue during game pauses",_pauseDialogueState)
+
 	
 	endif
 
@@ -291,6 +336,7 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogRange(15, 600)
 		SetSliderDialogInterval(1)
 	endIf
+	
 endEvent
 
 event OnOptionSliderAccept(int a_option, float a_value)
@@ -350,6 +396,7 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
 	
+	
 endEvent
 	
 	
@@ -373,6 +420,7 @@ event OnGameReload()
 	controlScript.setConf("_lip_res",_lip_res)
 	controlScript.setConf("_timeout",_timeout_int)
 
+
 	controlScript.setConf("_max_distance_inside",_max_distance_inside)
 	controlScript.setConf("_max_distance_outside",_max_distance_outside)
 	
@@ -389,172 +437,208 @@ event OnGameReload()
 	else
 		controlScript.setConf("_rechat_policy_asap",0)
 	endif
+
 	
 	if (_animationstate)
 		controlScript.setConf("_animations",1)
 	else
 		controlScript.setConf("_animations",0)
 	endif
+	
+	if (_pauseDialogueState)
+		controlScript.setConf("_pause_dialogue_when_menu_open",1)
+	else
+		controlScript.setConf("_pause_dialogue_when_menu_open",0)
+	endif
+	
 	controlScript.setSoulgazeModeNative(_toggleState7 as Int)
+	
+endEvent
+
+event OnOptionDefault(int a_option)
+	if (a_option == _keymapOID_K)
+		controlScript.removeBinding(_myKey)
+		_myKey = _myKeyDefault
+		SetKeymapOptionValue(a_option, _myKey)
+		controlScript.doBinding(_myKey)
+
+	elseif (a_option == _keymapOID_K2)
+		controlScript.removeBinding(_myKey2)
+		_myKey2 = _myKey2Default
+		SetKeymapOptionValue(a_option, _myKey2)
+		controlScript.doBinding2(_myKey2)
+
+	elseif (a_option == _keymapOID_K3)
+		controlScript.removeBinding(_myKey3)
+		_myKey3 = _myKey3Default
+		SetKeymapOptionValue(a_option, _myKey3)
+		controlScript.doBinding3(_myKey3)
+
+	elseif (a_option == _keymapOID_K4)
+		controlScript.removeBinding(_myKey4)
+		_myKey4 = _myKey4Default
+		SetKeymapOptionValue(a_option, _myKey4)
+		controlScript.doBinding4(_myKey4)
+
+	elseif (a_option == _keymapOID_K5)
+		controlScript.removeBinding(_myKey5)
+		_myKey5 = _myKey5Default
+		SetKeymapOptionValue(a_option, _myKey5)
+		controlScript.doBinding5(_myKey5)
+
+	elseif (a_option == _keymapOID_K6)
+		controlScript.removeBinding(_myKey6)
+		_myKey6 = _myKey6Default
+		SetKeymapOptionValue(a_option, _myKey6)
+		controlScript.doBinding6(_myKey6)
+
+	elseif (a_option == _keymapOID_K7)
+		controlScript.removeBinding(_myKey7)
+		_myKey7 = _myKey7Default
+		SetKeymapOptionValue(a_option, _myKey7)
+		controlScript.doBinding7(_myKey7)
+
+	elseif (a_option == _toggle1OID_C)
+		_toggleState2 = _toggleState2Default
+		SetToggleOptionValue(a_option, _toggleState2)
+
+	elseif (a_option == _slider_timeout)
+		_timeout_int = _timeout_intDefault
+		SetSliderOptionValue(a_option, _timeout_int, "{1}")
+
+	elseif (a_option == _toggleAnimation)
+		_animationstate = _animationstateDefault
+		SetToggleOptionValue(a_option, _animationstate)
+
+	elseif (a_option == _toggle1OID_E)
+		_toggleState7 = _toggleState7Default
+		SetToggleOptionValue(a_option, _toggleState7)
+
+	elseif (a_option == _slider_volume)
+		_sound_volume = _sound_volumeDefault
+		SetSliderOptionValue(a_option, _sound_volume, "{1}")
+
+	elseif (a_option == _slider_ds)
+		_sound_ds = _sound_dsDefault
+		SetSliderOptionValue(a_option, _sound_ds, "{1}")
+
+	elseif (a_option == _slider_preclip)
+		_sound_preclip = _sound_preclipDefault
+		SetSliderOptionValue(a_option, _sound_preclip, "{1}")
+
+	elseif (a_option == _slider_postclip)
+		_sound_postclip = _sound_postclipDefault
+		SetSliderOptionValue(a_option, _sound_postclip, "{1}")
+
+	elseif (a_option == _slider_lip_res)
+		_lip_res = _lip_resDefault
+		SetSliderOptionValue(a_option, _lip_res, "{1}")
+
+	elseif (a_option == _slider_lip_int)
+		_lip_int = _lip_intDefault
+		SetSliderOptionValue(a_option, _lip_int, "{1}")
+
+	elseif (a_option == _toggleInvertHeading)
+		_invertheadingstate = _invertheadingstateDefault
+		SetToggleOptionValue(a_option, _invertheadingstate)
+
+	elseif (a_option == _togglePauseDialogue)
+		_pauseDialogueState = _pauseDialogueStateDefault
+		SetToggleOptionValue(a_option, _pauseDialogueState)
+	endIf
 	
 endEvent
 
 event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl, string a_conflictName)
 	{Called when a key has been remapped}
 
-	if (a_option == _keymapOID_K)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
-			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
-
-			continue = ShowMessage(msg, true, "$Yes", "$No")
+	bool continue = true
+	if (a_conflictControl != "" && a_keyCode != 1)
+		string msg
+		if (a_conflictName != "")
+			msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+		else
+			msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
 		endIf
 
-		if (continue)
+		continue = ShowMessage(msg, true, "$Yes", "$No")
+	endIf
+
+	; clear if escape key
+	if (a_keyCode == 1)
+		a_keyCode = -1
+	endIf
+
+	if (continue)
+		if (a_option == _keymapOID_K)
+			controlScript.removeBinding(_myKey)
 			_myKey = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K2)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K2)
+			controlScript.removeBinding(_myKey2)
 			_myKey2 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding2(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K3)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K3)
+			controlScript.removeBinding(_myKey3)
 			_myKey3 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding3(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K4)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K4)
+			controlScript.removeBinding(_myKey4)
 			_myKey4 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding4(a_keyCode)
-		endIf
-	endIf
-	
-	if (a_option == _keymapOID_K5)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K5)
+			controlScript.removeBinding(_myKey5)
 			_myKey5 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding5(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K6)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K6)
+			controlScript.removeBinding(_myKey6)
 			_myKey6 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding6(a_keyCode)
-		endIf
-	endIf
-	if (a_option == _keymapOID_K7)
-
-		bool continue = true
-
-		if (a_conflictControl != "")
-			string msg
-
-			if (a_conflictName != "")
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n(" + a_conflictName + ")\n\nAre you sure you want to continue?"
+			if (a_keyCode == -1)
+				ForcePageReset()
 			else
-				msg = "This key is already mapped to:\n'" + a_conflictControl + "'\n\nAre you sure you want to continue?"
-			endIf
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 
-			continue = ShowMessage(msg, true, "$Yes", "$No")
-		endIf
-
-		if (continue)
+		elseif (a_option == _keymapOID_K7)
+			controlScript.removeBinding(_myKey7)
 			_myKey7 = a_keyCode
-			SetKeymapOptionValue(a_option, a_keyCode)
 			controlScript.doBinding7(a_keyCode)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 	endIf
 endEvent
@@ -614,16 +698,6 @@ event OnOptionSelect(int a_option)
 		ShowMessage("Close menu")
 	endIf
 	
-	if (a_option == _toggleResetNPC)
-		AIAgentFunctions.testRemoveAll()
-		ShowMessage("Done")
-	endIf
-	
-	if (a_option == _toggleAddAllNowNPC)
-		AIAgentFunctions.testAddAllNPCAround()
-		ShowMessage("Done")
-	endIf
-	
 	if (a_option == _toggleInvertHeading)
 		_invertheadingstate = !_invertheadingstate
 		
@@ -635,17 +709,17 @@ event OnOptionSelect(int a_option)
 		
 		SetToggleOptionValue(a_option, _invertheadingstate)
 	endIf
-	
-	if (a_option == _toggleAddAllNPC)
-		_toggleAddAllNPCState = !_toggleAddAllNPCState
+
+	if (a_option == _togglePauseDialogue)
+		_pauseDialogueState = !_pauseDialogueState
 		
-		if (_toggleAddAllNPCState)
-			controlScript.setConf("_toggleAddAllNPC",1)
+		if (_pauseDialogueState)
+			controlScript.setConf("_pause_dialogue_when_menu_open",1)
 		else
-			controlScript.setConf("_toggleAddAllNPC",0)
+			controlScript.setConf("_pause_dialogue_when_menu_open",0)
 		endif
 		
-		SetToggleOptionValue(a_option, _toggleAddAllNPCState)
+		SetToggleOptionValue(a_option, _pauseDialogueState)
 	endIf
 	
 	if (a_option == _toggleRechat_policy_asap)
@@ -745,10 +819,11 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _toggleInvertHeading)
 		SetInfoText("When using 3D sound, try inverting the heading. This may resolve issues where NPCs in front are heard at a lower volume. (Need people to help solve this)")
 	endIf
-	
-	if (a_option == _toggleResetNPC)
-		SetInfoText("Removes all NPCs from framework. Confs and Bios are kept untouched")
+
+	if (a_option == _togglePauseDialogue)
+		SetInfoText("Enable to pause dialogue during game pauses. Disable to allow dialogue to continue during game pauses.")
 	endIf
+
 	
 	if (a_option == _toggleAddAllNowNPC)
 		SetInfoText("Will add (almost) all NPCs around to framework. Will be executed once right now.")
@@ -778,4 +853,5 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("When enabled, NPCs subtly walk toward the player to avoid having dialogues occur too far away. Only works when player is sitting")
 	endIf
 	
+
 endEvent
