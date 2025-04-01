@@ -520,6 +520,9 @@ function LookAt(Actor npc,Actor target) global
 	else 
 		Debug.Trace("[CHIM] LookAt on Player, avoiding");
 	endif
+	
+	
+	
 endFunction
 
 function PlayIdle(Actor npc,int animation) global
@@ -640,6 +643,15 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 		GetIntoConversation(npc,listener); if speaker is too far away, Move speaker to listener if listener near to player, if not, move to player 
 
 	endif
+	
+	
+	PlaceCam(npc)
+	
+	;Game.DisablePlayerControls(abMovement = true, abFighting = true, abCamSwitch = true, abLooking = true, abSneaking = true, abMenu = true, abActivate = true, abJournalTabs = false, aiDisablePOVType = 0)
+	
+	;Utility.wait(1);
+	;Game.EnablePlayerControls()
+	
 endFunction
 
 function FakeDialogue(Actor npc,int animation,int movehead) global
@@ -662,6 +674,8 @@ function FakeDialogue(Actor npc,int animation,int movehead) global
 		;Debug.SendAnimationEvent(npc, "IdleDialogueExpressiveStart")
 	EndIf
 
+	PlaceCam(npc);
+	
 endFunction
 
 
@@ -1385,14 +1399,30 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 EndFunction
 
 
-function placeCam(Actor npc,Actor listener) global
+function PlaceCam(Actor npc) global
 
 	
-	Game.DisablePlayerControls(abMovement = true, abFighting = true, abCamSwitch = true,  abLooking = true, abSneaking = true, abMenu = true, abActivate = true, abJournalTabs = false)
-
-	Game.SetCameraTarget(npc) 
+	int isActive=StorageUtil.GetIntValue(None, "AIAgentAutoFocusOnSit",1);
+	if (!isActive)
+		return
+	endif
 	
-	MIscUtil.ToggleFreeCamera();
+	if (Game.GetPlayer().GetSitState()==0) ; Dont use feature if player is not sitting
+		return;
+	endif
+	
+	Actor player = Game.GetPlayer()
+    ; Get the angle between the player and the NPC
+    float angleToNPC = player.GetHeadingAngle(npc)
+    ; Adjust the player's angle to face the NPC
+	if (Math.abs(angleToNPC)>10)
+		if (angleToNPC>80)
+			angleToNPC=80;
+		elseif (angleToNPC<-80)
+			angleToNPC=-80;
+		endif;
+		Game.SetSittingRotation(angleToNPC)
+	endif
 	
 	Debug.Trace("[CHIM] Camera focus on "+npc.GetName())
 
@@ -1401,7 +1431,7 @@ EndFunction
 
 function resetCam() global
 	
-	Game.EnablePlayerControls()
+	
 		
 	
 endFunction

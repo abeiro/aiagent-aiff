@@ -98,6 +98,11 @@ bool  		_rechat_policy_asap = true
 int 		_toggle_npc_go_near
 bool  		_toggle_npc_go_near_state = true
 
+
+int 		_toggle_autofocus_on_sit
+bool  		_toggle_autofocus_on_sit_state = false
+
+
 ; default settings
 int			_myKeyDefault					= -1
 int			_myKey2Default					= -1
@@ -122,7 +127,7 @@ bool		_pauseDialogueStateDefault		= false
 
 event OnConfigInit()
 	ModName="CHIM"
-	Pages = new string[2]
+	Pages = new string[3]
 	Pages[0] = "Main"
 	Pages[1] = "Behavior"
 	Pages[2] = "Sound"
@@ -165,12 +170,18 @@ event OnConfigInit()
 		_toggle_npc_go_near_state=true
 	endIf
 	
+	if (CurrentVersion<38)
+		_toggle_autofocus_on_sit=0
+		StorageUtil.SetIntValue(None, "AIAgentAutoFocusOnSit",0);
+		_toggle_autofocus_on_sit_state=false
+	endIf
+	
 	ConsoleUtil.ExecuteCommand("setstage SKI_ConfigManagerInstance 1")
 endEvent
 
 int function GetVersion()
 
-	return 37
+	return 38
 
 endFunction
 
@@ -241,6 +252,7 @@ event OnPageReset(string a_page)
 		_slider_max_distance_outside	= AddSliderOption("Distance (exteriors) to AI controlled speech",_max_distance_outside,"{0}" )
 		
 		_toggle_npc_go_near	= AddToggleOption("NPCs walk near player", _toggle_npc_go_near_state)
+		_toggle_autofocus_on_sit	= AddToggleOption("Autofocus on sitting", _toggle_autofocus_on_sit_state)
 	endif
 	
 
@@ -259,7 +271,7 @@ event OnPageReset(string a_page)
 		;AddEmptyOption();
 
 
-		_toggleInvertHeading	= AddToggleOption("3D sound invert heading",_invertheadingstate)
+		
 		_togglePauseDialogue	= AddToggleOption("Pause dialogue during game pauses",_pauseDialogueState)
 
 	
@@ -745,6 +757,40 @@ event OnOptionSelect(int a_option)
 
 	endif
 	
+	if (a_option == _toggle_autofocus_on_sit)
+		_toggle_autofocus_on_sit_state = !_toggle_autofocus_on_sit_state
+		if (_toggle_autofocus_on_sit_state)
+			StorageUtil.SetIntValue(None, "AIAgentAutoFocusOnSit",1);
+		else
+			StorageUtil.SetIntValue(None, "AIAgentAutoFocusOnSit",0);
+		endif
+		SetToggleOptionValue(a_option, _toggle_autofocus_on_sit_state)
+
+	endif
+	
+	if (a_option == _toggleAddAllNPC)
+ 		_toggleAddAllNPCState = !_toggleAddAllNPCState
+ 
+ 		if (_toggleAddAllNPCState)
+ 			controlScript.setConf("_toggleAddAllNPC",1)
+ 		else
+ 			controlScript.setConf("_toggleAddAllNPC",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggleAddAllNPCState)
+ 	endIf
+	
+	if (a_option == _toggleResetNPC)
+ 		AIAgentFunctions.testRemoveAll()
+ 		ShowMessage("Done")
+ 	endIf
+ 
+ 	if (a_option == _toggleAddAllNowNPC)
+ 		AIAgentFunctions.testAddAllNPCAround()
+ 		ShowMessage("Done")
+ 	endIf
+	
+	
 endEvent
 
 event OnOptionHighlight(int a_option)
@@ -841,6 +887,10 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Will add automagically (almost) all NPCs around to framework. ")
 	endIf
 	
+	if (a_option == _toggleResetNPC)
+ 		SetInfoText("Removes all NPCs from framework. Confs and Bios are kept untouched")
+ 	endIf
+	
 	if (a_option == _slider_bored_period)
 		SetInfoText("A bored event (random NPC will start to talk) every x seconds.")
 	endIf
@@ -851,6 +901,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _toggle_npc_go_near)
 		SetInfoText("When enabled, NPCs subtly walk toward the player to avoid having dialogues occur too far away. Only works when player is sitting")
+	endIf
+	
+	if (a_option == _toggle_autofocus_on_sit)
+		SetInfoText("Rotate camera to talking NPC, works only when player is sitting and in 1st person")
 	endIf
 	
 
