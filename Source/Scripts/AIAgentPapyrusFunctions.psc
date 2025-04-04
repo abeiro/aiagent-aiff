@@ -8,6 +8,8 @@ int			_currentDiaryKey
 int			_currentCModelKey
 int 		_currentCSoulgaze
 int 		_currentCtl
+int 		_currentGodmodeKey
+bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
 
@@ -27,7 +29,12 @@ EndEvent
 Event OnKeyUp(int keyCode, float holdTime)
 	If(keyCode == _currentKeyVoice)
 		if (!UI.IsMenuOpen("Book Menu"))
-			AIAgentFunctions.stopRecording(_currentKeyVoice)
+			int externalSTTactive=StorageUtil.GetIntValue(None, "AIAgentWebSockeSTT");
+			if (externalSTTactive>0)
+				AIAgentSTTExternal.stopRecording(_currentKeyVoice)
+			else
+				AIAgentFunctions.stopRecording(_currentKeyVoice)
+			endif
 			;WebSocketSTT.StopRecordVoice(_currentKeyVoice);
 			Debug.Notification("[CHIM] Recording end");
 		endif
@@ -57,7 +64,13 @@ Event OnKeyDown(int keyCode)
 		;Debug.Notification("[CHIM] lazy reader...");
 		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
 	else
-        AIAgentFunctions.recordSoundEx(_currentKeyVoice)
+		int externalSTTactive=StorageUtil.GetIntValue(None, "AIAgentWebSockeSTT");
+		if (externalSTTactive>0)
+			AIAgentSTTExternal.recordSoundEx(_currentKeyVoice)
+		else
+			AIAgentFunctions.recordSoundEx(_currentKeyVoice)
+		endif
+        
 		;WebSocketSTT.StartRecordVoice(_currentKeyVoice);
 		Debug.Notification("[CHIM] recording....");
 	endif
@@ -198,6 +211,16 @@ Event OnKeyDown(int keyCode)
 	
   EndIf
   
+  If(keyCode == _currentGodmodeKey)
+	_currentGodmodeStatus=!_currentGodmodeStatus
+	if (_currentGodmodeStatus)
+		setConf("_godmode",1);
+	else
+		setConf("_godmode",0);	
+	endif
+	
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -277,6 +300,12 @@ EndFunction
 bool Function doBinding7(int keycode) 
 	
 	_currentCtl=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+bool Function doBinding8(int keycode) 
+	
+	_currentGodmodeKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

@@ -102,6 +102,25 @@ bool  		_toggle_npc_go_near_state = true
 int 		_toggle_autofocus_on_sit
 bool  		_toggle_autofocus_on_sit_state = false
 
+int 		_toggle_usewebsocketstt
+bool  		_toggle_usewebsocketstt_state = false
+
+
+int 		_toggle_restrict_onscene
+bool  		_toggle_restrict_onscene_state = false
+
+
+int 		_toggle_autoadd_hostile
+bool  		_toggle_autoadd_hostile_state = false
+
+
+int 		_toggle_autoadd_allraces
+bool  		_toggle_autoadd_allraces_state = false
+
+
+int			_keymap_godmode
+int			_godmode_key					= -1
+
 
 ; default settings
 int			_myKeyDefault					= -1
@@ -176,19 +195,38 @@ event OnConfigInit()
 		_toggle_autofocus_on_sit_state=false
 	endIf
 	
+	if (CurrentVersion<39)
+		_toggle_usewebsocketstt=0 
+		StorageUtil.SetIntValue(None, "AIAgentWebSockeSTT",0);
+		_toggle_usewebsocketstt_state=false
+		
+
+		controlScript.setConf("_restrict_onscene",0)
+		_toggle_restrict_onscene=0 
+		_toggle_restrict_onscene_state=false;
+	endIf
+	
+	if (CurrentVersion<41)
+		controlScript._currentGodmodeStatus=false
+		controlScript.setConf("_godmode",0)
+		controlScript.setConf("_autoadd_hostile",0)
+		controlScript.setConf("_autoadd_allraces",0)
+	endIf
+
+	
 	ConsoleUtil.ExecuteCommand("setstage SKI_ConfigManagerInstance 1")
 endEvent
 
 int function GetVersion()
 
-	return 38
+	return 41
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
 
-	if (a_version >= 2 && CurrentVersion < 37)
+	if (a_version >= 2 && CurrentVersion < 38)
 		OnConfigInit()
 		
 		; Clear any AutoActivate related settings from existing saves
@@ -234,6 +272,7 @@ event OnPageReset(string a_page)
 		_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
+		_keymap_godmode		= AddKeyMapOption("AI God Mode", _godmode_key)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
 	
@@ -253,6 +292,15 @@ event OnPageReset(string a_page)
 		
 		_toggle_npc_go_near	= AddToggleOption("NPCs walk near player", _toggle_npc_go_near_state)
 		_toggle_autofocus_on_sit	= AddToggleOption("Autofocus on sitting", _toggle_autofocus_on_sit_state)
+		
+		_toggle_restrict_onscene	= AddToggleOption("Restrict Actors On Scene", _toggle_restrict_onscene_state)
+		AddEmptyOption();
+		AddHeaderOption("Auto Activate Options")	
+		AddEmptyOption();
+		_toggle_autoadd_hostile	= AddToggleOption("Add Hostile NPCs", _toggle_autoadd_hostile_state)
+		AddEmptyOption(); 
+		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
+		
 	endif
 	
 
@@ -268,11 +316,10 @@ event OnPageReset(string a_page)
 		
 		_slider_lip_res	= AddSliderOption("Resolution of lip anim.",_lip_res,"{0}" )
 		_slider_lip_int			= AddSliderOption("Intensity of lip anim ",_lip_int,"{1}" )
-		;AddEmptyOption();
-
-
 		
+		;AddEmptyOption();
 		_togglePauseDialogue	= AddToggleOption("Pause dialogue during game pauses",_pauseDialogueState)
+		_toggle_usewebsocketstt			= AddToggleOption("Use WebSocket STT",_toggle_usewebsocketstt_state)
 
 	
 	endif
@@ -463,7 +510,22 @@ event OnGameReload()
 		controlScript.setConf("_pause_dialogue_when_menu_open",0)
 	endif
 	
+	if (_toggle_autoadd_hostile_state)
+		controlScript.setConf("_autoadd_hostile",1)
+	else
+		controlScript.setConf("_autoadd_hostile",0)
+	endif
+	
+	if (_toggle_autoadd_allraces_state)
+		controlScript.setConf("_autoadd_allraces",1)
+	else
+		controlScript.setConf("_autoadd_allraces",0)
+	endif
+	
 	controlScript.setSoulgazeModeNative(_toggleState7 as Int)
+	
+	controlScript.setConf("_godmode",0)
+	controlScript._currentGodmodeStatus=false
 	
 endEvent
 
@@ -651,7 +713,17 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_godmode)
+			controlScript.removeBinding(_godmode_key)
+			_godmode_key = a_keyCode
+			controlScript.doBinding8(_godmode_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif	
 		endIf
+		
 	endIf
 endEvent
 
@@ -698,9 +770,9 @@ event OnOptionSelect(int a_option)
 		_animationstate = !_animationstate
 		
 		if (_animationstate)
-			controlScript.setConf("_animations",1)
+			bool r=controlScript.setConf("_animations",1)
 		else
-			controlScript.setConf("_animations",0)
+			bool r=controlScript.setConf("_animations",0)
 		endif
 		
 		SetToggleOptionValue(a_option, _animationstate)
@@ -790,6 +862,54 @@ event OnOptionSelect(int a_option)
  		ShowMessage("Done")
  	endIf
 	
+	
+	if (a_option == _toggle_restrict_onscene)
+ 		_toggle_restrict_onscene_state = !_toggle_restrict_onscene_state
+ 
+ 		if (_toggle_restrict_onscene_state)
+ 			controlScript.setConf("_restrict_onscene",1)
+ 		else
+ 			controlScript.setConf("_restrict_onscene",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_restrict_onscene_state)
+ 	endIf
+	
+	if (a_option == _toggle_usewebsocketstt)
+ 		_toggle_usewebsocketstt_state = !_toggle_usewebsocketstt_state
+ 
+ 		if (_toggle_usewebsocketstt_state)
+			StorageUtil.SetIntValue(None, "AIAgentWebSockeSTT",1);
+ 		else
+ 			StorageUtil.SetIntValue(None, "AIAgentWebSockeSTT",0);
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_usewebsocketstt_state)
+ 	endIf
+	
+	if (a_option == _toggle_autoadd_hostile)
+ 		_toggle_autoadd_hostile_state = !_toggle_autoadd_hostile_state
+ 
+ 		if (_toggle_autoadd_hostile_state)
+ 			controlScript.setConf("_autoadd_hostile",1)
+ 		else
+ 			controlScript.setConf("_autoadd_hostile",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_autoadd_hostile_state)
+ 	endIf
+	
+	if (a_option == _toggle_autoadd_allraces)
+ 		_toggle_autoadd_allraces_state = !_toggle_autoadd_allraces_state
+ 
+ 		if (_toggle_autoadd_allraces_state)
+ 			controlScript.setConf("_autoadd_allraces",1)
+ 		else
+ 			controlScript.setConf("_autoadd_allraces",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_autoadd_allraces_state)
+ 	endIf
 	
 endEvent
 
@@ -905,6 +1025,26 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _toggle_autofocus_on_sit)
 		SetInfoText("Rotate camera to talking NPC, works only when player is sitting and in 1st person")
+	endIf
+	
+	if (a_option == _toggle_restrict_onscene)
+		SetInfoText("When activated, NPCs running a scene will not be selected for AI speech unless directly addressed using 'Hey Dude' or targeted under the crosshair")
+	endIf
+	
+	if (a_option == _toggle_usewebsocketstt)
+		SetInfoText("Use WebSocket STT. External plugin needed.")
+	endIf
+	
+	if (a_option == _keymap_godmode)
+		SetInfoText("This is a switch to enter/leave 'AI god mode'")
+	endIf
+	
+	if (a_option == _toggle_autoadd_hostile)
+		SetInfoText("Auto activate policy, By default, it applies to non-hostile NPCs whose race allows player dialogue (PC Dialogue = 1).Check this to allow auto activate hostile NPCs")
+	endIf
+	
+	if (a_option == _toggle_autoadd_allraces)
+		SetInfoText("Auto activate policy, By default, it applies to non-hostile NPCs whose race allows player dialogue (PC Dialogue = 1).Check this to allow auto activate all races")
 	endIf
 	
 

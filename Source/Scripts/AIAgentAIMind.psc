@@ -46,9 +46,10 @@ function ResetPackages(Actor npc) global
 
 
 endFunction
+
 function PlayerFollowStart() global
 
-	
+
 
 endFunction
 
@@ -521,9 +522,9 @@ function LookAt(Actor npc,Actor target) global
 		Debug.Trace("[CHIM] LookAt on Player, avoiding");
 	endif
 	
-	
-	
 endFunction
+
+
 
 function PlayIdle(Actor npc,int animation) global
 
@@ -644,8 +645,8 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 
 	endif
 	
-	
-	PlaceCam(npc)
+	PlaceCam(npc);
+	;PlaceCam(npc)
 	
 	;Game.DisablePlayerControls(abMovement = true, abFighting = true, abCamSwitch = true, abLooking = true, abSneaking = true, abMenu = true, abActivate = true, abJournalTabs = false, aiDisablePOVType = 0)
 	
@@ -1411,20 +1412,72 @@ function PlaceCam(Actor npc) global
 		return;
 	endif
 	
+	Actor lastCamActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitLastActor",None) as Actor;
+	if (lastCamActor==npc && false) ; activate to update cam per speech, not per spech line
+		return
+	endif;
+	
+	StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitLastActor",npc);
+	
 	Actor player = Game.GetPlayer()
-    ; Get the angle between the player and the NPC
+    ; Simple camera rotation to point view to speaker
     float angleToNPC = player.GetHeadingAngle(npc)
     ; Adjust the player's angle to face the NPC
-	if (Math.abs(angleToNPC)>10)
+	if (Math.abs(angleToNPC)>10 )
 		if (angleToNPC>80)
 			angleToNPC=80;
 		elseif (angleToNPC<-80)
 			angleToNPC=-80;
 		endif;
-		Game.SetSittingRotation(angleToNPC)
+		
+		Game.SetSittingRotation(angleToNPC)	
+    
+		
 	endif
+
+	; Tesst code. Never fully worked.
+	if (false)
+		float distanceOffset=100
+		Actor cameraActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",None) as Actor;
+		if (!cameraActor)
+			ActorBase newActorBase = Game.GetFormFromFile(0x0278d6,"AIAgent.esp") as ActorBase 
+			newActorBase.SetHeight(1);
+			ObjectReference newCameraReference = Game.GetPlayer().PlaceAtMe(newActorBase, 1, false, true)
+			cameraActor=newCameraReference as Actor
+			cameraActor.Enable();
+			cameraActor.SetAlpha(0)
+			cameraActor.EnableAI(false)		
+			Game.SetCameraTarget(cameraActor)
+			StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",cameraActor);
+		endif;
+
+		if (cameraActor)
+			
+			cameraActor.Disable();
+			;newActor.MoveTo(npc, Math.Sin(npc.GetAngleZ()) * distanceOffset, Math.Cos(npc.GetAngleZ()) * distanceOffset, 0,true)
+			;newActor.SetAngle(npc.GetAngleX(), npc.GetAngleY(), npc.GetAngleZ()+180.0)
+			float x=npc.X+Math.Sin(npc.GetAngleZ()) * distanceOffset
+			float y=npc.Y+Math.Cos(npc.GetAngleZ()) * distanceOffset
+			float z=npc.Z
+			
+			float dx = x - cameraActor.GetPositionX()
+			float dy = y - cameraActor.GetPositionY()
+			float dz = z - cameraActor.GetPositionZ()
 	
-	Debug.Trace("[CHIM] Camera focus on "+npc.GetName())
+			float delta = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+			if (delta>50)
+				cameraActor.TranslateTo(x, y, z, npc.GetAngleX(), npc.GetAngleY(), npc.GetAngleZ()+180, 99999, 0)
+				cameraActor.Enable();
+				cameraActor.SetAlpha(0)
+			else
+				cameraActor.Enable();
+				cameraActor.SetAlpha(0)
+			endif
+		endif
+		
+	endif
+
+	Debug.Trace("[CHIM] Camera focus on "+npc.GetDisplayName())
 
 
 EndFunction
