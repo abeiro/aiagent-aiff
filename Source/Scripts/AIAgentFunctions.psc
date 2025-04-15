@@ -39,6 +39,8 @@ ObjectReference function getLocationMarkerFor(Location loc) Global Native
 ObjectReference function getNearestDoor() global Native
 ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restriction=true) global Native
 
+int Function isUsingFurniture(Actor actor) global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

@@ -17,8 +17,6 @@ endFunction
 
 
 
-
-
 function ResetPackages(Actor npc) global
 
 	npc.EnableAI(false) 
@@ -48,9 +46,10 @@ function ResetPackages(Actor npc) global
 
 
 endFunction
+
 function PlayerFollowStart() global
 
-	
+
 
 endFunction
 
@@ -59,7 +58,7 @@ function MoveToTarget(Actor npc, ObjectReference akTarget) global
 	ResetPackages(npc);
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Faction MoveToFaction=Game.GetFormFromFile(0x01A69B, "AIAgent.esp") as Faction ; Faction MoveToTarget
-	Keyword MoveTargetKw = Game.GetFormFromFile(0x21245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
 	
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 	npc.RemoveFromFaction(FollowFaction)
@@ -144,7 +143,6 @@ function TakeASeatEnd(Actor npc) global
 endFunction
 
 
-
 function SneakToTarget(Actor npc, ObjectReference akTarget) global
 	
 
@@ -180,6 +178,29 @@ function StartWait(Actor npc) global
 
 endFunction
 
+function StartWaitSoft(Actor npc) global
+
+
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" waits" )
+
+	Package WaitPackage = Game.GetFormFromFile(0x0268b1, "AIAgent.esp") as Package ; Package WaitPackage
+	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+
+	npc.RemoveFromFaction(FollowFaction);
+
+	npc.SetFactionRank(WaitFaction,1)
+	
+	ActorUtil.AddPackageOverride(npc, WaitPackage, 100, 0)
+	npc.EvaluatePackage()
+	
+	;Debug.Notification("Mission MoveToTarget start")
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" waits" )
+	
+	
+
+endFunction
+
 function EndWait(Actor npc) global
 
 	Debug.Trace("[CHIM] End of wait: "+npc.GetDisplayName())
@@ -196,7 +217,20 @@ function EndWait(Actor npc) global
 
 endFunction
 
+function EndWaitSoft(Actor npc) global
 
+	Debug.Trace("[CHIM] End of wait: "+npc.GetDisplayName())
+
+	Package WaitPackage = Game.GetFormFromFile(0x0268b1, "AIAgent.esp") as Package ; Package WaitPackage
+	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
+	npc.RemoveFromFaction(WaitFaction)
+	ActorUtil.RemovePackageOverride(npc, WaitPackage)
+
+	npc.EvaluatePackage()
+	
+	Debug.Notification("[CHIM] End of wait: "+npc.GetDisplayName())
+
+endFunction
 
 function Follow(Actor npc, ObjectReference akTarget) global
 	
@@ -211,7 +245,26 @@ function Follow(Actor npc, ObjectReference akTarget) global
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
 	ActorUtil.AddPackageOverride(npc, FollowPackage, 100, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[CHIM] Following  "+akTarget.GetDisplayName())
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" following  "+akTarget.GetDisplayName())
+
+	
+	
+endFunction
+
+function FollowSoft(Actor npc, ObjectReference akTarget) global
+	
+	
+	ResetPackages(npc);
+	Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
+
+	npc.SetFactionRank(FollowFaction,1)
+	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw) ;AIAgentMoveLocation keyword
+	ActorUtil.AddPackageOverride(npc, FollowPackageSoft, 100, 0)
+	npc.EvaluatePackage()
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" sandboxing near "+akTarget.GetDisplayName())
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" sandboxing near "+akTarget.GetDisplayName())
 
 	
 	
@@ -329,8 +382,6 @@ function OpenInventory(Actor npc,string originalCommand) global
 		endif
 	endif
 endFunction
-
-
 
 
 function AttackTarget(Actor npc, ObjectReference akTarget) global
@@ -451,7 +502,7 @@ endFunction
 
 
 function WaitHere(Actor npc) global
-	
+	; deprecated, should use package
 	Debug.Notification("[CHIM] "+npc.GetDisplayName())+" will wait here";
 	;Topic fixedTopic=Game.GetFormFromFile(0x00638E, "AddDiagToReplace.esp") as Topic ; AASPGQuestDialogue2Topic1B1Topic
 	;if (fixedTopic)
@@ -463,9 +514,171 @@ function WaitHere(Actor npc) global
 endFunction
 
 
+function LookAt(Actor npc,Actor target) global
+	
+	if (npc!=Game.GetPlayer())
+		npc.SetLookAt(target)
+	else 
+		Debug.Trace("[CHIM] LookAt on Player, avoiding");
+	endif
+	
+endFunction
+
+
+
+function PlayIdle(Actor npc,int animation) global
+
+	; extra checks
+	if (npc.IsBleedingOut())
+		return
+	elseif (npc.IsInCombat())
+		return
+	elseif (npc.IsSneaking())
+		return
+	elseif (npc.GetCurrentScene())
+		return
+	endif;
+	
+	npc.PlayIdle(Game.GetForm(animation) as Idle)
+	
+endFunction
+
+Function GetIntoConversation(Actor npc,ObjectReference reference) global
+
+	int isActive=StorageUtil.GetIntValue(None, "AIAgentNpcWalkNear",1);
+	if (isActive==0)
+		return;
+	endif
+	
+	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
+		return;
+	else
+		Debug.Trace("Player is sitting");
+	endif
+	
+	ObjectReference finalReference;
+	
+	if (reference.GetDistance(Game.GetPlayer())<256)
+		; Use reference as is close to player 
+		finalReference=reference
+	else
+		; Use player as reference , npc should aproach player while talking
+		finalReference=Game.GetPlayer()
+	endif;
+	
+	if (!npc.IsinCombat() && !npc.IsInKillMove() && !npc.IsRunning() && !npc.IsUnconscious() && !npc.IsHostileToActor(npc) && !npc.GetCurrentScene())
+		if (npc.GetDistance(finalReference)>1024 ) 
+			Package isRunningPackage=StorageUtil.GetFormValue(npc, "PackageSoft",None) as Package;
+			if (!isRunningPackage)
+				; Seems listener NPC is sandboxing, lets gently move it to speaker*/player 
+				
+				Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
+				StorageUtil.SetFormValue(npc, "PackageSoft",FollowPackageSoft) as Package;
+				FollowSoft(npc,finalReference);
+			else 
+				; NPC should be aproaching
+			EndIf
+		elseif (npc.GetDistance(finalReference)<300 ) 
+			Package isRunningPackage=StorageUtil.GetFormValue(npc, "PackageSoft",None) as Package;
+			if (isRunningPackage)
+				; Now it's close enough, release it and make it wait 300 seconds.
+				StorageUtil.SetFormValue(npc, "PackageSoft",None) ;
+				Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
+
+				PO3_SKSEFunctions.SetLinkedRef(npc,None,MoveTargetKw)
+				ActorUtil.RemovePackageOverride(npc, isRunningPackage)
+				; Remove FollowFaction so package FollowPackageSoft won't apply anymore
+				Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+				npc.RemoveFromFaction(FollowFaction)
+
+				StartWaitSoft(npc)
+				
+			EndIf
+		endif
+	endif
+
+EndFunction
+
+Function ReleaseFromConversation(Actor npc) global
+
+	int isActive=StorageUtil.GetIntValue(None, "AIAgentNpcWalkNear",1);
+	if (isActive==0)
+		return;
+	endif
+	
+	Package isRunningPackage=StorageUtil.GetFormValue(npc, "PackageSoft",None) as Package;
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" is running package "+isRunningPackage)
+	if (isRunningPackage)
+		Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
+		ActorUtil.RemovePackageOverride(npc, isRunningPackage)
+	EndIf		
+	StorageUtil.SetFormValue(npc, "PackageSoft",None);
+	
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	npc.RemoveFromFaction(FollowFaction);
+	
+	npc.EvaluatePackage()
+	
+	;npc.EnableAI(false);
+	;npc.EnableAI(true);
+	
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" leaves conversation")
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" leaves conversation")
+	
+EndFunction
+
+function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) global
+
+	; Should be called after NPC starts speech to listener (every sentence)
+	
+	if ((animation > 0) && !npc.IsInCombat())
+		npc.PlayIdle(Game.GetForm(animation) as Idle)
+	else
+		;Debug.SendAnimationEvent(npc, "IdleDialogueExpressiveStart")	
+	EndIf
+	
+	;placeCam(npc,listener)
+	
+	if (movehead == 1 || true)
+	
+		if (npc!=Game.GetPlayer())
+			npc.SetLookAt(listener)
+		else 
+			Debug.Trace("[CHIM] LookAt on Player, avoiding");
+		endif
+		
+		if (listener!=Game.GetPlayer())
+			listener.SetLookAt(npc)
+		else 
+			Debug.Trace("[CHIM] LookAt on Player, avoiding");
+		endif
+
+		GetIntoConversation(listener,npc as ObjectReference ) ; if listener is too far away, move listener to speaker if speaker close to player, if not close,  move near player
+		GetIntoConversation(npc,listener); if speaker is too far away, Move speaker to listener if listener near to player, if not, move to player 
+
+	endif
+	
+	PlaceCam(npc);
+	;PlaceCam(npc)
+	
+	;Game.DisablePlayerControls(abMovement = true, abFighting = true, abCamSwitch = true, abLooking = true, abSneaking = true, abMenu = true, abActivate = true, abJournalTabs = false, aiDisablePOVType = 0)
+	
+	;Utility.wait(1);
+	;Game.EnablePlayerControls()
+	
+endFunction
+
 function FakeDialogue(Actor npc,int animation,int movehead) global
 	
-	npc.SetLookAt(Game.GetPlayer())
+	; Should be called after NPC starts speech to player (every sentence)
+	if (npc!=Game.GetPlayer())
+		npc.SetLookAt(Game.GetPlayer())
+	else 
+		Debug.Trace("[CHIM] LookAt on Player, avoiding");
+	endif
+	
+	GetIntoConversation(npc,Game.GetPlayer())
+	;placeCam(npc,Game.GetPlayer())
 	
 	if ((animation > 0) && !npc.IsInCombat())
 		;npc.PlayIdle(Game.GetForm(0x000FFA0C) as Idle)
@@ -475,39 +688,18 @@ function FakeDialogue(Actor npc,int animation,int movehead) global
 		;Debug.SendAnimationEvent(npc, "IdleDialogueExpressiveStart")
 	EndIf
 
-endFunction
-
-function LookAt(Actor npc,Actor target) global
-	npc.SetLookAt(target)
-endFunction
-
-function PlayIdle(Actor npc,int animation) global
-
-	npc.PlayIdle(Game.GetForm(animation) as Idle)
+	PlaceCam(npc);
 	
 endFunction
 
 
 
-function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) global
-
-	if ((animation > 0) && !npc.IsInCombat())
-		npc.PlayIdle(Game.GetForm(animation) as Idle)
-	else
-		;Debug.SendAnimationEvent(npc, "IdleDialogueExpressiveStart")	
-	EndIf
-	if (movehead == 1 || true)
-		npc.SetLookAt(listener)
-		listener.SetLookAt(npc)
-	endif	
-
-endFunction
-
-
 function PrepareForDialog(Actor npc) global
-	; Before LLM response. User just talked.
+	; Before LLM response. User just talked. Called when NPC was talking or in dialog, so we must reset mouth position
 	if (!npc.IsOnMount())
 		npc.QueueNiNodeUpdate()
+	else 
+		npc.RegenerateHead()
 	endif
 	;AIAgentFaceReset.resetFace(npc);
 	
@@ -522,14 +714,21 @@ endFunction
 
 
 function EndDialogue(Actor npc) global
-	
+	; Should be called after NPC stops speech
 	;;npc.ClearLookAt()
 	
 endFunction
 
 function EndDialogueClear(Actor npc) global
-	npc.ClearLookAt()
+	; Should be called when cleaning NPC state (about 4 seconds adter las speech)
 	
+	if (npc!=Game.GetPlayer())
+		npc.ClearLookAt()
+	else 
+		Debug.Trace("[CHIM] ClearLookAt on Player, avoiding");
+	endif
+		
+	;resetCam();
 	
 	;Topic NullTopic = Game.GetFormFromFile(0x01dc74, "AIAgent.esp") as Topic 
 	;npc.Say(NullTopic)
@@ -537,10 +736,51 @@ function EndDialogueClear(Actor npc) global
 endFunction
 
 function EndDialogueClearScene(Actor npc) global
-	npc.ClearLookAt()
-	Topic nulltopic=Game.GetFormFromFile(0x01DC74, "AIAgent.esp") as Topic
-	npc.Say(nulltopic)
 
+	; Should be called when cleaning NPC state (about 90 seconds after last speech) and NPC was on scene
+	if (npc!=Game.GetPlayer())
+		npc.ClearLookAt()
+	else 
+		Debug.Trace("[CHIM] ClearLookAt on Player, avoiding");
+	endif
+
+	Utility.wait(5);	
+	npc.ClearExpressionOverride();
+	
+	; Try to restart scene, can break quests
+	if (npc.GetCurrentScene())
+		
+			Scene currentScene=npc.GetCurrentScene();
+			currentScene.Stop();
+			Utility.wait(1);	
+			currentScene.Start();
+		
+	else 
+		if (npc.GetCurrentPackage())
+			if (npc.GetCurrentPackage().GetOwningQuest())
+				Quest questScene=npc.GetCurrentPackage().GetOwningQuest();
+				questScene.Stop();
+				Utility.wait(1);	
+				questScene.Start();
+			else 
+				;
+			endif
+		endif
+	
+	endif;
+	;Package doNothing=Game.GetFormFromFile(0x027374, "AIAgent.esp") as Package
+	;Debug.Trace("[CHIM] GetFormFromFile is "+doNothing);
+	;ActorUtil.AddPackageOverride(npc, doNothing,99,0)
+
+	;Topic nulltopic=Game.GetFormFromFile(0x01DC74, "AIAgent.esp") as Topic
+	;npc.Say(nulltopic)
+	
+	;npc.GetCurrentScene().Start();
+	Package runningPackage=npc.GetCurrentPackage() as Package;
+	Debug.Trace("[CHIM] EndDialogueClearScene on "+npc.GetDisplayName()+", voice is:"+npc.GetVoiceType());
+	Debug.Trace("[CHIM] GetCurrentPackage is "+runningPackage);
+	
+	;AIADialogueNullResetTopic
 	;Topic NullTopic = Game.GetFormFromFile(0x01dc74, "AIAgent.esp") as Topic 
 	;npc.Say(NullTopic)
 
@@ -1148,8 +1388,6 @@ EndFunction
 
 Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int amount,string realName) global
 	
-	
-	
 	Debug.Trace("MoveInventoryItem start");
 	if (akItemToRemove.GetFormID()==0xf)
 	
@@ -1174,4 +1412,94 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 
 EndFunction
 
+
+function PlaceCam(Actor npc) global
+
 	
+	int isActive=StorageUtil.GetIntValue(None, "AIAgentAutoFocusOnSit",1);
+	if (!isActive)
+		return
+	endif
+	
+	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
+		return;
+	else
+		Debug.Trace("Player is sitting");
+	endif
+	
+	Actor lastCamActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitLastActor",None) as Actor;
+	if (lastCamActor==npc && false) ; activate to update cam per speech, not per spech line
+		return
+	endif;
+	
+	StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitLastActor",npc);
+	
+	Actor player = Game.GetPlayer()
+    ; Simple camera rotation to point view to speaker
+    float angleToNPC = player.GetHeadingAngle(npc)
+    ; Adjust the player's angle to face the NPC
+	if (Math.abs(angleToNPC)>10 )
+		if (angleToNPC>80)
+			angleToNPC=80;
+		elseif (angleToNPC<-80)
+			angleToNPC=-80;
+		endif;
+		
+		Game.SetSittingRotation(angleToNPC)	
+    
+		
+	endif
+
+	; Tesst code. Never fully worked.
+	if (false)
+		float distanceOffset=100
+		Actor cameraActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",None) as Actor;
+		if (!cameraActor)
+			ActorBase newActorBase = Game.GetFormFromFile(0x0278d6,"AIAgent.esp") as ActorBase 
+			newActorBase.SetHeight(1);
+			ObjectReference newCameraReference = Game.GetPlayer().PlaceAtMe(newActorBase, 1, false, true)
+			cameraActor=newCameraReference as Actor
+			cameraActor.Enable();
+			cameraActor.SetAlpha(0)
+			cameraActor.EnableAI(false)		
+			Game.SetCameraTarget(cameraActor)
+			StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",cameraActor);
+		endif;
+
+		if (cameraActor)
+			
+			cameraActor.Disable();
+			;newActor.MoveTo(npc, Math.Sin(npc.GetAngleZ()) * distanceOffset, Math.Cos(npc.GetAngleZ()) * distanceOffset, 0,true)
+			;newActor.SetAngle(npc.GetAngleX(), npc.GetAngleY(), npc.GetAngleZ()+180.0)
+			float x=npc.X+Math.Sin(npc.GetAngleZ()) * distanceOffset
+			float y=npc.Y+Math.Cos(npc.GetAngleZ()) * distanceOffset
+			float z=npc.Z
+			
+			float dx = x - cameraActor.GetPositionX()
+			float dy = y - cameraActor.GetPositionY()
+			float dz = z - cameraActor.GetPositionZ()
+	
+			float delta = Math.Sqrt(dx * dx + dy * dy + dz * dz);
+			if (delta>50)
+				cameraActor.TranslateTo(x, y, z, npc.GetAngleX(), npc.GetAngleY(), npc.GetAngleZ()+180, 99999, 0)
+				cameraActor.Enable();
+				cameraActor.SetAlpha(0)
+			else
+				cameraActor.Enable();
+				cameraActor.SetAlpha(0)
+			endif
+		endif
+		
+	endif
+
+	Debug.Trace("[CHIM] Camera focus on "+npc.GetDisplayName())
+
+
+EndFunction
+
+function resetCam() global
+	
+	
+		
+	
+endFunction
