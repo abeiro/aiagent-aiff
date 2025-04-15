@@ -528,6 +528,17 @@ endFunction
 
 function PlayIdle(Actor npc,int animation) global
 
+	; extra checks
+	if (npc.IsBleedingOut())
+		return
+	elseif (npc.IsInCombat())
+		return
+	elseif (npc.IsSneaking())
+		return
+	elseif (npc.GetCurrentScene())
+		return
+	endif;
+	
 	npc.PlayIdle(Game.GetForm(animation) as Idle)
 	
 endFunction
@@ -539,8 +550,10 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 		return;
 	endif
 	
-	if (Game.GetPlayer().GetSitState()==0) ; Dont use feature if player is not sitting
+	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
 		return;
+	else
+		Debug.Trace("Player is sitting");
 	endif
 	
 	ObjectReference finalReference;
@@ -1408,8 +1421,10 @@ function PlaceCam(Actor npc) global
 		return
 	endif
 	
-	if (Game.GetPlayer().GetSitState()==0) ; Dont use feature if player is not sitting
+	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
 		return;
+	else
+		Debug.Trace("Player is sitting");
 	endif
 	
 	Actor lastCamActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitLastActor",None) as Actor;
