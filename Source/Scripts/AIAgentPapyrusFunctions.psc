@@ -28,7 +28,7 @@ EndEvent
 
 Event OnKeyUp(int keyCode, float holdTime)
 	If(keyCode == _currentKeyVoice)
-		if (!UI.IsMenuOpen("Book Menu"))
+		if (!UI.IsMenuOpen("Book Menu") && SafeProcess())
 			int externalSTTactive=StorageUtil.GetIntValue(None, "AIAgentWebSockeSTT");
 			if (externalSTTactive>0)
 				AIAgentSTTExternal.stopRecording(_currentKeyVoice)
@@ -45,7 +45,7 @@ Event OnKeyDown(int keyCode)
    
   If(keyCode == _currentKey)
   
-	If Utility.IsInMenuMode()
+	If !SafeProcess()
       Return
     EndIf
 	
@@ -63,7 +63,7 @@ Event OnKeyDown(int keyCode)
 	if (UI.IsMenuOpen("Book Menu"))
 		;Debug.Notification("[CHIM] lazy reader...");
 		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
-	else
+	elseif SafeProcess()
 		int externalSTTactive=StorageUtil.GetIntValue(None, "AIAgentWebSockeSTT");
 		if (externalSTTactive>0)
 			AIAgentSTTExternal.recordSoundEx(_currentKeyVoice)
@@ -81,7 +81,7 @@ Event OnKeyDown(int keyCode)
 		;Debug.Notification("[CHIM] lazy reader...");
 		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
 	else
-		If Utility.IsInMenuMode()
+		If !SafeProcess()
 		  Return
 		EndIf
 
@@ -179,22 +179,22 @@ Event OnKeyDown(int keyCode)
 	endif
   EndIf
   If(keyCode == _currentDiaryKey)
-	If Utility.IsInMenuMode()
+	If !SafeProcess()
 		Return
 	EndIf
 	AIAgentFunctions.sendMessage("Please, update your diary","diary")
   EndIf
   If(keyCode == _currentCModelKey)
-	If Utility.IsInMenuMode()
+	If Utility.IsInMenuMode() && SafeProcess(true)
 		AIAgentFunctions.logMessage("Model change requested","togglemodel")
-		Return
+	ElseIf SafeProcess()
+		Actor target=AIAgentFunctions.getClosestAgent()
+		AIAgentFunctions.logMessageForActor("Model change requested","togglemodel",target.GetDisplayName())
 	EndIf
-	Actor target=AIAgentFunctions.getClosestAgent()
-	AIAgentFunctions.logMessageForActor("Model change requested","togglemodel",target.GetDisplayName())
   EndIf
   
   If(keyCode == _currentCSoulgaze)
-	If Utility.IsInMenuMode()
+	If !SafeProcess()
 		Return
 	EndIf
 	
@@ -203,7 +203,7 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentCtl)
-	If Utility.IsInMenuMode()
+	If !SafeProcess()
 		Return
 	EndIf
 	
@@ -257,53 +257,53 @@ Event OnUpdate()
     EndIf
 Endevent
 
-bool Function removeBinding(int keycode) 
+Function removeBinding(int keycode) 
 	UnregisterForKey(keycode)
 EndFunction
 
-bool Function doBinding(int keycode) 
+Function doBinding(int keycode) 
 	_currentKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding2(int keycode) 
+Function doBinding2(int keycode) 
 	
 	_currentKeyVoice=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding3(int keycode) 
+Function doBinding3(int keycode) 
 	
 	_currentFollowKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding4(int keycode) 
+Function doBinding4(int keycode) 
 	
 	_currentDiaryKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding5(int keycode) 
+Function doBinding5(int keycode) 
 	
 	_currentCModelKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding6(int keycode) 
+Function doBinding6(int keycode) 
 	
 	_currentCSoulgaze=keycode
 	RegisterForKey(keycode)
 
 EndFunction
 
-bool Function doBinding7(int keycode) 
+Function doBinding7(int keycode) 
 	
 	_currentCtl=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-bool Function doBinding8(int keycode) 
+Function doBinding8(int keycode) 
 	
 	_currentGodmodeKey=keycode
 	RegisterForKey(keycode)
@@ -383,4 +383,27 @@ Event OnTrackedStatsEvent(string asStatFilter, int aiStatValue)
 	endif
 endEvent
 
-
+Bool Function SafeProcess(bool allowMenuMode = false)
+	If (allowMenuMode || !Utility.IsInMenuMode()) \
+	&& (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("MessageBoxMenu")) \
+	&& (!UI.IsMenuOpen("ContainerMenu")) \
+	&& (!UI.IsTextInputEnabled()) \
+	&& (!UI.IsMenuOpen("LootMenu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu")) \
+	&& (!UI.IsMenuOpen("listmenu"))
+		;IsInMenuMode to block when game is paused with menus open
+		;Console to block when console is open - console does not trigger IsInMenuMode and thus needs its own check
+		;Crafting Menu to block when crafting menus are open - game is not paused so IsInMenuMode does not work
+		;MessageBoxMenu to block when message boxes are open - while they pause the game, they do not trigger IsInMenuMode
+		;ContainerMenu to block when containers are accessed - while they pause the game, they do not trigger IsInMenuMode
+		;IsTextInputEnabled to block when editable text fields are open
+		;LootMenu to block when looting - when used with Quick Loot
+		;RaceSex Menu to block during character creation - when used with RaceMenu
+		;listmenu to block during list selection - comes from UIExtensions
+		Return True
+	Else
+		Return False
+	EndIf
+EndFunction
