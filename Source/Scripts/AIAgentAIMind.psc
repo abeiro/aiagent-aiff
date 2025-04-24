@@ -1503,3 +1503,4 @@ function resetCam() global
 		
 	
 endFunction
+

@@ -1052,7 +1052,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_autoadd_allraces)
-		SetInfoText("Auto Activate policy. By default, it applies to non-hostile NPCs whose race allows player dialogue (PC Dialogue = 1). Check this option to allow Auto Activate for all races—including animals like rabbits, deer, foxes, etc.Note: Enabling this may cause instability.")
+		SetInfoText("Auto Activate policy. By default, it applies to non-hostile NPCs whose race allows player dialogue (PC Dialogue = 1). Check this option to allow Auto Activate for all races - including animals like rabbits, deer, foxes, etc. Note: Enabling this may cause instability.")
 	endIf
 	
 
