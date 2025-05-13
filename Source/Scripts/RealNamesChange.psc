@@ -63,6 +63,18 @@ Function ChangeName(Actor akTarget, String newFirstName, String newLastName)
 		EndIf
 	EndIf
 
+	; Patch, dont use on CHIM Npcs
+	
+	
+	string creatorMod=PO3_SKSEFunctions.GetFormModName(TargetBase,false)
+	If (creatorMod=="AIAgent.esp")
+		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename: "+akTarget.getDisplayName())
+		ShouldRename=false
+	else
+		Debug.Trace("[REALNAMES - CHIM] Allowing to rename: "+akTarget.getDisplayName())
+	EndIf
+	
+	
 	If !ShouldRename
 		; Debug.Notification("Target is a unique NPC. You cannot change its name!")
 		Return

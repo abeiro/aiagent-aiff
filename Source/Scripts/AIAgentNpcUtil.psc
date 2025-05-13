@@ -132,6 +132,27 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 	Endif
 endFunction
 
+function FakeBrawl(Actor a,Actor b) global
+	
+		; Unarmed Combat
+		; TO-DO restore statuses and weapons after fight
+		a.SetNoBleedoutRecovery(true);
+		b.SetNoBleedoutRecovery(true);
+			
+		AIAgentNpcUtil.RemoveAllWeapons(a);
+		AIAgentNpcUtil.RemoveAllWeapons(b);
+			
+		CombatStyle CombatStyleA=AIAgentNpcUtil.getProperActorBase(a).GetCombatStyle();
+		CombatStyle CombatStyleB=AIAgentNpcUtil.getProperActorBase(b).GetCombatStyle();
+			
+		CombatStyleA.SetUnarmedMult(100);
+		CombatStyleB.SetUnarmedMult(100);
+			
+		Weapon unarmed=Game.GetForm(0x00001f4) as Weapon ; Unarmed
+		a.EquipItem(unarmed,true,true)
+		b.EquipItem(unarmed,true,true)
+		
+endFunction
 
 function CopyApearanceFromTo(Actor source, Actor dest) global
 
@@ -183,6 +204,19 @@ function CopyApearanceFromTo(Actor source, Actor dest) global
 	Endif
 endFunction
 
+
+function RemoveAllWeapons(Actor npc)  global
+
+	int iFormIndex = npc.GetNumItems()
+	While(iFormIndex > 0 )
+			iFormIndex -= 1
+			Form objectForm = npc.GetNthForm(iFormIndex)
+			int type=objectForm.GetType()
+			if (type==41) ; weapon
+				npc.RemoveItem(objectForm, npc.GetItemCount( objectForm ), true, None)
+			endif
+	EndWhile
+endFunction
 Function NpcPlayIdle(Actor ref,string animation) Global
 	Debug.SendAnimationEvent(ref,animation)
 EndFunction

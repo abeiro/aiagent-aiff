@@ -54,7 +54,7 @@ function PlayerFollowStart() global
 endFunction
 
 function MoveToTarget(Actor npc, ObjectReference akTarget) global
-
+	; Only used by spawn
 	ResetPackages(npc);
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Faction MoveToFaction=Game.GetFormFromFile(0x01A69B, "AIAgent.esp") as Faction ; Faction MoveToTarget
@@ -95,9 +95,11 @@ function MoveToTargetEnd(Actor npc) global
 	
 	AIAgentFunctions.commandEndedForActor("MoveTo",npc.GetDisplayName())
 
-	string taskid = JDB.solveStr(".aiff.currentTaskId");
-	
-
+	;string taskid = JDB.solveStr(".aiff.currentTaskId");
+	string taskid=""
+	stayAtPlace(npc,0,taskid)
+	AIAgentFunctions.requestMessageForActor("The Narrator:"+npc.GetDisplayName()+" appears in scene and sees people around, now tries to accomplish its goal.","instruction",npc.GetDisplayName())
+	;AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" appears in scene.Should surroudings, maybe looking for someone/something","welcome",npc.GetDisplayName())
 	Debug.Trace("[CHIM] End of move: "+npc.GetDisplayName()+" taskid:"+taskid)	
 	
 
@@ -341,6 +343,8 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
 	npc.EvaluatePackage()
 	
+	StorageUtil.SetFormValue(npc, "LastTravelToLocation",akTarget);
+	
 	;Debug.Notification("Mission MoveToTarget start")
 	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
 endFunction
@@ -353,6 +357,23 @@ function TravelToTargetEnd(Actor npc) global
 
 	PO3_SKSEFunctions.SetLinkedRef(npc,None)
 	npc.EvaluatePackage()
+	
+	ObjectReference destination=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as ObjectReference;
+	if (destination)
+		Form dest=destination.GetBaseObject()
+		if (dest.GetType()==43) 
+			Actor destinationActor=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as Actor
+			if (destinationActor.IsDead())
+				Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " inspects "+destinationActor.getDisplayName())
+				LookAt(npc,destinationActor)
+				Debug.SendAnimationEvent(npc,"IdleKneeling")
+				Utility.wait(3)
+				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
+			endif
+			Debug.Trace("TravelToTargetEnd: Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+		endif
+	endif
+		
 	
 	AIAgentFunctions.commandEndedForActor("TravelTo",npc.GetDisplayName())
 	Debug.Notification("[CHIM] End travelling for "+npc.GetDisplayName() )
@@ -384,7 +405,7 @@ function OpenInventory(Actor npc,string originalCommand) global
 endFunction
 
 
-function AttackTarget(Actor npc, ObjectReference akTarget) global
+function AttackTarget(Actor npc, ObjectReference akTarget,bool lethal=true) global
 		
 	ResetPackages(npc);
 	Package AttackPackage = Game.GetFormFromFile(0x01B6C2 , "AIAgent.esp") as Package 
@@ -398,6 +419,11 @@ function AttackTarget(Actor npc, ObjectReference akTarget) global
 	npc.RemoveFromFaction(FollowFaction)
 
 	Actor targetAsActor = akTarget as Actor
+
+	string combatString=" engages fair combat with "
+	if (!lethal)
+		combatString=" engages non-lethal fair combat with "
+	endif
 	
 	;Faction WEPlayerEnemy=Game.GetForm(0x0001DD0F) as Faction ; WEPlayerEnemy
 	;targetAsActor.SetFactionRank(WEPlayerEnemy,1)
@@ -406,13 +432,79 @@ function AttackTarget(Actor npc, ObjectReference akTarget) global
 	;npc.ModActorValue("aggression", 3)
 	;npc.ModActorValue("morality", 0)
 	;npc.SetPlayerTeammate(false,true);
+	
 	if (targetAsActor)
-		PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
-		ActorUtil.AddPackageOverride(npc, AttackPackage, 100, 0)
-		npc.EvaluatePackage()
-		;npc.startCombat(targetAsActor);
-		Debug.Notification("[CHIM] "+npc.GetDisplayName()+" attacks "+akTarget.GetDisplayName())
-		AIAgentFunctions.logMessageForActor("command@Attack@"+akTarget.GetDisplayName()+"@"+npc.GetDisplayName()+" engages fair combat with "+akTarget.GetDisplayName(),"funcret",npc.GetDisplayName())
+	
+		if (npc.GetDistance(targetAsActor)<2048)
+			
+			;npc.SetActorValue("Confidence",4)
+			;npc.SetRelationshipRank(targetAsActor, -3)
+			;targetAsActor.SetRelationshipRank(npc, -3)
+			;npc.startCombat(targetAsActor);
+			
+			npc.SetActorValue("Confidence",4); Review this. Maybe we shoud restore
+			npc.SetRelationshipRank(targetAsActor, -3)
+			targetAsActor.SetRelationshipRank(npc, -3)
+			
+			if (!lethal)
+				; To-DO reover this values after combat
+				
+				if (!StorageUtil.HasIntValue(npc, "CHIM_Protected"))
+					bool originallyProtected=AIAgentNpcUtil.getProperActorBase(npc).IsProtected();
+					if (originallyProtected)
+						StorageUtil.SetIntValue(npc, "CHIM_Protected",1);
+					else
+						StorageUtil.SetIntValue(npc, "CHIM_Protected",0);
+					endif
+				endif
+				
+				if (!StorageUtil.HasIntValue(targetAsActor, "CHIM_Protected"))
+					bool originallyProtected=AIAgentNpcUtil.getProperActorBase(targetAsActor).IsProtected();
+					if (originallyProtected)
+						StorageUtil.SetIntValue(targetAsActor, "CHIM_Protected",1);
+					else
+						StorageUtil.SetIntValue(targetAsActor, "CHIM_Protected",0);
+					endif
+				endif
+				
+				
+				if (!StorageUtil.HasIntValue(npc, "CHIM_BleedRecovery"))
+					bool originalValue=npc.GetNoBleedoutRecovery()
+					if (originalValue)
+						StorageUtil.SetIntValue(npc, "CHIM_BleedRecovery",1);
+					else
+						StorageUtil.SetIntValue(npc, "CHIM_BleedRecovery",0);
+					endif
+				endif
+				
+				if (!StorageUtil.HasIntValue(targetAsActor, "CHIM_BleedRecovery"))
+					bool originalValue=targetAsActor.GetNoBleedoutRecovery()
+					if (originalValue)
+						StorageUtil.SetIntValue(targetAsActor, "CHIM_BleedRecovery",1);
+					else
+						StorageUtil.SetIntValue(targetAsActor, "CHIM_BleedRecovery",0);
+					endif
+				endif
+				Debug.Trace(npc.GetDisplayName()+" and "+targetAsActor.GetDisplayName()+" are now protected")
+				; Set actors protected as non-lethal fight
+				AIAgentNpcUtil.getProperActorBase(npc).SetProtected()
+				AIAgentNpcUtil.getProperActorBase(targetAsActor).SetProtected()
+				
+				npc.SetNoBleedoutRecovery(true);
+				targetAsActor.SetNoBleedoutRecovery(true);
+			endif
+			npc.startCombat(targetAsActor);
+			
+			AIAgentFunctions.logMessageForActor("command@Attack@"+akTarget.GetDisplayName()+"@"+npc.GetDisplayName()+combatString+akTarget.GetDisplayName(),"funcret",npc.GetDisplayName())
+			
+		else 
+			PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
+			ActorUtil.AddPackageOverride(npc, AttackPackage, 100, 0)
+			npc.EvaluatePackage()
+			;npc.startCombat(targetAsActor);
+			Debug.Notification("[CHIM] "+npc.GetDisplayName()+" attacks "+akTarget.GetDisplayName())
+			AIAgentFunctions.logMessageForActor("command@Attack@"+akTarget.GetDisplayName()+"@"+npc.GetDisplayName()+combatString+akTarget.GetDisplayName(),"funcret",npc.GetDisplayName())
+		endif;
 	else
 		Debug.Notification("[CHIM] Could not reach target "+akTarget.GetDisplayName());
 		;AIAgentFunctions.logMessage("command@Attack@"+akTarget.GetDisplayName()+"@"+npc.GetDisplayName()+" cannot attack "+akTarget.GetDisplayName(),"funcret")
@@ -422,6 +514,51 @@ function AttackTarget(Actor npc, ObjectReference akTarget) global
 
 endFunction
 
+function RecoverFromCombat(Actor npc) global;Triggers on defeated actor
+
+	
+	if (StorageUtil.HasIntValue(npc, "CHIM_BleedRecovery"))	; Only applied if combat was started by brawl
+		Actor winner=npc.GetCombatTarget();
+		
+		if (winner)
+			Debug.Trace(npc.GetDisplayName()+" no more enemy with "+winner.GetDisplayName());
+			npc.SetRelationshipRank(winner,0)
+			winner.SetRelationshipRank(npc,0)
+			winner.StopCombat()
+			npc.StopCombat()
+		endif
+		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has lost combat and is wounded. Should surrender and leave the place.","instruction",npc.GetDisplayName())
+		Utility.wait(10);Wait, sometimes opponent still agressive
+
+		npc.RestoreAV("Health",20)	
+		int original=StorageUtil.GetIntValue(npc, "CHIM_BleedRecovery")
+		
+		if (original==1)
+			npc.SetNoBleedoutRecovery(true);
+			Debug.Trace(npc.GetDisplayName()+" restoring SetNoBleedoutRecovery to true");
+
+		else
+			npc.SetNoBleedoutRecovery(false);
+			Debug.Trace(npc.GetDisplayName()+" restoring SetNoBleedoutRecovery to false");
+		endif
+	endif
+	
+	Utility.wait(10);Wait, sometimes opponent still agressive
+
+	npc.RestoreAV("Health",20)	
+	if (StorageUtil.HasIntValue(npc, "CHIM_Protected"))
+		int original=StorageUtil.GetIntValue(npc, "CHIM_Protected")
+		
+		if (original==1)
+			AIAgentNpcUtil.getProperActorBase(npc).SetProtected();
+			Debug.Trace(npc.GetDisplayName()+" restoring as protected")
+		else
+			AIAgentNpcUtil.getProperActorBase(npc).SetProtected(false);
+			Debug.Trace(npc.GetDisplayName()+" restoring as non protected")
+		endif
+	endif
+	
+endFunction
 
 function AttackTargetEnd(Actor npc) global
 	Package AttackPackage = Game.GetFormFromFile(0x01B6C2 , "AIAgent.esp") as Package 
@@ -442,7 +579,11 @@ function StartCombat(Actor npc,ObjectReference victim) global
 
 	Actor victimasActor = victim as Actor
 	Debug.Trace("[CHIM] starting combat:  "+npc.GetDisplayName()+ " vs "+victim.GetDisplayName(),1)
-		
+	
+	npc.SetActorValue("Aggression",2)		
+	npc.SetActorValue("Confidence",4)
+	npc.SetRelationshipRank(victimasActor, -3)
+	
 	npc.startCombat(victimasActor);
 
 	Debug.Notification("[CHIM] starting combat:  "+npc.GetDisplayName()+ " vs "+victim.GetDisplayName())
@@ -553,7 +694,7 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
 		return;
 	else
-		Debug.Trace("Player is sitting");
+		;Debug.Trace("Player is sitting");
 	endif
 	
 	ObjectReference finalReference;
@@ -722,6 +863,7 @@ endFunction
 function EndDialogueClear(Actor npc) global
 	; Should be called when cleaning NPC state (about 4 seconds adter las speech)
 	
+	Debug.Trace("[CHIM] EndDialogueClear "+npc.GetDisplayName());
 	if (npc!=Game.GetPlayer())
 		npc.ClearLookAt()
 	else 
@@ -1450,7 +1592,7 @@ function PlaceCam(Actor npc) global
 		
 	endif
 
-	; Tesst code. Never fully worked.
+	; Test code. Never fully worked.
 	if (false)
 		float distanceOffset=100
 		Actor cameraActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",None) as Actor;
