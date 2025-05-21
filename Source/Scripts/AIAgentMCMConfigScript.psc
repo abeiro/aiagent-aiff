@@ -868,6 +868,8 @@ event OnOptionSelect(int a_option)
  
  	if (a_option == _toggleAddAllNowNPC)
  		AIAgentFunctions.testAddAllNPCAround()
+		
+		AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
  	endIf
 	

@@ -217,6 +217,7 @@ function RemoveAllWeapons(Actor npc)  global
 			endif
 	EndWhile
 endFunction
+
 Function NpcPlayIdle(Actor ref,string animation) Global
 	Debug.SendAnimationEvent(ref,animation)
 EndFunction

@@ -407,3 +407,19 @@ Bool Function SafeProcess(bool allowMenuMode = false)
 		Return False
 	EndIf
 EndFunction
+
+Function sendAllLocations() global
+
+	Form[] allLocations=PO3_SKSEFunctions.GetAllForms(104)
+	Debug.Trace("Total "+allLocations.Length);
+	int lengthA=allLocations.Length
+	int i=0;
+	while i < lengthA
+		Form j=allLocations[i] as Form
+		Debug.Trace("Adding Location "+j.GetName());
+		AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId(),"util_location_name")
+		i=i+1
+	endwhile
+	return
+
+EndFunction

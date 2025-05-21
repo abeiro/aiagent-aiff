@@ -19,7 +19,7 @@ endFunction
 
 function ResetPackages(Actor npc) global
 
-	npc.EnableAI(false) 
+	;npc.EnableAI(false) 
 
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Package AttackPackage = Game.GetFormFromFile(0x01B6C2 , "AIAgent.esp") as Package ; Package AttackPackage
@@ -28,6 +28,7 @@ function ResetPackages(Actor npc) global
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Package WaitPackage = Game.GetFormFromFile(0x02021F, "AIAgent.esp") as Package ; Package MoveToTarget
 	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	;
 	
 	
 	ActorUtil.RemovePackageOverride(npc, TraveltoPackage)
@@ -40,9 +41,11 @@ function ResetPackages(Actor npc) global
 	;ActorUtil.ClearPackageOverride(npc)
 	
 	npc.EvaluatePackage()
+
+	PO3_SKSEFunctions.SetLinkedRef(npc,None,MoveTargetKw)
 	
 	SheatheWeapon(npc);
-	npc.EnableAI(true) 
+	;npc.EnableAI(true) 
 
 
 endFunction
@@ -53,35 +56,92 @@ function PlayerFollowStart() global
 
 endFunction
 
-function MoveToTarget(Actor npc, ObjectReference akTarget) global
-	; Only used by spawn
+function MoveToTarget(Actor npc, ObjectReference akTarget, int intent) global
+	
 	ResetPackages(npc);
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Faction MoveToFaction=Game.GetFormFromFile(0x01A69B, "AIAgent.esp") as Faction ; Faction MoveToTarget
-	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
-	
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	;
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	
 	npc.RemoveFromFaction(FollowFaction)
-
-
+	npc.RemoveFromFaction(SandboxFaction)
+	
 	npc.SetFactionRank(MoveToFaction,1)
+	
+	StorageUtil.SetFormValue(npc, "LastMoveToLocation",akTarget);
+	StorageUtil.SetIntValue(npc, "MoveToTargetIntent",intent);
+	; 1- Give
+	; 2- Trade
+	; 3- Spawn
+	
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw)
-	ActorUtil.AddPackageOverride(npc, MoveToPackage, 99, 0)
+	ActorUtil.AddPackageOverride(npc, MoveToPackage, 100, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" is moving to "+akTarget.GetDisplayName())
+	;Debug.Notification("[CHIM] "+npc.GetDisplayName()+" is moving to "+akTarget.GetDisplayName())
+	Debug.Trace("[CHIM] MoveToTarget "+npc.GetDisplayName()+" is moving to "+akTarget.GetDisplayName())
 	AIAgentFunctions.logMessageForActor("started_moving@"+akTarget.GetDisplayName(),"status_msg",npc.GetDisplayName())
 
 endFunction
 
 function MoveToTargetEnd(Actor npc) global
 
-	Debug.Notification("[CHIM] End of move: "+npc.GetDisplayName())	
+	;Debug.Notification("[CHIM] End of move: "+npc.GetDisplayName())	
 	
+
 	if (npc.GetParentCell()==Game.GetPlayer().GetParentCell())
 		AIAgentFunctions.logMessageForActor("reached_destination_player@"+npc.GetDisplayName(),"status_msg",npc.GetDisplayName())
 	else
 		AIAgentFunctions.logMessageForActor("reached_destination@"+npc.GetDisplayName(),"status_msg",npc.GetDisplayName())
 	endif
+	
+	ObjectReference destination=StorageUtil.GetFormValue(npc, "LastMoveToLocation") as ObjectReference;
+	int intent=StorageUtil.GetIntValue(npc, "MoveToTargetIntent") as int;
+	
+	
+	if (destination)
+		Form dest=destination.GetBaseObject()
+		if (dest.GetType()==43) 
+			Actor destinationActor=destination as Actor
+			npc.KeepOffsetFromActor(destinationActor, 0.0, 0.0, 5.0, afFollowRadius = 32.0);Move it next to it
+			Utility.Wait(3);
+			npc.ClearKeepOffsetFromActor()
+			if (destinationActor.IsDead()); Inspecting a dead body
+				Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " inspects "+destinationActor.getDisplayName())
+				LookAt(npc,destinationActor)
+				Debug.SendAnimationEvent(npc,"IdleKneeling")
+				Utility.wait(3)
+				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
+			endif
+			if (intent==1);Give/Trade
+				Debug.trace("[CHIM] MoveToTargetEnd performing animation IdleGive");
+				LookAt(npc,destinationActor)
+				Debug.SendAnimationEvent(npc,"IdleGive")
+				Utility.wait(1)
+			endif
+			
+			if (intent==2)
+				Debug.trace("[CHIM] MoveToTargetEnd performing animation IdleGive2");
+				LookAt(npc,destinationActor)
+				Debug.SendAnimationEvent(npc,"IdleGive")
+				Debug.SendAnimationEvent(destinationActor,"IdleGive")
+				Utility.wait(1)
+			endif
+			
+			if (intent==3)
+				Debug.trace("[CHIM] MoveToTargetEnd , introducing spawned NPC");
+				AIAgentFunctions.requestMessageForActor("The Narrator:"+npc.GetDisplayName()+" appears in scene, directly pointing to its goal.","instruction",npc.GetDisplayName())
+			endif
+			
+			Debug.Trace("[CHIM] MoveToTargetEnd: "+npc.GetDisplayName()+". Move destination was "+destinationActor.GetDisplayName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+			stayAtPlace(npc,0);
+		endif
+	endif
+	
+	StorageUtil.SetFormValue(npc, "LastMoveToLocation",None);
+	StorageUtil.SetIntValue(npc, "MoveToTargetIntent",0);
+	
 	
 	Utility.Wait(3);
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
@@ -96,11 +156,13 @@ function MoveToTargetEnd(Actor npc) global
 	AIAgentFunctions.commandEndedForActor("MoveTo",npc.GetDisplayName())
 
 	;string taskid = JDB.solveStr(".aiff.currentTaskId");
-	string taskid=""
-	stayAtPlace(npc,0,taskid)
-	AIAgentFunctions.requestMessageForActor("The Narrator:"+npc.GetDisplayName()+" appears in scene and sees people around, now tries to accomplish its goal.","instruction",npc.GetDisplayName())
+	
+	if (intent==3)
+		stayAtPlace(npc,0)
+	Endif
+	
 	;AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" appears in scene.Should surroudings, maybe looking for someone/something","welcome",npc.GetDisplayName())
-	Debug.Trace("[CHIM] End of move: "+npc.GetDisplayName()+" taskid:"+taskid)	
+	Debug.Trace("[CHIM] MoveToTargetEnd End of move: "+npc.GetDisplayName())	
 	
 
 endFunction
@@ -130,6 +192,30 @@ function TakeASeat(Actor npc, ObjectReference akTarget) global
 
 endFunction
 
+function SleepInBed(Actor npc, ObjectReference akTarget) global
+	
+	Debug.Trace("[CHIM] SleepInBed start")
+
+	if (akTarget.IsFurnitureInUse()) 
+		Debug.Notification("[CHIM] Sitting at "+akTarget.GetDisplayName()+", but seems in use")
+	endif;
+	
+	Package SleepPackage = Game.GetFormFromFile(0x027e38, "AIAgent.esp") as Package ; Package AIAgentSleepPackage
+	Faction SeatFaction=Game.GetFormFromFile(0x01C6EA, "AIAgent.esp") as Faction ; Faction AIAgentFactionSeat
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	
+	npc.SetFactionRank(SeatFaction,1)
+	npc.RemoveFromFaction(FollowFaction);
+	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
+	ActorUtil.AddPackageOverride(npc, SleepPackage, 100)
+	npc.EvaluatePackage()
+	
+	
+	Debug.Trace("[CHIM] SleepInBed end")
+
+
+endFunction
+
 function TakeASeatEnd(Actor npc) global
 	Package SeatPackage = Game.GetFormFromFile(0x01C6E9, "AIAgent.esp") as Package ; Package MoveToTarget
 	Faction SeatFaction=Game.GetFormFromFile(0x01C6EA, "AIAgent.esp") as Faction ; Faction MoveToTarget
@@ -139,7 +225,7 @@ function TakeASeatEnd(Actor npc) global
 	npc.EvaluatePackage()
 	PO3_SKSEFunctions.SetLinkedRef(npc,None)
 	AIAgentFunctions.commandEnded("TakeASeat")
-	Debug.Notification("[CHIM] End of sit: "+npc.GetDisplayName())
+	;Debug.Notification("[CHIM] End of sit: "+npc.GetDisplayName())
 	
 
 endFunction
@@ -174,7 +260,7 @@ function StartWait(Actor npc) global
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" waits" )
+	;Debug.Notification("[CHIM] "+npc.GetDisplayName()+" waits" )
 	
 	
 
@@ -193,11 +279,11 @@ function StartWaitSoft(Actor npc) global
 
 	npc.SetFactionRank(WaitFaction,1)
 	
-	ActorUtil.AddPackageOverride(npc, WaitPackage, 100, 0)
+	ActorUtil.AddPackageOverride(npc, WaitPackage, 50)
 	npc.EvaluatePackage()
 	
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" waits" )
+	;Debug.Notification("[CHIM] "+npc.GetDisplayName()+" waits" )
 	
 	
 
@@ -215,7 +301,7 @@ function EndWait(Actor npc) global
 	npc.EvaluatePackage()
 	
 	AIAgentFunctions.commandEnded("WaitHere")
-	Debug.Notification("[CHIM] End of wait: "+npc.GetDisplayName())
+	;Debug.Notification("[CHIM] End of wait: "+npc.GetDisplayName())
 
 endFunction
 
@@ -230,7 +316,7 @@ function EndWaitSoft(Actor npc) global
 
 	npc.EvaluatePackage()
 	
-	Debug.Notification("[CHIM] End of wait: "+npc.GetDisplayName())
+	;Debug.Notification("[CHIM] End of wait: "+npc.GetDisplayName())
 
 endFunction
 
@@ -240,11 +326,12 @@ function Follow(Actor npc, ObjectReference akTarget) global
 	ResetPackages(npc);
 	Package FollowPackage = Game.GetFormFromFile(0x01BC25, "AIAgent.esp") as Package 
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-	
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
+
 	
 	
 	npc.SetFactionRank(FollowFaction,1)
-	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
+	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw)
 	ActorUtil.AddPackageOverride(npc, FollowPackage, 100, 0)
 	npc.EvaluatePackage()
 	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" following  "+akTarget.GetDisplayName())
@@ -255,17 +342,17 @@ endFunction
 
 function FollowSoft(Actor npc, ObjectReference akTarget) global
 	
-	
-	ResetPackages(npc);
+	; used by get into conversation to make NPC talk near plater
+	;ResetPackages(npc);
 	Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
 
 	npc.SetFactionRank(FollowFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw) ;AIAgentMoveLocation keyword
-	ActorUtil.AddPackageOverride(npc, FollowPackageSoft, 100, 0)
+	ActorUtil.AddPackageOverride(npc, FollowPackageSoft, 50, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" sandboxing near "+akTarget.GetDisplayName())
+	;Debug.Notification("[CHIM] "+npc.GetDisplayName()+" sandboxing near "+akTarget.GetDisplayName())
 	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" sandboxing near "+akTarget.GetDisplayName())
 
 	
@@ -334,28 +421,72 @@ function TravelToTargetPlayer(Actor npc, ObjectReference akTarget,String place) 
 	Debug.Trace("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 endFunction
 
+;Travel to location
+
 function TravelToLocation(Actor npc, ObjectReference akTarget,String place) global
 	ResetPackages(npc);
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+	
+	npc.RemoveFromFaction(SandboxFaction)
+	npc.RemoveFromFaction(FollowFaction)
+	npc.RemoveFromFaction(WaitFaction)
+	
 	npc.SetFactionRank(TraveToFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
 	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
 	npc.EvaluatePackage()
 	
 	StorageUtil.SetFormValue(npc, "LastTravelToLocation",akTarget);
-	
+	Debug.Trace("[CHIM] TravelToLocation "+npc.GetDisplayName()+ " starts travel to "+place+" reference "+akTarget.GetFormId());
 	;Debug.Notification("Mission MoveToTarget start")
 	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
+endFunction
+
+;Travel to reference
+function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
+	Debug.Trace("TravelToTarget called: "+npc.GetDisplayName())
+	ResetPackages(npc);
+
+	Utility.wait(5);
+	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
+	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
+	
+	npc.RemoveFromFaction(SandboxFaction)
+	npc.RemoveFromFaction(FollowFaction)
+	npc.RemoveFromFaction(WaitFaction)
+	
+	npc.SetFactionRank(TraveToFaction,1)
+	
+	StorageUtil.SetFormValue(npc, "LastTravelToLocation",akTarget);
+	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
+	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
+	npc.EvaluatePackage()
+	
+	;Debug.Notification("Mission MoveToTarget start")
+	if (place=="")
+		place="a Unknown Place";
+		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has left the place","infoaction",npc.GetDisplayName())
+	endif;
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
+	Debug.Trace("[CHHIM] TravelToTarget called: "+npc.GetDisplayName()+" "+place+ ", actor"+akTarget.GetDisplayName())
 endFunction
 
 function TravelToTargetEnd(Actor npc) global
 	Package TravelPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TravelFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
+
 	npc.RemoveFromFaction(TravelFaction)
 	ActorUtil.RemovePackageOverride(npc, TravelPackage)
 
-	PO3_SKSEFunctions.SetLinkedRef(npc,None)
+	PO3_SKSEFunctions.SetLinkedRef(npc,None,MoveTargetKw)
 	npc.EvaluatePackage()
 	
 	ObjectReference destination=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as ObjectReference;
@@ -363,22 +494,86 @@ function TravelToTargetEnd(Actor npc) global
 		Form dest=destination.GetBaseObject()
 		if (dest.GetType()==43) 
 			Actor destinationActor=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as Actor
-			if (destinationActor.IsDead())
+			if (destinationActor.IsDead()); Inspecting a dead body
 				Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " inspects "+destinationActor.getDisplayName())
 				LookAt(npc,destinationActor)
 				Debug.SendAnimationEvent(npc,"IdleKneeling")
 				Utility.wait(3)
 				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
 			endif
-			Debug.Trace("TravelToTargetEnd: Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+			Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName()+".Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+			stayAtPlace(npc,0,"");
 		endif
 	endif
 		
 	
 	AIAgentFunctions.commandEndedForActor("TravelTo",npc.GetDisplayName())
-	Debug.Notification("[CHIM] End travelling for "+npc.GetDisplayName() )
+	;Debug.Notification("[CHIM] End travelling for "+npc.GetDisplayName() )
 
 endFunction
+
+int Function MoveToPlayer(Actor npc,String taskid) global;Review this
+	;used by server spawn
+	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	;Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+	;Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+
+	;Actor finalActor=npc;
+	npc.SetFactionRank(FollowFaction,1)
+	ActorUtil.AddPackageOverride(npc, FollowPlayerPackage, 100,0)
+	;finalActor.SetFactionRank(SandboxFaction,1)
+	
+	;ActorUtil.AddPackageOverride(finalActor, SandboxPackage, 65,0)
+	AIAgentFunctions.logMessageForActor("moving@"+npc.GetDisplayName()+"@"+taskid,"status_msg",npc.GetDisplayName())
+    
+	Utility.wait(3);
+	
+	;Only fire this after spawn
+	
+	
+	if (npc.GetParentCell()==Game.GetPlayer().GetParentCell())
+		Debug.Trace("Actor is present");
+		AIAgentAIMind.MoveToTarget(npc,Game.GetPlayer(),3); 
+	else
+		Debug.Trace("Actor is not present");
+		AIAgentAIMind.MoveToTarget(npc,Game.GetPlayer(),3); 
+	endif;
+	
+EndFunction
+
+int Function stayAtPlace(Actor npc,int followPlayer,String taskid = "") global
+
+	Debug.Trace("START stayAtPlace "+npc.GetDisplayName())
+	ResetPackages(npc);
+	
+	
+	Faction BardAudienceExcludedFaction = Game.GetForm(0x10fcb4) as Faction		; Package sandboxPackage 
+	npc.SetFactionRank(BardAudienceExcludedFaction,1)
+	
+	if (followPlayer==0)
+		Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+		Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+		npc.SetFactionRank(SandboxFaction,1)
+		ActorUtil.AddPackageOverride(npc, SandboxPackage, 99,0)
+		npc.EvaluatePackage();
+	elseif (followPlayer==1)
+		
+		Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+		Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+			
+		npc.SetFactionRank(FollowFaction,1)
+		ActorUtil.AddPackageOverride(npc, FollowPlayerPackage, 100,0)
+		npc.EvaluatePackage();
+	endif
+	
+	Debug.Trace("END stayAtPlace "+npc.GetDisplayName())
+	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
+
+EndFunction
+
+
+
 
 function OpenInventory(Actor npc,string originalCommand) global
 	Faction CurrentFollowerFaction=Game.GetForm(0x5c84e) as Faction; PlayerFollowerFaction
@@ -543,7 +738,7 @@ function RecoverFromCombat(Actor npc) global;Triggers on defeated actor
 		endif
 	endif
 	
-	Utility.wait(10);Wait, sometimes opponent still agressive
+	Utility.wait(15);Wait, sometimes opponent still agressive
 
 	npc.RestoreAV("Health",20)	
 	if (StorageUtil.HasIntValue(npc, "CHIM_Protected"))
@@ -570,7 +765,7 @@ function AttackTargetEnd(Actor npc) global
 	PO3_SKSEFunctions.SetLinkedRef(npc,None)
 	
 	AIAgentFunctions.commandEndedForActor("Attack",npc.GetDisplayName())
-	Debug.Notification("[CHIM] end attack command:  "+npc.GetDisplayName() )
+	;Debug.Notification("[CHIM] end attack command:  "+npc.GetDisplayName() )
 
 endFunction
 
@@ -599,7 +794,7 @@ function SendExternalEvent(String npcname,String command,String parm) global
 		ModEvent.PushString(handle, command)
 		ModEvent.PushString(handle, parm)
 		ModEvent.Send(handle)
-		Debug.Notification("[CHIM] External command sent "+command+"@"+parm)
+		;Debug.Notification("[CHIM] External command sent "+command+"@"+parm)
 
 	endIf
 endFunction
@@ -611,7 +806,7 @@ function SendExternalEventNPC(String npcname,String actionName) global
 		ModEvent.PushString(handle, npcname)
 		ModEvent.PushString(handle, actionName)
 		ModEvent.Send(handle)
-		Debug.Trace("[CHIM] CHIM_NPC "+npcname+" "+actionName)
+		;Debug.Trace("[CHIM] CHIM_NPC "+npcname+" "+actionName)
 	endIf
 endFunction
 
@@ -624,7 +819,7 @@ function SendExternalEventChat(String npcname,String text) global
 		ModEvent.PushString(handle, npcname)
 		ModEvent.PushString(handle, text)
 		ModEvent.Send(handle)
-		Debug.Trace("[CHIM] CHIM_TextReceived sent "+npcname+"@"+text)
+		;Debug.Trace("[CHIM] CHIM_TextReceived sent "+npcname+"@"+text)
 	endIf
 
 endFunction
@@ -763,7 +958,7 @@ Function ReleaseFromConversation(Actor npc) global
 	;npc.EnableAI(false);
 	;npc.EnableAI(true);
 	
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" leaves conversation")
+	;Debug.Notification("[CHIM] "+npc.GetDisplayName()+" leaves conversation")
 	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" leaves conversation")
 	
 EndFunction
@@ -1120,8 +1315,11 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		AIAgentFunctions.logMessageForActor("spawned@"+finalActor.GetDisplayName()+"@"+finalActor.GetFormId(),"status_msg",finalActor.GetDisplayName())
 
-		
-		Debug.Trace("[CHIM] Spaned "+finalActor.GetDisplayName()+" at "+finalActor.GetCurrentLocation().GetName())
+		string locationStr="";
+		if (finalActor.GetCurrentLocation())
+			locationStr = finalActor.GetCurrentLocation().GetName()
+		endif
+		Debug.Trace("[CHIM] Spaned "+finalActor.GetDisplayName()+" at "+locationStr)
 		return 0
 	EndIf
 
@@ -1271,34 +1469,6 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 	return -1
 EndFunction
 
-int Function MoveToPlayer(Actor npc,String taskid) global
-
-	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
-	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-	;Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
-	;Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
-
-	;Actor finalActor=npc;
-	npc.SetFactionRank(FollowFaction,1)
-	ActorUtil.AddPackageOverride(npc, FollowPlayerPackage, 100,0)
-	;finalActor.SetFactionRank(SandboxFaction,1)
-	
-	;ActorUtil.AddPackageOverride(finalActor, SandboxPackage, 65,0)
-	AIAgentFunctions.logMessageForActor("moving@"+npc.GetDisplayName()+"@"+taskid,"status_msg",npc.GetDisplayName())
-    
-	Utility.wait(3);
-	if (npc.GetParentCell()==Game.GetPlayer().GetParentCell())
-		Debug.Trace("Actor is present");
-		AIAgentAIMind.MoveToTarget(npc,Game.GetPlayer()); 
-	else
-		Debug.Trace("Actor is not present");
-		AIAgentAIMind.MoveToTarget(npc,Game.GetPlayer()); 
-	endif;
-	
-	
-
-	
-EndFunction
 
 int Function Sandbox(Actor npc,String taskid) global
 
@@ -1312,35 +1482,6 @@ int Function Sandbox(Actor npc,String taskid) global
 	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
 endFunction
 
-int Function stayAtPlace(Actor npc,int followPlayer,String taskid) global
-
-	Debug.Trace("START stayAtPlace "+npc.GetDisplayName())
-	ResetPackages(npc);
-	
-	
-	Faction BardAudienceExcludedFaction = Game.GetForm(0x10fcb4) as Faction		; Package sandboxPackage 
-	npc.SetFactionRank(BardAudienceExcludedFaction,1)
-	
-	if (followPlayer==0)
-		Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
-		Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
-		npc.SetFactionRank(SandboxFaction,1)
-		ActorUtil.AddPackageOverride(npc, SandboxPackage, 99,0)
-		npc.EvaluatePackage();
-	elseif (followPlayer==1)
-		
-		Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
-		Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-			
-		npc.SetFactionRank(FollowFaction,1)
-		ActorUtil.AddPackageOverride(npc, FollowPlayerPackage, 100,0)
-		npc.EvaluatePackage();
-	endif
-	
-	Debug.Trace("END stayAtPlace "+npc.GetDisplayName())
-	;AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" talks to "+(Game.GetPlayer().GetDisplayName())+" about the topic he/she knows","instruction",npc.GetDisplayName())
-
-EndFunction
 
 
 int Function CombatPlayer(Actor npc) global
@@ -1354,35 +1495,6 @@ int Function CombatPlayer(Actor npc) global
 	
 endFunction
 	
-function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
-	Debug.Trace("TravelToTarget called: "+npc.GetDisplayName())
-	ResetPackages(npc);
-	;AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" is leaving the place","instruction",npc.GetDisplayName())
-	Utility.wait(5);
-	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
-	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
-	Faction sandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
-	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-
-	npc.RemoveFromFaction(sandboxFaction)
-	npc.RemoveFromFaction(FollowFaction)
-	
-	npc.SetFactionRank(TraveToFaction,1)
-	
-	
-	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
-	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
-	npc.EvaluatePackage()
-	
-	;Debug.Notification("Mission MoveToTarget start")
-	if (place=="")
-		place="a Unknown Place";
-		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has left the place","infoaction",npc.GetDisplayName())
-	endif;
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
-
-endFunction
-
 function SendInstruction(Actor npc, String instruction) global
 	
 	AIAgentFunctions.requestMessageForActor(instruction,"instruction",npc.GetDisplayName())
@@ -1566,7 +1678,7 @@ function PlaceCam(Actor npc) global
 	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
 		return;
 	else
-		Debug.Trace("Player is sitting");
+		;Debug.Trace("Player is sitting");
 	endif
 	
 	Actor lastCamActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitLastActor",None) as Actor;
@@ -1634,7 +1746,7 @@ function PlaceCam(Actor npc) global
 		
 	endif
 
-	Debug.Trace("[CHIM] Camera focus on "+npc.GetDisplayName())
+	;Debug.Trace("[CHIM] Camera focus on "+npc.GetDisplayName())
 
 
 EndFunction
