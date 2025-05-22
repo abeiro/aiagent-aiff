@@ -122,6 +122,10 @@ int			_keymap_godmode
 int			_godmode_key					= -1
 
 
+int			_actionSendLocations
+bool		_actionSendLocationsState		= false
+
+
 ; default settings
 int			_myKeyDefault					= -1
 int			_myKey2Default					= -1
@@ -146,14 +150,15 @@ bool 		_rechat_policy_asap_default		= true
 
 event OnConfigInit()
 	ModName="CHIM"
-	Pages = new string[3]
+	Pages = new string[4]
 	Pages[0] = "Main"
 	Pages[1] = "Behavior"
 	Pages[2] = "Sound"
+	Pages[3] = "Util"
 	
 
 	Debug.Trace("CHIM: OnConfigInit")
-	Debug.Notification("[CHIM] Updating menu ... v3.7");
+	Debug.Notification("[CHIM] Updating menu ... v4.2");
 	
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
@@ -219,14 +224,14 @@ endEvent
 
 int function GetVersion()
 
-	return 41
+	return 42
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
 
-	if (a_version >= 2 && CurrentVersion < 38)
+	if (a_version >= 2 && CurrentVersion < 42)
 		OnConfigInit()
 		
 		; Clear any AutoActivate related settings from existing saves
@@ -329,6 +334,13 @@ event OnPageReset(string a_page)
 		;AddEmptyOption();
 		_togglePauseDialogue	= AddToggleOption("Pause Dialogue on Game Pause",_pauseDialogueState)
 		_toggle_usewebsocketstt			= AddToggleOption("Use WebSocket STT",_toggle_usewebsocketstt_state)
+
+	
+	endif
+	
+	if (a_page=="Util")
+		
+		_actionSendLocations	= AddToggleOption("Send all locations to server",false)
 
 	
 	endif
@@ -869,7 +881,7 @@ event OnOptionSelect(int a_option)
  	if (a_option == _toggleAddAllNowNPC)
  		AIAgentFunctions.testAddAllNPCAround()
 		
-		AIAgentPapyrusFunctions.sendAllLocations();
+		;AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
  	endIf
 	
@@ -920,6 +932,11 @@ event OnOptionSelect(int a_option)
  		endif
  
  		SetToggleOptionValue(a_option, _toggle_autoadd_allraces_state)
+ 	endIf
+	
+	if (a_option == _actionSendLocations)
+ 		AIAgentPapyrusFunctions.sendAllLocations();
+ 		ShowMessage("Done")
  	endIf
 	
 endEvent
@@ -1057,5 +1074,8 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Auto Activate policy. By default, it applies to non-hostile NPCs whose race allows player dialogue (PC Dialogue = 1). Check this option to allow Auto Activate for all races - including animals like rabbits, deer, foxes, etc. Note: Enabling this may cause instability.")
 	endIf
 	
+	if (a_option == _actionSendLocations)
+		SetInfoText("Will send all locations found in-game to server, so TravelTo action can work better")
+	endIf
 
 endEvent

@@ -23,7 +23,7 @@ Actor	currentPlayerHorse;
 
 Event OnInit()
 	doBinding(_currentKey)
-	
+	Debug.Trace("[CHIM] AIAgentPapyrusFunctions quest script OnInit()")
 EndEvent
 
 Event OnKeyUp(int keyCode, float holdTime)
@@ -85,18 +85,6 @@ Event OnKeyDown(int keyCode)
 		  Return
 		EndIf
 
-		if (false)	; this is for test purposes
-			if (!followingHerika)
-				followingHerika=true;
-				Debug.Notification("[CHIM] Everyone added...");
-				AIAgentFunctions.testAddAllNPCAround()
-			else
-				Debug.Notification("[CHIM] Everyone removed..");
-				followingHerika=false;
-				AIAgentFunctions.testRemoveAll()
-			endif
-			return;
-		endif
 		
 		if (false) 
 			Debug.Notification("[CHIM] Sending all actors names");
@@ -422,4 +410,9 @@ Function sendAllLocations() global
 	endwhile
 	return
 
+EndFunction
+
+Function OnAnimationEvent(ObjectReference akSource, String asEventName)
+	Debug.Trace("[CHIM] Sending animation event "+asEventName+" on "+akSource.GetName());
+	Debug.SendAnimationEvent(akSource,asEventName)
 EndFunction

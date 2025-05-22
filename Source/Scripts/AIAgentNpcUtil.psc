@@ -112,7 +112,14 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		if (dest.Is3DLoaded())
 			PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
 		else
-			Debug.Trace("CHIM ADV]  ResetActor3D cancelled");
+			Debug.Trace("[CHIM ADV]  ResetActor3D cancelled...will retry");
+			Utility.wait(5)
+			if (dest.Is3DLoaded())
+				PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
+			else	
+				Debug.Trace("[CHIM ADV]  ResetActor3D cancelled");
+				Debug.Notification("[CHIM] error spawning NPC");
+			EndIf
 		endif
 		
 		destBase.SetVoiceType(sourceBase.GetVoiceType())
@@ -219,5 +226,9 @@ function RemoveAllWeapons(Actor npc)  global
 endFunction
 
 Function NpcPlayIdle(Actor ref,string animation) Global
-	Debug.SendAnimationEvent(ref,animation)
+	;Debug.SendAnimationEvent(ref,animation);Old way
+	Quest AIAgentPapyrusFunctionsQuest = Game.GetFormFromFile(0x0093fc, "AIAgent.esp") as Quest 
+	
+	AIAgentPapyrusFunctionsQuest.OnAnimationEvent(ref,animation)
+
 EndFunction
