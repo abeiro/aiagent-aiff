@@ -14,6 +14,7 @@ function resetFace(Actor target) global
 	;; this works if using mfgfix, but maybe will reset some face effect
 	if (!target.IsOnMount())
 		MfgConsoleFunc.ResetPhonemeModifier(target);
+		;MfgConsoleFunc.SetPhonemeModifier(ActorRef, -1, 0, 0)
 		target.QueueNiNodeUpdate()
 	endif	
 	;https://forums.nexusmods.com/index.php?/topic/5915098-mfg-fix/page-93#entry120402382 Coffee to this guy

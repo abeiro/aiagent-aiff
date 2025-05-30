@@ -28,7 +28,10 @@ function ResetPackages(Actor npc) global
 	Package MoveToPackage = Game.GetFormFromFile(0x01C6E8, "AIAgent.esp") as Package ; Package MoveToTarget
 	Package WaitPackage = Game.GetFormFromFile(0x02021F, "AIAgent.esp") as Package ; Package MoveToTarget
 	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
+	Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	;
+
 	
 	
 	ActorUtil.RemovePackageOverride(npc, TraveltoPackage)
@@ -38,6 +41,7 @@ function ResetPackages(Actor npc) global
 	ActorUtil.RemovePackageOverride(npc, MoveToPackage)
 	ActorUtil.RemovePackageOverride(npc, WaitPackage)
 	ActorUtil.RemovePackageOverride(npc, FollowPlayerPackage)
+	ActorUtil.RemovePackageOverride(npc, SandboxPackage)
 	;ActorUtil.ClearPackageOverride(npc)
 	
 	npc.EvaluatePackage()
@@ -114,14 +118,14 @@ function MoveToTargetEnd(Actor npc) global
 				Utility.wait(3)
 				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
 			endif
-			if (intent==1);Give/Trade
+			if (intent==1);Give
 				Debug.trace("[CHIM] MoveToTargetEnd performing animation IdleGive");
 				LookAt(npc,destinationActor)
 				Debug.SendAnimationEvent(npc,"IdleGive")
 				Utility.wait(1)
 			endif
 			
-			if (intent==2)
+			if (intent==2);Trade
 				Debug.trace("[CHIM] MoveToTargetEnd performing animation IdleGive2");
 				LookAt(npc,destinationActor)
 				Debug.SendAnimationEvent(npc,"IdleGive")
@@ -129,13 +133,14 @@ function MoveToTargetEnd(Actor npc) global
 				Utility.wait(1)
 			endif
 			
-			if (intent==3)
+			if (intent==3);spawn
 				Debug.trace("[CHIM] MoveToTargetEnd , introducing spawned NPC");
 				AIAgentFunctions.requestMessageForActor("The Narrator:"+npc.GetDisplayName()+" appears in scene, directly pointing to its goal.","instruction",npc.GetDisplayName())
+				stayAtPlace(npc,0);
 			endif
 			
 			Debug.Trace("[CHIM] MoveToTargetEnd: "+npc.GetDisplayName()+". Move destination was "+destinationActor.GetDisplayName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
-			stayAtPlace(npc,0);
+			
 		endif
 	endif
 	
@@ -171,6 +176,7 @@ function TakeASeat(Actor npc, ObjectReference akTarget) global
 	
 	Debug.Trace("[CHIM] TakeASeat start")
 
+		
 	if (akTarget.IsFurnitureInUse()) 
 		Debug.Notification("[CHIM] Sitting at "+akTarget.GetDisplayName()+", but seems in use")
 	endif;
@@ -369,12 +375,18 @@ function StopCurrent(Actor npc) global
 	Faction WaitFaction=  Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
 	Faction SeatFaction=  Game.GetFormFromFile(0x01C6EA, "AIAgent.esp") as Faction ; Faction AIAgentFactionSeat
 
+	Faction MoveToFaction=Game.GetFormFromFile(0x01A69B, "AIAgent.esp") as Faction ; Faction MoveToTarget
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+	
+	
 	;npc.RemoveFromFaction(moveToFaction)
 	npc.RemoveFromFaction(AttackFaction)
 	npc.RemoveFromFaction(FollowFaction)
 	npc.RemoveFromFaction(TravelFaction)
 	npc.RemoveFromFaction(WaitFaction)
 	npc.RemoveFromFaction(SeatFaction)
+	npc.RemoveFromFaction(MoveToFaction)
+	npc.RemoveFromFaction(SandboxFaction)
 	
 	ResetPackages(npc);
 	ActorUtil.ClearPackageOverride(npc)

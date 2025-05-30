@@ -232,3 +232,29 @@ Function NpcPlayIdle(Actor ref,string animation) Global
 	AIAgentPapyrusFunctionsQuest.OnAnimationEvent(ref,animation)
 
 EndFunction
+
+ObjectReference function findFurniture()
+	
+	Cell currentCell=Game.GetPlayer().GetParentCell();
+	Int nRefs=currentCell.GetNumRefs(40);
+	Int i = 0
+	Float nearest =1000;
+	ObjectReference candidate=None;
+	
+	while i < nRefs
+		ObjectReference localRef = currentCell.GetNthRef(i, 40)
+		;PO3_SKSEFunctions.GetFurnitureType(localRef as Furniture)
+		if !localRef.IsFurnitureInUse()
+			float distance = localRef.GetDistance(Game.GetPlayer())
+			
+			if distance < nearest
+				candidate = localRef
+				nearest = distance
+			endif
+		endif
+
+		i += 1
+	endwhile
+	
+	return candidate
+endFunction

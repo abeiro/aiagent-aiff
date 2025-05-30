@@ -15,6 +15,7 @@ bool		followingHerika= false
 
 int		_nativeSoulGaze= 1
 
+Spell Property IntimacySpell  Auto  
 
 
 Actor	currentPlayerFollowTarget;
@@ -53,7 +54,12 @@ Event OnKeyDown(int keyCode)
     string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
 	
 	If messageText != ""
-        AIAgentFunctions.sendMessage(messageText,"")
+		if (Input.IsKeyPressed(29))	; Left Shift
+			Debug.Trace("[CHIM] Shift modifier, will cast intimacy bubble");
+			IntimacySpell.cast(Game.GetPlayer())
+			
+		endif;
+		AIAgentFunctions.sendMessage(messageText,"")
 		
 		
     EndIf
@@ -416,3 +422,4 @@ Function OnAnimationEvent(ObjectReference akSource, String asEventName)
 	Debug.Trace("[CHIM] Sending animation event "+asEventName+" on "+akSource.GetName());
 	Debug.SendAnimationEvent(akSource,asEventName)
 EndFunction
+

@@ -13,6 +13,7 @@ int function logMessageForActor(String a_msg,String type,String npc) Global Nati
 int function requestMessage(String a_msg,String type) Global Native		; Send message (no user input). expects an IA response
 int function requestMessageForActor(String a_msg,String type,String npc) Global Native		; Send message (no user input). expects an IA response
 int function setAnimationBusy(int busy,String npc) Global Native
+int function setLocked(int locked,String npc) Global Native; 1 locks agent for talking, 0 releases.
 int function sendRequest() Global Native
 int function hardResetExpression() Global Native
 int function shotAndUpload(String hints,int mode) Global Native
