@@ -15,7 +15,9 @@ EndFunction
 Function Fragment_3(Actor akActor)
 ;BEGIN CODE
 Debug.Trace("AIAgentMovePackage ebd")
-AIAGentAiMind.MoveToTargetEnd(akActor)
+if (akActor)
+	AIAGentAiMind.MoveToTargetEnd(akActor)
+endif
 ;END CODE
 EndFunction
 ;END FRAGMENT

@@ -354,6 +354,13 @@ function FollowSoft(Actor npc, ObjectReference akTarget) global
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	; // Psijic Monk Outfit
 
+	;
+	Package SeatPackage = Game.GetFormFromFile(0x01C6E9, "AIAgent.esp") as Package ; Package AIAgentSeatPackage
+	Faction SeatFaction=Game.GetFormFromFile(0x01C6EA, "AIAgent.esp") as Faction ; 
+	
+	npc.RemoveFromFaction(SeatFaction)
+	ActorUtil.RemovePackageOverride(npc, SeatPackage)
+	
 	npc.SetFactionRank(FollowFaction,1)
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw) ;AIAgentMoveLocation keyword
 	ActorUtil.AddPackageOverride(npc, FollowPackageSoft, 50, 0)
