@@ -9,6 +9,7 @@ int			_currentCModelKey
 int 		_currentCSoulgaze
 int 		_currentCtl
 int 		_currentGodmodeKey
+int 		_currentOpenMicMuteKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -215,6 +216,16 @@ Event OnKeyDown(int keyCode)
 	
   EndIf
   
+  If(keyCode == _currentOpenMicMuteKey)
+	If !SafeProcess()
+		Return
+	EndIf
+	
+	setConf("_openmic_toggle_mute",1);
+	Debug.Notification("[CHIM] Open mic mute toggled");
+	
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -300,6 +311,12 @@ EndFunction
 Function doBinding8(int keycode) 
 	
 	_currentGodmodeKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding9(int keycode) 
+	
+	_currentOpenMicMuteKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
