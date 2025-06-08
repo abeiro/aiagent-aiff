@@ -1179,11 +1179,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_openmic)
-		SetInfoText("Enable open microphone mode. When enabled, the mod will automatically start recording when it detects voice above the sensitivity threshold.")
+		SetInfoText("Enable open microphone mode. When enabled, will automatically start recording when it detects voice input above the sensitivity threshold.")
 	endIf
 	
 	if (a_option == _slider_openmic_sensitivity)
-		SetInfoText("Voice detection sensitivity for open mic. Higher values require louder voice to trigger recording. Adjust based on your microphone and environment.")
+		SetInfoText("Voice detection sensitivity for open mic. Higher values require louder voice to trigger recording.")
 	endIf
 	
 	if (a_option == _slider_openmic_enddelay)
@@ -1191,7 +1191,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_openmic_mute)
-		SetInfoText("Key to temporarily mute the open microphone without disabling the feature completely.")
+		SetInfoText("Key to temporarily mute the open microphone.")
 	endIf
 
 endEvent

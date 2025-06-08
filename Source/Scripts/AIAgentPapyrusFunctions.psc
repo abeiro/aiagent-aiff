@@ -222,7 +222,6 @@ Event OnKeyDown(int keyCode)
 	EndIf
 	
 	setConf("_openmic_toggle_mute",1);
-	Debug.Notification("[CHIM] Open mic mute toggled");
 	
   EndIf
   
