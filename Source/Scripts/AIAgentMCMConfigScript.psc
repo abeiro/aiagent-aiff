@@ -118,6 +118,20 @@ int 		_toggle_autoadd_allraces
 bool  		_toggle_autoadd_allraces_state = false
 
 
+; Open Mic functionality
+int			_toggle_openmic
+bool		_toggle_openmic_state			= false
+
+int			_slider_openmic_sensitivity
+float		_openmic_sensitivity			= 1000.0
+
+int			_slider_openmic_enddelay
+float		_openmic_enddelay				= 1.0
+
+int			_keymap_openmic_mute
+int			_openmic_mute_key				= -1
+
+
 int			_keymap_godmode
 int			_godmode_key					= -1
 
@@ -147,6 +161,10 @@ bool		_animationstateDefault			= false
 bool		_invertheadingstateDefault		= false
 bool		_pauseDialogueStateDefault		= false
 bool 		_rechat_policy_asap_default		= true
+bool		_toggle_openmic_stateDefault	= false
+float		_openmic_sensitivityDefault		= 1000.0
+float		_openmic_enddelayDefault		= 1.0
+int			_openmic_mute_keyDefault		= -1
 
 event OnConfigInit()
 	ModName="CHIM"
@@ -334,6 +352,13 @@ event OnPageReset(string a_page)
 		;AddEmptyOption();
 		_togglePauseDialogue	= AddToggleOption("Pause Dialogue on Game Pause",_pauseDialogueState)
 		_toggle_usewebsocketstt			= AddToggleOption("Use WebSocket STT",_toggle_usewebsocketstt_state)
+		
+		AddEmptyOption();
+		AddHeaderOption("Open Mic Settings")
+		_toggle_openmic		= AddToggleOption("Enable Open Mic", _toggle_openmic_state)
+		_slider_openmic_sensitivity = AddSliderOption("Voice Detection Sensitivity", _openmic_sensitivity, "{0}")
+		_slider_openmic_enddelay = AddSliderOption("End of Sentence Delay (sec)", _openmic_enddelay, "{1}")
+		_keymap_openmic_mute = AddKeyMapOption("Mute Open Mic", _openmic_mute_key)
 
 	
 	endif
@@ -417,6 +442,20 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(1)
 	endIf
 	
+	if (a_option == _slider_openmic_sensitivity)
+		SetSliderDialogStartValue(_openmic_sensitivity)
+		SetSliderDialogDefaultValue(1000)
+		SetSliderDialogRange(100, 5000)
+		SetSliderDialogInterval(100)
+	endIf
+	
+	if (a_option == _slider_openmic_enddelay)
+		SetSliderDialogStartValue(_openmic_enddelay)
+		SetSliderDialogDefaultValue(1.0)
+		SetSliderDialogRange(0.5, 5.0)
+		SetSliderDialogInterval(0.1)
+	endIf
+	
 endEvent
 
 event OnOptionSliderAccept(int a_option, float a_value)
@@ -473,6 +512,18 @@ event OnOptionSliderAccept(int a_option, float a_value)
 	if (a_option == _slider_bored_period)
 		_bored_period = a_value
 		controlScript.setConf("_bored_period",_bored_period)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+	
+	if (a_option == _slider_openmic_sensitivity)
+		_openmic_sensitivity = a_value
+		controlScript.setConf("_openmic_sensitivity",_openmic_sensitivity)
+		SetSliderOptionValue(a_option, a_value, "{0}")
+	endIf
+	
+	if (a_option == _slider_openmic_enddelay)
+		_openmic_enddelay = a_value
+		controlScript.setConf("_openmic_enddelay",_openmic_enddelay)
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
 	
@@ -547,6 +598,16 @@ event OnGameReload()
 	
 	controlScript.setConf("_godmode",0)
 	controlScript._currentGodmodeStatus=false
+	
+	; Open mic settings
+	if (_toggle_openmic_state)
+		controlScript.setConf("_openmic_enabled",1)
+	else
+		controlScript.setConf("_openmic_enabled",0)
+	endif
+	
+	controlScript.setConf("_openmic_sensitivity",_openmic_sensitivity)
+	controlScript.setConf("_openmic_enddelay",_openmic_enddelay)
 	
 endEvent
 
@@ -640,6 +701,24 @@ event OnOptionDefault(int a_option)
 	elseif (a_option == _togglePauseDialogue)
 		_pauseDialogueState = _pauseDialogueStateDefault
 		SetToggleOptionValue(a_option, _pauseDialogueState)
+		
+	elseif (a_option == _toggle_openmic)
+		_toggle_openmic_state = _toggle_openmic_stateDefault
+		SetToggleOptionValue(a_option, _toggle_openmic_state)
+		
+	elseif (a_option == _slider_openmic_sensitivity)
+		_openmic_sensitivity = _openmic_sensitivityDefault
+		SetSliderOptionValue(a_option, _openmic_sensitivity, "{0}")
+		
+	elseif (a_option == _slider_openmic_enddelay)
+		_openmic_enddelay = _openmic_enddelayDefault
+		SetSliderOptionValue(a_option, _openmic_enddelay, "{1}")
+		
+	elseif (a_option == _keymap_openmic_mute)
+		controlScript.removeBinding(_openmic_mute_key)
+		_openmic_mute_key = _openmic_mute_keyDefault
+		SetKeymapOptionValue(a_option, _openmic_mute_key)
+		controlScript.doBinding9(_openmic_mute_key)
 	endIf
 	
 endEvent
@@ -743,6 +822,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif	
+		elseif (a_option == _keymap_openmic_mute)
+			controlScript.removeBinding(_openmic_mute_key)
+			_openmic_mute_key = a_keyCode
+			controlScript.doBinding9(_openmic_mute_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -934,6 +1022,18 @@ event OnOptionSelect(int a_option)
  		SetToggleOptionValue(a_option, _toggle_autoadd_allraces_state)
  	endIf
 	
+	if (a_option == _toggle_openmic)
+ 		_toggle_openmic_state = !_toggle_openmic_state
+ 
+ 		if (_toggle_openmic_state)
+ 			controlScript.setConf("_openmic_enabled",1)
+ 		else
+ 			controlScript.setConf("_openmic_enabled",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_openmic_state)
+ 	endIf
+	
 	if (a_option == _actionSendLocations)
  		AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
@@ -1076,6 +1176,22 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _actionSendLocations)
 		SetInfoText("Will send all locations found in-game to server, so TravelTo action can work better")
+	endIf
+	
+	if (a_option == _toggle_openmic)
+		SetInfoText("Enable open microphone mode. When enabled, will automatically start recording when it detects voice input above the sensitivity threshold.")
+	endIf
+	
+	if (a_option == _slider_openmic_sensitivity)
+		SetInfoText("Voice detection sensitivity for open mic. Higher values require louder voice to trigger recording.")
+	endIf
+	
+	if (a_option == _slider_openmic_enddelay)
+		SetInfoText("How long to wait (in seconds) after voice stops before ending the recording and processing the speech.")
+	endIf
+	
+	if (a_option == _keymap_openmic_mute)
+		SetInfoText("Key to temporarily mute the open microphone.")
 	endIf
 
 endEvent
