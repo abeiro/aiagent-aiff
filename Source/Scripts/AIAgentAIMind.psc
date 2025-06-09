@@ -521,7 +521,7 @@ function TravelToTargetEnd(Actor npc) global
 				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
 			endif
 			Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName()+".Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
-			stayAtPlace(npc,0,"");
+			;stayAtPlace(npc,0,"");
 		endif
 	endif
 		
@@ -804,6 +804,19 @@ function StartCombat(Actor npc,ObjectReference victim) global
 
 endFunction
 
+
+function SendInternalEvent(String npcname,String command,String parm) global
+
+	int handle = ModEvent.Create("CHIM_CommandReceivedInternal")
+	if (handle)
+		ModEvent.PushString(handle, npcname)
+		ModEvent.PushString(handle, command)
+		ModEvent.PushString(handle, parm)
+		ModEvent.Send(handle)
+		;Debug.Notification("[CHIM] External command sent "+command+"@"+parm)
+
+	endIf
+endFunction
 
 function SendExternalEvent(String npcname,String command,String parm) global
 

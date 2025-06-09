@@ -341,8 +341,10 @@ EndFunction
 
 
 bool Function thirdPartyInit()
-	
-    
+	Debug.Trace("[CHIM] thirdPartyInit")
+	UnRegisterForModEvent("CHIM_CommandReceivedInternal")
+	RegisterForModEvent("CHIM_CommandReceivedInternal", "CommandManager")
+
 	
 EndFunction
 
@@ -417,6 +419,22 @@ Function sendAllLocations() global
 	return
 
 EndFunction
+
+Event CommandManager(String npcname,String  command, String parameter)
+	
+	if (command=="AnimationEvent")
+		Actor npc=AIAgentFunctions.getAgentByName(npcname);
+		;if (actor->IsInCombat() || actor->IsOnMount() || actor->IsHorse() || actor->IsPlayer() ) {
+		if (npc.IsInCombat() || npc.IsOnMount() || npc.IsFlying() || npc.IsUnconscious() || npc == Game.GetPlayer()  )
+			Debug.Trace("[CHIM] [ANIMATION aborted]")
+		else
+			OnAnimationEvent(npc,parameter)
+		endif;
+		
+	endif
+	
+
+EndEvent
 
 Function OnAnimationEvent(ObjectReference akSource, String asEventName)
 	Debug.Trace("[CHIM] Sending animation event "+asEventName+" on "+akSource.GetName());
