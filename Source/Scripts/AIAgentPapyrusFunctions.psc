@@ -357,11 +357,7 @@ bool Function setNewActionMode( int mode)
 	AIAgentFunctions.setConf("_sgmode",0,_nativeSoulGaze,"");
 	
 
-	if (mode==0)
-		Debug.Notification("[CHIM] Action mode is off");
-	else
-		Debug.Notification("[CHIM] Action mode is on");
-	endif
+	; Removed action mode notifications - no longer displayed on save load
 	
 	InitTSE();	
 	thirdPartyInit();	
@@ -395,7 +391,7 @@ EndFunction
 
 
 Function InitTSE() 
-	Debug.Notification("[CHIM] Player script initialized")
+	; Removed player script initialized notification - no longer displayed on save load
     RegisterForTrackedStatsEvent() ; Before we can use OnTrackedStatsEvent we must register.
 endFunction
 
