@@ -52,11 +52,22 @@ Event OnKeyUp(int keyCode, float holdTime)
 		
 		; If held for more than 0.5 seconds, trigger all followers
 		If (holdTime >= 0.5)
-			Debug.Notification("[CHIM] Diary: All followers writing entries...")
+			Debug.Notification("[CHIM] Diary: All followers are writing entries...")
 			AIAgentFunctions.sendMessage("Please, update your diary","diary_followers")
 		Else
 			; Quick press - normal behavior (target or closest)
-			Debug.Notification("[CHIM] Diary: Writing entry...")
+			; Get the target NPC name for the notification
+			ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+			String targetName = ""
+			If (crosshairRef && crosshairRef.GetBaseObject() as ActorBase)
+				targetName = (crosshairRef.GetBaseObject() as ActorBase).GetName()
+			EndIf
+			
+			If (targetName != "")
+				Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+			Else
+				Debug.Notification("[CHIM] Writing diary entry...")
+			EndIf
 			AIAgentFunctions.sendMessage("Please, update your diary","diary")
 		EndIf
 	EndIf
