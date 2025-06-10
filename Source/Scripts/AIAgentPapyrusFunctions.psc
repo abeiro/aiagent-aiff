@@ -13,6 +13,7 @@ int 		_currentOpenMicMuteKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
+bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
 
 int		_nativeSoulGaze= 1
 
@@ -41,6 +42,24 @@ Event OnKeyUp(int keyCode, float holdTime)
 			Debug.Notification("[CHIM] Recording end");
 		endif
 	endif
+	
+	; Handle diary key release with hold time detection
+	If(keyCode == _currentDiaryKey && _diaryKeyPressed)
+		_diaryKeyPressed = false
+		If !SafeProcess()
+			Return
+		EndIf
+		
+		; If held for more than 0.5 seconds, trigger all followers
+		If (holdTime >= 0.5)
+			Debug.Notification("[CHIM] Diary: All followers writing entries...")
+			AIAgentFunctions.sendMessage("Please, update your diary","diary_followers")
+		Else
+			; Quick press - normal behavior (target or closest)
+			Debug.Notification("[CHIM] Diary: Writing entry...")
+			AIAgentFunctions.sendMessage("Please, update your diary","diary")
+		EndIf
+	EndIf
 EndEvent
 
 Event OnKeyDown(int keyCode)
@@ -177,7 +196,8 @@ Event OnKeyDown(int keyCode)
 	If !SafeProcess()
 		Return
 	EndIf
-	AIAgentFunctions.sendMessage("Please, update your diary","diary")
+	; Just track that the diary key was pressed - actual logic happens in OnKeyUp
+	_diaryKeyPressed = true
   EndIf
   If(keyCode == _currentCModelKey)
 	If Utility.IsInMenuMode() && SafeProcess(true)
