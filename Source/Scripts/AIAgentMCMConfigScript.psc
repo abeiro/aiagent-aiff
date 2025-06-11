@@ -59,7 +59,7 @@ float		_lip_int				= 1.0
 
 
 int 		_slider_timeout
-float		_timeout_int				= 30.0
+float		_timeout_int				= 60.0
 
 
 int			_toggleAnimation
@@ -77,8 +77,6 @@ bool		_pauseDialogueState			= false
 
 
 ; Auto Activate related
-int			_toggleResetNPC
-int			_toggleAddAllNowNPC
 
 int			_toggleAddAllNPC 
 bool		_toggleAddAllNPCState			= false
@@ -142,6 +140,12 @@ int			_godmode_key					= -1
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 
+; AI Agents page variables
+int[] 		_agentToggleOIDs
+string[]	_currentAgentNames
+int			_toggleAddAllNowNPC
+int			_removeAllAgentsOID
+
 
 ; default settings
 int			_myKeyDefault					= -1
@@ -171,15 +175,13 @@ int			_openmic_mute_keyDefault		= -1
 
 event OnConfigInit()
 	ModName="CHIM"
-	Pages = new string[4]
+	Pages = new string[5]
 	Pages[0] = "Main"
 	Pages[1] = "Behavior"
 	Pages[2] = "Sound"
-	Pages[3] = "Util"
+	Pages[3] = "AI Agents"
+	Pages[4] = "Utility"
 	
-
-	Debug.Trace("CHIM: OnConfigInit")
-	Debug.Notification("[CHIM] Updating menu ... v4.2");
 	
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
@@ -249,14 +251,14 @@ endEvent
 
 int function GetVersion()
 
-	return 43
+	return 45
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
 
-	if (a_version >= 2 && CurrentVersion < 42)
+	if (a_version >= 2 && CurrentVersion < 45)
 		OnConfigInit()
 		
 		; Clear any AutoActivate related settings from existing saves
@@ -298,7 +300,7 @@ event OnPageReset(string a_page)
 	if (a_page=="Main" || a_page=="")
 		_keymapOID_K2 = AddKeyMapOption("Voice Chat/Summarize Book", _myKey2)
 		_keymapOID_K = AddKeyMapOption("Text Chat", _myKey)	
-		_keymapOID_K7		= AddKeyMapOption("Activate AI", _myKey7)
+		_keymapOID_K7		= AddKeyMapOption("Manual AI Activate", _myKey7)
 		;_toggle1OID_B		= AddToggleOption("Enable AI Voice (TTS)", _toggleState1)
 		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
 		_keymapOID_K3		= AddKeyMapOption("Follow and Unfollow NPC/Summarize book", _myKey3)
@@ -307,7 +309,7 @@ event OnPageReset(string a_page)
 		_keymapOID_K5		= AddKeyMapOption("Switch AI/LLM Model", _myKey5)
 		_keymapOID_K6		= AddKeyMapOption("Soulgaze", _myKey6)
 		
-		_slider_timeout	= AddSliderOption("AIAgent connection timeout ",_timeout_int,"{1}" )
+		_slider_timeout	= AddSliderOption("AIAgent Connection Timeout",_timeout_int,"{1}" )
 		_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
@@ -318,19 +320,16 @@ event OnPageReset(string a_page)
 
 	if (a_page=="Behavior")
 		_toggleAddAllNPC		= AddToggleOption("Auto Activate", _toggleAddAllNPCState)
-		AddEmptyOption();
-		_toggleResetNPC		= AddToggleOption("Remove all AI NPCs", false)
-		_toggleAddAllNowNPC	= AddToggleOption("Add all current AI NPCs", false)
 		
-		_slider_bored_period	= AddSliderOption("Bored Event Cooldown",_bored_period,"{0}" )
+		_slider_bored_period	= AddSliderOption("Bored Event Timer (seconds)",_bored_period,"{0}" )
 		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
 		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
 		
 		
-		_slider_max_distance_inside	= AddSliderOption("Distance (interiors) for Auto Activate",_max_distance_inside,"{0}" )
-		_slider_max_distance_outside	= AddSliderOption("Distance (exteriors) for Auto Activate",_max_distance_outside,"{0}" )
+		_slider_max_distance_inside	= AddSliderOption("Interior Auto Activate Distance",_max_distance_inside,"{0}" )
+		_slider_max_distance_outside	= AddSliderOption("Exterior Auto Activate Distance",_max_distance_outside,"{0}" )
 		
-		_toggle_npc_go_near	= AddToggleOption("NPCs sandbox near player", _toggle_npc_go_near_state)
+		_toggle_npc_go_near	= AddToggleOption("NPCs Sandbox Near Player", _toggle_npc_go_near_state)
 		_toggle_autofocus_on_sit	= AddToggleOption("Seat Conversation Camera", _toggle_autofocus_on_sit_state)
 		
 		_toggle_restrict_onscene	= AddToggleOption("NPC Scene Safety", _toggle_restrict_onscene_state)
@@ -371,9 +370,43 @@ event OnPageReset(string a_page)
 	
 	endif
 	
-	if (a_page=="Util")
+	if (a_page=="AI Agents")
+		AddHeaderOption("Agent Management")
+		AddEmptyOption()
 		
-		_actionSendLocations	= AddToggleOption("Send all locations to server",false)
+		_toggleAddAllNowNPC	= AddToggleOption("Add all current AI Agents", false)
+		_removeAllAgentsOID = AddToggleOption("Remove All AI Agents", false)
+		AddEmptyOption()
+		
+		; Get current AI agents (all agents, not just nearby)
+		Actor[] allAgents = AIAgentFunctions.findAllAgents()
+		_currentAgentNames = new string[128]  ; Maximum agents we can display
+		_agentToggleOIDs = new int[128]
+		
+		int i = 0
+		int displayedAgents = 0
+		while i < allAgents.Length && displayedAgents < 120  ; Leave some room for other options
+			if (allAgents[i] && allAgents[i].GetDisplayName() != "The Narrator" && allAgents[i] != Game.GetPlayer())
+				_currentAgentNames[displayedAgents] = allAgents[i].GetDisplayName()
+				_agentToggleOIDs[displayedAgents] = AddToggleOption("Remove: " + _currentAgentNames[displayedAgents], false)
+				displayedAgents += 1
+			endif
+			i += 1
+		endwhile
+		
+		AddHeaderOption("Active AI Agents")
+		AddEmptyOption()
+		
+		if (displayedAgents == 0)
+			AddTextOption("No AI agents active", "")
+		else
+			AddTextOption("Total Active Agents: " + displayedAgents, "")
+		endif
+	endif
+	
+	if (a_page=="Utility")
+		
+		_actionSendLocations = AddToggleOption("Send all locations to server", false)
 
 	
 	endif
@@ -983,17 +1016,7 @@ event OnOptionSelect(int a_option)
  		SetToggleOptionValue(a_option, _toggleAddAllNPCState)
  	endIf
 	
-	if (a_option == _toggleResetNPC)
- 		AIAgentFunctions.testRemoveAll()
- 		ShowMessage("Done")
- 	endIf
- 
- 	if (a_option == _toggleAddAllNowNPC)
- 		AIAgentFunctions.testAddAllNPCAround()
-		
-		;AIAgentPapyrusFunctions.sendAllLocations();
- 		ShowMessage("Done")
- 	endIf
+
 	
 	
 	if (a_option == _toggle_restrict_onscene)
@@ -1060,6 +1083,39 @@ event OnOptionSelect(int a_option)
  		AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
  	endIf
+ 	
+ 	; Handle AI Agents page options
+ 	if (a_option == _toggleAddAllNowNPC)
+ 		AIAgentFunctions.testAddAllNPCAround()
+ 		ForcePageReset()
+ 		ShowMessage("AI agents added successfully")
+ 	endIf
+ 	
+ 	if (a_option == _removeAllAgentsOID)
+ 		bool confirmed = ShowMessage("Are you sure you want to remove ALL AI agents? This cannot be undone.", true, "$Yes", "$No")
+ 		if (confirmed)
+ 			AIAgentFunctions.testRemoveAll()
+ 			ForcePageReset()
+ 			ShowMessage("All AI agents removed")
+ 		endif
+ 	endIf
+ 	
+ 	; Handle individual agent removal
+ 	if (_agentToggleOIDs && _currentAgentNames)
+ 		int i = 0
+ 		while i < _agentToggleOIDs.Length
+ 			if (a_option == _agentToggleOIDs[i] && _currentAgentNames[i] != "")
+ 				bool confirmed = ShowMessage("Remove AI agent '" + _currentAgentNames[i] + "'?", true, "$Yes", "$No")
+ 				if (confirmed)
+ 					AIAgentFunctions.removeAgentByName(_currentAgentNames[i])
+ 					ForcePageReset()
+ 					ShowMessage("Removed AI agent: " + _currentAgentNames[i])
+ 				endif
+ 				return
+ 			endif
+ 			i += 1
+ 		endwhile
+ 	endif
 	
 endEvent
 
@@ -1067,10 +1123,10 @@ event OnOptionHighlight(int a_option)
 	{Called when the user highlights an option}
 	
 	if (a_option == _keymapOID_K)
-		SetInfoText("Use a textbox to communiate with AI")
+		SetInfoText("Open a textbox to communiate with AI NPCs.")
 	endIf
 	if (a_option == _toggle1OID_B)
-		SetInfoText("Enables Text-to-Speech for AI NPC's.")
+		SetInfoText("Enables Text-to-Speech for AI NPCs.")
 	endIf
 	if (a_option == _keymapOID_K2)
 		SetInfoText("Push-to-Talk key to speak with an AI NPC. Make sure your microphone is setup as your default recording device in Windows. Also allows an AI NPC to summarize books you have open.")
@@ -1082,10 +1138,10 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("If reading a book, will have an AI NPC to summarize it. If not, it will toggle auto follow.")
+		SetInfoText("If reading a book, will have an AI NPC to summarize it.")
 	endIf
 	if (a_option == _keymapOID_K4)
-		SetInfoText("Use this to force an AI NPC to summarize the current events into their diary. NEEDS ACTIONS ENABLED!")
+		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby followers to write an entry.")
 	endIf
 	if (a_option == _keymapOID_K5)
 		SetInfoText("Change AI/LLM Connector.")
@@ -1121,11 +1177,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _slider_timeout)
-		SetInfoText("Timeout in seconds when requesting data to server. Recommend to leave at 30.")
+		SetInfoText("Timeout in seconds when requesting data from the CHIM Server. Recommend to leave at 60.")
 	endIf
 	
 	if (a_option == _toggleAnimation)
-		SetInfoText("Enable animations to plays during AI interactions.")
+		SetInfoText("Allow AI NPCs to perform animations during interactions.")
 	endIf
 	
 	if (a_option == _toggle1OID_Rereg)
@@ -1140,10 +1196,6 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Enable to pause dialogue during game pauses. Disable to allow dialogue to continue during game pauses.")
 	endIf
 
-	if (a_option == _toggleAddAllNowNPC)
-		SetInfoText("Will Auto Activate (almost) all nearby NPCs.")
-	endIf
-	
 	if (a_option == _slider_max_distance_inside)
 		SetInfoText("AI within this distance in interiors are Auto Activated.")
 	endIf
@@ -1155,10 +1207,6 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _toggleAddAllNPC)
 		SetInfoText("Will Auto Activate (almost) force all current NPCs.")
 	endIf
-	
-	if (a_option == _toggleResetNPC)
- 		SetInfoText("Remove all NPCs from Auto Activate.")
- 	endIf
 	
 	if (a_option == _slider_bored_period)
 		SetInfoText("How many seconds (with some exceptions) a Bored event can potenitally be triggered.")
@@ -1205,7 +1253,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_openmic)
-		SetInfoText("Enable open microphone mode. When enabled, will automatically start recording when it detects voice input above the sensitivity threshold.")
+		SetInfoText("Enable open microphone mode. Will automatically start recording when it detects voice input above the sensitivity threshold.")
 	endIf
 	
 	if (a_option == _slider_openmic_sensitivity)
@@ -1217,7 +1265,28 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_openmic_mute)
-		SetInfoText("Key to temporarily mute the open microphone.")
+		SetInfoText("Key to temporarily mute open microphone.")
 	endIf
+	
+	; AI Agents page help text
+	if (a_option == _toggleAddAllNowNPC)
+		SetInfoText("Will Auto Activate (almost) all nearby NPCs.")
+	endIf
+	
+	if (a_option == _removeAllAgentsOID)
+		SetInfoText("Remove all active AI agents from the system.")
+	endIf
+	
+	; Help text for individual agent removal options
+	if (_agentToggleOIDs && _currentAgentNames)
+		int i = 0
+		while i < _agentToggleOIDs.Length
+			if (a_option == _agentToggleOIDs[i] && _currentAgentNames[i] != "")
+				SetInfoText("Remove the AI agent '" + _currentAgentNames[i] + "' from the active AI system.")
+				return
+			endif
+			i += 1
+		endwhile
+	endif
 
 endEvent
