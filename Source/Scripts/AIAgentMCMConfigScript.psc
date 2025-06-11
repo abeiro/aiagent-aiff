@@ -92,6 +92,9 @@ float		_max_distance_outside		= 2400.0
 int			_slider_bored_period
 float		_bored_period		= 60.0
 
+int			_slider_dynamic_profile_period
+float		_dynamic_profile_period		= 20.0
+
 int 		_toggleRechat_policy_asap
 bool  		_rechat_policy_asap = false
 
@@ -212,6 +215,10 @@ event OnConfigInit()
 		_toggle_npc_go_near_state=true
 	endIf
 	
+	if (CurrentVersion<43)
+		_dynamic_profile_period=20
+	endIf
+	
 	if (CurrentVersion<38)
 		_toggle_autofocus_on_sit=0
 		StorageUtil.SetIntValue(None, "AIAgentAutoFocusOnSit",0);
@@ -242,7 +249,7 @@ endEvent
 
 int function GetVersion()
 
-	return 42
+	return 43
 
 endFunction
 
@@ -316,6 +323,7 @@ event OnPageReset(string a_page)
 		_toggleAddAllNowNPC	= AddToggleOption("Add all current AI NPCs", false)
 		
 		_slider_bored_period	= AddSliderOption("Bored Event Cooldown",_bored_period,"{0}" )
+		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
 		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
 		
 		
@@ -442,6 +450,13 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(1)
 	endIf
 	
+	if (a_option == _slider_dynamic_profile_period)
+		SetSliderDialogStartValue(_dynamic_profile_period)
+		SetSliderDialogDefaultValue(20)
+		SetSliderDialogRange(5, 120)
+		SetSliderDialogInterval(1)
+	endIf
+	
 	if (a_option == _slider_openmic_sensitivity)
 		SetSliderDialogStartValue(_openmic_sensitivity)
 		SetSliderDialogDefaultValue(1000)
@@ -515,6 +530,12 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
 	
+	if (a_option == _slider_dynamic_profile_period)
+		_dynamic_profile_period = a_value
+		controlScript.setConf("_dynamic_profile_period",_dynamic_profile_period)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+	
 	if (a_option == _slider_openmic_sensitivity)
 		_openmic_sensitivity = a_value
 		controlScript.setConf("_openmic_sensitivity",_openmic_sensitivity)
@@ -556,6 +577,7 @@ event OnGameReload()
 	controlScript.setConf("_max_distance_outside",_max_distance_outside)
 	
 	controlScript.setConf("_bored_period",_bored_period)
+	controlScript.setConf("_dynamic_profile_period",_dynamic_profile_period)
 	
 	if (_toggleAddAllNPCState)
 		controlScript.setConf("_toggleAddAllNPC",1)
