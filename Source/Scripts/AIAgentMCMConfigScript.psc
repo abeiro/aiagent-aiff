@@ -1164,6 +1164,10 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("How many seconds (with some exceptions) a Bored event can potenitally be triggered.")
 	endIf
 	
+	if (a_option == _slider_dynamic_profile_period)
+		SetInfoText("Timer for automatic dynamic profile updates. Updates NPC personalities based on recent events.")
+	endIf
+	
 	if (a_option == _toggleRechat_policy_asap)
 		SetInfoText("When enabled, will send more context to a responding NPC during a Rechat event.")
 	endIf
