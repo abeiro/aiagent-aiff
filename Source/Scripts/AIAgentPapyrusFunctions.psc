@@ -13,6 +13,7 @@ int 		_currentOpenMicMuteKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
+bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
 
 int		_nativeSoulGaze= 1
 
@@ -41,6 +42,35 @@ Event OnKeyUp(int keyCode, float holdTime)
 			Debug.Notification("[CHIM] Recording end");
 		endif
 	endif
+	
+	; Handle diary key release with hold time detection
+	If(keyCode == _currentDiaryKey && _diaryKeyPressed)
+		_diaryKeyPressed = false
+		If !SafeProcess()
+			Return
+		EndIf
+		
+		; If held for more than 0.5 seconds, trigger all followers
+		If (holdTime >= 0.5)
+			Debug.Notification("[CHIM] Diary: All followers are writing entries...")
+			AIAgentFunctions.sendMessage("Please, update your diary","diary_followers")
+		Else
+			; Quick press - normal behavior (target or closest)
+			; Get the target NPC name for the notification
+			ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+			String targetName = ""
+			If (crosshairRef && crosshairRef.GetBaseObject() as ActorBase)
+				targetName = (crosshairRef.GetBaseObject() as ActorBase).GetName()
+			EndIf
+			
+			If (targetName != "")
+				Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+			Else
+				Debug.Notification("[CHIM] Writing diary entry...")
+			EndIf
+			AIAgentFunctions.sendMessage("Please, update your diary","diary")
+		EndIf
+	EndIf
 EndEvent
 
 Event OnKeyDown(int keyCode)
@@ -177,7 +207,8 @@ Event OnKeyDown(int keyCode)
 	If !SafeProcess()
 		Return
 	EndIf
-	AIAgentFunctions.sendMessage("Please, update your diary","diary")
+	; Just track that the diary key was pressed - actual logic happens in OnKeyUp
+	_diaryKeyPressed = true
   EndIf
   If(keyCode == _currentCModelKey)
 	If Utility.IsInMenuMode() && SafeProcess(true)
@@ -326,11 +357,7 @@ bool Function setNewActionMode( int mode)
 	AIAgentFunctions.setConf("_sgmode",0,_nativeSoulGaze,"");
 	
 
-	if (mode==0)
-		Debug.Notification("[CHIM] Action mode is off");
-	else
-		Debug.Notification("[CHIM] Action mode is on");
-	endif
+	; Removed action mode notifications - no longer displayed on save load
 	
 	InitTSE();	
 	thirdPartyInit();	
@@ -366,7 +393,7 @@ EndFunction
 
 
 Function InitTSE() 
-	Debug.Notification("[CHIM] Player script initialized")
+	; Removed player script initialized notification - no longer displayed on save load
     RegisterForTrackedStatsEvent() ; Before we can use OnTrackedStatsEvent we must register.
 endFunction
 
