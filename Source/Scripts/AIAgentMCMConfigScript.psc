@@ -318,7 +318,7 @@ event OnPageReset(string a_page)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
 		_keymap_godmode		= AddKeyMapOption("Toggle Director Mode", _godmode_key)
-		_keymap_halt		= AddKeyMapOption("Emergency Stop/Halt AI actions", _halt_key)
+		_keymap_halt		= AddKeyMapOption("Halt AI actions", _halt_key)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
 	
