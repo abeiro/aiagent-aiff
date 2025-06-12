@@ -364,7 +364,7 @@ event OnPageReset(string a_page)
 		AddHeaderOption("Open Mic Settings")
 		_toggle_openmic		= AddToggleOption("Enable Open Mic", _toggle_openmic_state)
 		_slider_openmic_sensitivity = AddSliderOption("Voice Detection Sensitivity", _openmic_sensitivity, "{0}")
-		_slider_openmic_enddelay = AddSliderOption("End of Sentence Delay (sec)", _openmic_enddelay, "{1}")
+		_slider_openmic_enddelay = AddSliderOption("End of Sentence Delay (seconds)", _openmic_enddelay, "{1}")
 		_keymap_openmic_mute = AddKeyMapOption("Mute Open Mic", _openmic_mute_key)
 
 	
@@ -1092,7 +1092,7 @@ event OnOptionSelect(int a_option)
  	endIf
  	
  	if (a_option == _removeAllAgentsOID)
- 		bool confirmed = ShowMessage("Are you sure you want to remove ALL AI agents? This cannot be undone.", true, "$Yes", "$No")
+ 		bool confirmed = ShowMessage("Are you sure you want to remove ALL AI agents? Won't do anything if Auto Activate is enabled.", true, "$Yes", "$No")
  		if (confirmed)
  			AIAgentFunctions.testRemoveAll()
  			ForcePageReset()
@@ -1138,7 +1138,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("If reading a book, will have an AI NPC to summarize it.")
+		SetInfoText("Follow an NPC. Or if reading a book, will have an AI NPC to summarize it.")
 	endIf
 	if (a_option == _keymapOID_K4)
 		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby followers to write an entry.")
@@ -1147,7 +1147,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Change AI/LLM Connector.")
 	endIf
 	if (a_option == _keymapOID_K6)
-		SetInfoText("Take a screeshot and sends to an ITT AI service to summarize what is shown.")
+		SetInfoText("Take a screenshot and sends to an ITT AI service to summarize what is shown.")
 	endIf
 	if (a_option == _keymapOID_K7)
 		SetInfoText("Import the NPC you are looking at into CHIM. Can use it to turn their AI on and off.")
