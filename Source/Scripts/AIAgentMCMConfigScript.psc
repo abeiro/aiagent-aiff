@@ -142,6 +142,10 @@ int			_godmode_key					= -1
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 
+; combat dialogue
+int			_toggle_combatdialogue
+bool		_toggle_combatdialogue_state		= false
+
 
 ; default settings
 int			_myKeyDefault					= -1
@@ -340,6 +344,8 @@ event OnPageReset(string a_page)
 		_toggle_autoadd_hostile	= AddToggleOption("Add Hostile NPCs", _toggle_autoadd_hostile_state)
 		AddEmptyOption(); 
 		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
+		AddEmptyOption(); 
+		_toggle_combatdialogue	= AddToggleOption("Allow combat dialogue", _toggle_combatdialogue_state)
 		
 	endif
 	
@@ -515,12 +521,15 @@ event OnOptionSliderAccept(int a_option, float a_value)
 	if (a_option == _slider_max_distance_inside)
 		_max_distance_inside = a_value
 		controlScript.setConf("_max_distance_inside",_max_distance_inside)
+		controlScript.mdi=_max_distance_inside;
 		SetSliderOptionValue(a_option, a_value, "{1}")
+		
 	endIf
 	
 	if (a_option == _slider_max_distance_outside)
 		_max_distance_outside = a_value
 		controlScript.setConf("_max_distance_outside",_max_distance_outside)
+		controlScript.mdo=_max_distance_outside;
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
 	
@@ -575,6 +584,10 @@ event OnGameReload()
 
 	controlScript.setConf("_max_distance_inside",_max_distance_inside)
 	controlScript.setConf("_max_distance_outside",_max_distance_outside)
+	
+	controlScript.mdi=_max_distance_inside;
+	controlScript.mdo=_max_distance_outside;
+
 	
 	controlScript.setConf("_bored_period",_bored_period)
 	controlScript.setConf("_dynamic_profile_period",_dynamic_profile_period)
@@ -1056,6 +1069,19 @@ event OnOptionSelect(int a_option)
  		SetToggleOptionValue(a_option, _toggle_openmic_state)
  	endIf
 	
+	
+	if (a_option == _toggle_combatdialogue)
+ 		_toggle_combatdialogue_state = !_toggle_combatdialogue_state
+ 
+ 		if (_toggle_combatdialogue_state)
+ 			controlScript.setConf("_combat_dialogue",1)
+ 		else
+ 			controlScript.setConf("_combat_dialogue",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_combatdialogue_state)
+ 	endIf
+	
 	if (a_option == _actionSendLocations)
  		AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
@@ -1218,6 +1244,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_openmic_mute)
 		SetInfoText("Key to temporarily mute the open microphone.")
+	endIf
+	
+	if (a_option == _toggle_combatdialogue)
+		SetInfoText("Enable combat dialogue. Note minai also has this feature. Enable on both.")
 	endIf
 
 endEvent

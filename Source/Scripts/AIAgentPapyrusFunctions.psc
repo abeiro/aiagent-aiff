@@ -24,6 +24,10 @@ Actor	currentPlayerFollowTarget;
 Actor	currentPlayerHorse;
 
 
+float Property mdi auto
+float Property mdo auto
+
+
 Event OnInit()
 	doBinding(_currentKey)
 	Debug.Trace("[CHIM] AIAgentPapyrusFunctions quest script OnInit()")
