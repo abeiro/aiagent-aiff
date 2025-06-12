@@ -69,11 +69,18 @@ Event OnKeyUp(int keyCode, float holdTime)
 			EndIf
 			
 			If (targetName != "")
-				Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+				; Has a target - send diary request to specific actor
+				Actor targetActor = crosshairRef as Actor
+				If (targetActor)
+					Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+					AIAgentFunctions.requestMessageForActor("Please, update your diary","diary", targetActor.GetDisplayName())
+				Else
+					Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
+				EndIf
 			Else
-				Debug.Notification("[CHIM] Writing diary entry...")
+				; No target - show error (no closest agent fallback for quick press)
+				Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
 			EndIf
-			AIAgentFunctions.sendMessage("Please, update your diary","diary")
 		EndIf
 	EndIf
 EndEvent
