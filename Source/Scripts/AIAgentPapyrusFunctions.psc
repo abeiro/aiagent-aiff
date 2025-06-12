@@ -10,6 +10,7 @@ int 		_currentCSoulgaze
 int 		_currentCtl
 int 		_currentGodmodeKey
 int 		_currentOpenMicMuteKey
+int 		_currentHaltKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -256,6 +257,12 @@ Event OnKeyDown(int keyCode)
 	
   EndIf
   
+  If(keyCode == _currentHaltKey)
+	Debug.Notification("[CHIM] Stopping AI actions")
+	; Send halt command directly to all AI agents without server round-trip
+	AIAgentFunctions.logMessage("Halt@", "command")
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -347,6 +354,12 @@ EndFunction
 Function doBinding9(int keycode) 
 	
 	_currentOpenMicMuteKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding10(int keycode) 
+	
+	_currentHaltKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

@@ -136,6 +136,8 @@ int			_openmic_mute_key				= -1
 int			_keymap_godmode
 int			_godmode_key					= -1
 
+int			_keymap_halt
+int			_halt_key					= -1
 
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
@@ -172,6 +174,8 @@ bool		_toggle_openmic_stateDefault	= false
 float		_openmic_sensitivityDefault		= 1000.0
 float		_openmic_enddelayDefault		= 1.0
 int			_openmic_mute_keyDefault		= -1
+
+int			_halt_keyDefault				= -1
 
 event OnConfigInit()
 	ModName="CHIM"
@@ -314,6 +318,7 @@ event OnPageReset(string a_page)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
 		_keymap_godmode		= AddKeyMapOption("Toggle Director Mode", _godmode_key)
+		_keymap_halt		= AddKeyMapOption("Emergency Stop/Halt AI actions", _halt_key)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
 	
@@ -881,6 +886,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			controlScript.removeBinding(_openmic_mute_key)
 			_openmic_mute_key = a_keyCode
 			controlScript.doBinding9(_openmic_mute_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
+		elseif (a_option == _keymap_halt)
+			controlScript.removeBinding(_halt_key)
+			_halt_key = a_keyCode
+			controlScript.doBinding10(_halt_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
