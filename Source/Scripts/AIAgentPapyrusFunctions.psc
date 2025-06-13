@@ -271,7 +271,25 @@ Event OnKeyDown(int keyCode)
   If(keyCode == _currentHaltKey)
 	Debug.Notification("[CHIM] Stopping AI actions")
 	; Send halt command directly to all AI agents without server round-trip
-	AIAgentFunctions.logMessage("Halt@", "command")
+	;AIAgentFunctions.logMessage("Halt@", "command")
+	
+	ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+	Actor crActor = crosshairRef as Actor;
+	if (crActor) 
+		AIAgentAIMind.StopCurrent(crActor);
+	else	
+		Actor[] actors=AIAgentFunctions.findAllNearbyAgents();
+		int i = 0
+		while i < actors.Length
+			Actor akActor = actors[i]
+			; Do something with akActor, for example:
+			Debug.Trace("Found actor for StopCurrent" + akActor)
+			AIAgentAIMind.StopCurrent(akActor);
+
+		i += 1
+		endWhile
+	endif;
+	
   EndIf
   
 EndEvent
