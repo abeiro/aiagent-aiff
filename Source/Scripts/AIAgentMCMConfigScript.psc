@@ -1283,6 +1283,10 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Toggle Director Mode. Allows you to control AI actors with simple commands.'")
 	endIf
 	
+	if (a_option == _keymap_halt)
+		SetInfoText("Halt AI actions.")
+	endIf
+	
 	if (a_option == _toggle_autoadd_hostile)
 		SetInfoText("Auto Activate policy. By default, it applies to non-hostile NPCs whose race allows player dialogue (PC Dialogue = 1). Check this to allow Auto Activate hostile NPCs")
 	endIf
