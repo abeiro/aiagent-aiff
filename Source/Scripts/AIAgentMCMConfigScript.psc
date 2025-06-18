@@ -1391,7 +1391,7 @@ event OnOptionHighlight(int a_option)
 	
 
 	if (a_option == _toggle_combatdialogue)
-		SetInfoText("Enable combat dialogue. Note minai also has this feature. Enable on both.")
+		SetInfoText("Enable combat dialogue.")
 	endIf
 
 	; AI Agents page help text
