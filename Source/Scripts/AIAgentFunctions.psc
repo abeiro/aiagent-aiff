@@ -38,6 +38,7 @@ Actor function getClosestAgent() Global Native
 Actor function getAgentByName(String npcName) Global Native
 Actor[] function findAllNearbyAgents() Global Native
 Actor[] function findAllAgents() Global Native
+Actor[] function findAllNearbyNonAgents() Global Native
 
 ; Helpers
 ObjectReference function getLocationMarkerFor(Location loc) Global Native

@@ -154,6 +154,11 @@ string[]	_currentAgentNames
 int			_toggleAddAllNowNPC
 int			_removeAllAgentsOID
 
+; New variables for nearby non-agent NPCs
+int[]		_nearbyNpcToggleOIDs
+string[]	_nearbyNpcNames
+int			_refreshNearbyNPCsOID
+
 
 
 ; default settings
@@ -416,6 +421,36 @@ event OnPageReset(string a_page)
 		else
 			AddTextOption("Total Active Agents: " + displayedAgents, "")
 		endif
+		
+		AddEmptyOption()
+		AddHeaderOption("Nearby Available NPCs")
+		AddEmptyOption()
+		
+		_refreshNearbyNPCsOID = AddToggleOption("Refresh Nearby NPCs List", false)
+		AddEmptyOption()
+		
+		; Get nearby NPCs that are NOT currently AI agents
+		Actor[] nearbyNonAgents = AIAgentFunctions.findAllNearbyNonAgents()
+		_nearbyNpcNames = new string[128]
+		_nearbyNpcToggleOIDs = new int[128]
+		
+		int j = 0
+		int displayedNearbyNPCs = 0
+		while j < nearbyNonAgents.Length && displayedNearbyNPCs < 60  ; Limit to reasonable number
+			if (nearbyNonAgents[j] && nearbyNonAgents[j].GetDisplayName() != "The Narrator" && nearbyNonAgents[j] != Game.GetPlayer())
+				_nearbyNpcNames[displayedNearbyNPCs] = nearbyNonAgents[j].GetDisplayName()
+				_nearbyNpcToggleOIDs[displayedNearbyNPCs] = AddToggleOption("Add: " + _nearbyNpcNames[displayedNearbyNPCs], false)
+				displayedNearbyNPCs += 1
+			endif
+			j += 1
+		endwhile
+		
+		if (displayedNearbyNPCs == 0)
+			AddTextOption("No nearby available NPCs", "")
+		else
+			AddTextOption("Available NPCs: " + displayedNearbyNPCs, "")
+		endif
+		
 	endif
 	
 	if (a_page=="Utility")
@@ -1159,6 +1194,45 @@ event OnOptionSelect(int a_option)
  			i += 1
  		endwhile
  	endif
+ 	
+ 	; Handle refresh nearby NPCs
+ 	if (a_option == _refreshNearbyNPCsOID)
+ 		ForcePageReset()
+ 		ShowMessage("Nearby NPCs list refreshed")
+ 	endIf
+ 	
+ 	; Handle individual nearby NPC addition
+ 	if (_nearbyNpcToggleOIDs && _nearbyNpcNames)
+ 		int k = 0
+ 		while k < _nearbyNpcToggleOIDs.Length
+ 			if (a_option == _nearbyNpcToggleOIDs[k] && _nearbyNpcNames[k] != "")
+ 				bool confirmed = ShowMessage("Add AI agent '" + _nearbyNpcNames[k] + "'?", true, "$Yes", "$No")
+ 				if (confirmed)
+ 					Actor targetNPC = None
+ 					
+ 					; Find the actual actor by name from the nearby non-agents list
+ 					Actor[] nearbyNonAgents = AIAgentFunctions.findAllNearbyNonAgents()
+ 					int m = 0
+ 					while m < nearbyNonAgents.Length && !targetNPC
+ 						if (nearbyNonAgents[m] && nearbyNonAgents[m].GetDisplayName() == _nearbyNpcNames[k])
+ 							targetNPC = nearbyNonAgents[m]
+ 						endif
+ 						m += 1
+ 					endwhile
+ 					
+ 					if (targetNPC)
+ 						AIAgentFunctions.setDrivenByAIA(targetNPC, true)
+ 						ForcePageReset()
+ 						ShowMessage("Added AI agent: " + _nearbyNpcNames[k])
+ 					else
+ 						ShowMessage("Could not find NPC: " + _nearbyNpcNames[k])
+ 					endif
+ 				endif
+ 				return
+ 			endif
+ 			k += 1
+ 		endwhile
+ 	endif
 	
 endEvent
 
@@ -1317,7 +1391,7 @@ event OnOptionHighlight(int a_option)
 	
 
 	if (a_option == _toggle_combatdialogue)
-		SetInfoText("Enable combat dialogue. Note minai also has this feature. Enable on both.")
+		SetInfoText("Enable combat dialogue.")
 	endIf
 
 	; AI Agents page help text
@@ -1338,6 +1412,23 @@ event OnOptionHighlight(int a_option)
 				return
 			endif
 			i += 1
+		endwhile
+	endif
+
+	; Help text for refresh nearby NPCs
+	if (a_option == _refreshNearbyNPCsOID)
+		SetInfoText("Refresh the list of nearby NPCs that can be added to the AI system.")
+	endIf
+	
+	; Help text for individual nearby NPC addition
+	if (_nearbyNpcToggleOIDs && _nearbyNpcNames)
+		int j = 0
+		while j < _nearbyNpcToggleOIDs.Length
+			if (a_option == _nearbyNpcToggleOIDs[j] && _nearbyNpcNames[j] != "")
+				SetInfoText("Add the nearby NPC '" + _nearbyNpcNames[j] + "' to the AI system.")
+				return
+			endif
+			j += 1
 		endwhile
 	endif
 
