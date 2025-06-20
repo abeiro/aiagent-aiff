@@ -329,7 +329,7 @@ event OnPageReset(string a_page)
 		_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
-		_keymap_godmode		= AddKeyMapOption("Toggle Director Mode", _godmode_key)
+		_keymap_godmode		= AddKeyMapOption("Toggle Modes", _godmode_key)
 		_keymap_halt		= AddKeyMapOption("Halt AI actions", _halt_key)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
@@ -1354,7 +1354,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_godmode)
-		SetInfoText("Toggle Director Mode. Allows you to control AI actors with simple commands.'")
+		SetInfoText("Toggle Modes. ")
 	endIf
 	
 	if (a_option == _keymap_halt)

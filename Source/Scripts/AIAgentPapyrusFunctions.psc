@@ -18,6 +18,8 @@ bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
 
 int		_nativeSoulGaze= 1
 
+int _currentModeIndex = 0 
+
 Spell Property IntimacySpell  Auto  
 
 
@@ -135,22 +137,6 @@ Event OnKeyDown(int keyCode)
 		EndIf
 
 		
-		if (false) 
-			Debug.Notification("[CHIM] Sending all actors names");
-			Form[] allActors=PO3_SKSEFunctions.GetAllForms(43)
-			Debug.Trace("Total "+allActors.Length);
-			int lengthA=allActors.Length
-			int i=0;
-			while i < lengthA
-				Form j=allActors[i] as Form
-				Debug.Trace("Adding NPC "+j.GetName());
-				AIAgentFunctions.logMessage(j.GetName(),"util_npcname")
-				i=i+1
-			endwhile
-			return
-		endif
-		
-		
 		if (!followingHerika)
 			followingHerika=true;
 			
@@ -159,9 +145,7 @@ Event OnKeyDown(int keyCode)
 			if (true)	
 			
 				Game.SetPlayerAiDriven(true)
-				Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-				Package FollowPackage = Game.GetFormFromFile(0x01BC25, "AIAgent.esp") as Package 
-
+				
 								
 				Actor leader = Game.GetCurrentCrosshairRef() as Actor
 				if (!leader)
@@ -169,12 +153,18 @@ Event OnKeyDown(int keyCode)
 				EndIf	
 				
 				currentPlayerFollowTarget = leader;
-				player.SetFactionRank(FollowFaction,1)
-				PO3_SKSEFunctions.SetLinkedRef(player,leader)
-				ActorUtil.AddPackageOverride(player, FollowPackage, 100, 0)
-				player.EvaluatePackage()
+				
+				float offsetCustomX=0
+				float offsetCustomZ=150
 				;player.ForceActorValue("SpeedMult",leader.GetActorValue("SpeedMult"));
 				Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
+				;Game.GetPlayer().SetLookAt(leader,true)
+				;float zOffset = Game.GetPlayer().GetHeadingAngle(leader)
+				;Game.GetPlayer().SetAngle(leader.GetAngleX(), leader.GetAngleY(), leader.GetAngleZ() + zOffset)
+
+				;player.KeepOffsetFromActor(leader, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 1350, afFollowRadius = 150)
+				player.TranslateToRef(leader,100)
+				RegisterForSingleUpdate(1.0)
 				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
 			else
 				
@@ -189,8 +179,7 @@ Event OnKeyDown(int keyCode)
 				
 				player.PathToReference(leader, 1)
 
-				;float offsetCustomX=100
-				;float offsetCustomZ=50
+				
 				;player.setVehicle(currentPlayerHorse)
 				;Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
 				;Utility.Wait(1)
@@ -204,10 +193,7 @@ Event OnKeyDown(int keyCode)
 			
 		else
 			Actor player=Game.GetPlayer()
-			Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-			player.RemoveFromFaction(FollowFaction)
-			AIAgentAIMind.ResetPackages(player);
-			Debug.Notification("[CHIM] Player Unfollowing ");
+			player.ClearKeepOffsetFromActor();
 			Game.SetPlayerAiDriven(false)
 			Game.EnablePlayerControls()
 			followingHerika=false;
@@ -250,12 +236,42 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentGodmodeKey)
-	_currentGodmodeStatus=!_currentGodmodeStatus
-	if (_currentGodmodeStatus)
-		setConf("_godmode",1);
-	else
-		setConf("_godmode",0);	
+	;_currentGodmodeStatus=!_currentGodmodeStatus
+	;if (_currentGodmodeStatus)
+	;	setConf("_godmode",1);
+	;else
+	;	setConf("_godmode",0);	
+	;endif
+	
+	String[] _modes = new String[8]
+	_modes[0] = "STANDARD"
+	_modes[1] = "WHISPER"
+	_modes[2] = "DIRECTOR"
+	_modes[3] = "SPAWN"
+	_modes[4] = "IMPERSONATION"
+	_modes[5] = "CREATION"
+	_modes[6] = "INJECTION_LOG"
+	_modes[7] = "INJECTION_CHAT"
+
+	_currentModeIndex += 1
+	if _currentModeIndex >= _modes.Length
+		_currentModeIndex = 0
 	endif
+
+	; Whisper mode.
+	if (_currentModeIndex==1)
+		Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
+		AIAgentFunctions.setConf("_max_distance_inside",256,256,256);
+		AIAgentFunctions.setConf("_max_distance_outside",256,256,256);
+	else
+		Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
+		AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string);
+		AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string);
+	endif
+	
+	String currentMode = _modes[_currentModeIndex]
+	Debug.Notification("Changed to mode "+currentMode)
+	AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
 	
   EndIf
   
@@ -298,33 +314,14 @@ Event OnUpdate()
     ;Debug.Notification("Updating...")
     If(followingHerika)
 		
-		Actor  herika = currentPlayerFollowTarget
-		int iCameraState = Game.GetCameraState()
-		
-		float offsetCustomX=-150
-		float offsetCustomZ=-150
-
-		if (herika.isRunning())
-			offsetCustomX=0
-			offsetCustomZ=100
-		endif
-			
-		If(iCameraState == 0)
-			Game.GetPlayer().ClearKeepOffsetFromActor()
-			Game.GetPlayer().SetLookAt(herika,true)
-			Utility.Wait(1)
-			
-		    currentPlayerHorse.KeepOffsetFromActor(herika, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 350, afFollowRadius = 0)
-		else
-		;Game.GetPlayer().SetLookAt(herika,true)
-		;Utility.Wait(1)
-			currentPlayerHorse.ClearKeepOffsetFromActor()
-			
-			Utility.Wait(1)
-			
-		    currentPlayerHorse.KeepOffsetFromActor(herika, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 350, afFollowRadius = 0)
-		endif
-	RegisterForSingleUpdate(10.0)
+		float offsetCustomX=0
+		float offsetCustomZ=150
+		Actor leader = currentPlayerFollowTarget
+		;Game.GetPlayer().ClearKeepOffsetFromActor()
+		;Game.GetPlayer().SetLookAt(leader,true)
+		;Game.GetPlayer().KeepOffsetFromActor(leader, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 350, afFollowRadius = 150)
+		Game.GetPlayer().TranslateToRef(leader,100.0)
+		RegisterForSingleUpdate(3.0)
     EndIf
 Endevent
 

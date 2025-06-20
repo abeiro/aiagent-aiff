@@ -827,7 +827,6 @@ function SendExternalEvent(String npcname,String command,String parm) global
 		ModEvent.PushString(handle, parm)
 		ModEvent.Send(handle)
 		;Debug.Notification("[CHIM] External command sent "+command+"@"+parm)
-
 	endIf
 endFunction
 
@@ -999,6 +998,13 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 
 	; Should be called after NPC starts speech to listener (every sentence)
 	
+	int handle = ModEvent.Create("CHIM_SpeechStarted")
+	if (handle)
+		Debug.Trace("[CHIM] Sending event CHIM_SpeechStarted");
+		ModEvent.PushForm(handle, npc)
+		ModEvent.Send(handle)
+	endIf
+	
 	if ((animation > 0) && !npc.IsInCombat())
 		npc.PlayIdle(Game.GetForm(animation) as Idle)
 	else
@@ -1027,6 +1033,8 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 	endif
 	
 	PlaceCam(npc);
+	
+	
 	;PlaceCam(npc)
 	
 	;Game.DisablePlayerControls(abMovement = true, abFighting = true, abCamSwitch = true, abLooking = true, abSneaking = true, abMenu = true, abActivate = true, abJournalTabs = false, aiDisablePOVType = 0)
@@ -1037,6 +1045,13 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 endFunction
 
 function FakeDialogue(Actor npc,int animation,int movehead) global
+	
+	int handle = ModEvent.Create("CHIM_SpeechStarted")
+	if (handle)
+		Debug.Trace("[CHIM] Sending event CHIM_SpeechStarted");
+		ModEvent.PushForm(handle, npc)
+		ModEvent.Send(handle)
+	endIf
 	
 	; Should be called after NPC starts speech to player (every sentence)
 	if (npc!=Game.GetPlayer())
@@ -1072,6 +1087,7 @@ function PrepareForDialog(Actor npc) global
 	;AIAgentFaceReset.resetFace(npc);
 	
 
+
 endFunction
 
 function resetExpression(Actor target) global
@@ -1084,6 +1100,13 @@ endFunction
 function EndDialogue(Actor npc) global
 	; Should be called after NPC stops speech
 	;;npc.ClearLookAt()
+	
+	int handle = ModEvent.Create("CHIM_SpeechStopped")
+	if (handle)
+		ModEvent.PushForm(handle, npc)
+		ModEvent.Send(handle)
+		;Debug.Trace("[CHIM] CHIM_TextReceived sent "+npcname+"@"+text)
+	endIf
 	
 endFunction
 
@@ -1351,7 +1374,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		if (finalActor.GetCurrentLocation())
 			locationStr = finalActor.GetCurrentLocation().GetName()
 		endif
-		Debug.Trace("[CHIM] Spaned "+finalActor.GetDisplayName()+" at "+locationStr)
+		Debug.Trace("[CHIM] Spawned "+finalActor.GetDisplayName()+" at "+locationStr)
 		return 0
 	EndIf
 

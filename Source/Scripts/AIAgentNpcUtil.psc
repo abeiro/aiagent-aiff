@@ -118,7 +118,7 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 				PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
 			else	
 				Debug.Trace("[CHIM ADV]  ResetActor3D cancelled");
-				Debug.Notification("[CHIM] error spawning NPC");
+				;Debug.Notification("[CHIM] spawned NPC ");
 			EndIf
 		endif
 		
@@ -257,4 +257,22 @@ ObjectReference function findFurniture()
 	endwhile
 	
 	return candidate
+endFunction
+
+
+function sendAllActorsNames()
+	if (false) 
+		Debug.Notification("[CHIM] Sending all actors names");
+		Form[] allActors=PO3_SKSEFunctions.GetAllForms(43)
+		Debug.Trace("Total "+allActors.Length);
+		int lengthA=allActors.Length
+		int i=0;
+		while i < lengthA
+			Form j=allActors[i] as Form
+			Debug.Trace("Adding NPC "+j.GetName());
+			AIAgentFunctions.logMessage(j.GetName(),"util_npcname")
+			i=i+1
+		endwhile
+		return
+	endif
 endFunction
