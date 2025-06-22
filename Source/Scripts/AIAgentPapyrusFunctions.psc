@@ -57,10 +57,10 @@ Event OnKeyUp(int keyCode, float holdTime)
 			Return
 		EndIf
 		
-		; If held for more than 0.5 seconds, trigger all followers
+		; If held for more than 0.5 seconds, trigger all nearby NPCs
 		If (holdTime >= 0.5)
-			Debug.Notification("[CHIM] Diary: All followers are writing entries...")
-			AIAgentFunctions.sendMessage("Please, update your diary","diary_followers")
+			Debug.Notification("[CHIM] Diary: Nearby NPCs are writing diary entries")
+			AIAgentFunctions.sendMessage("Please, update your diary","diary_nearby")
 		Else
 			; Quick press - normal behavior (target or closest)
 			; Get the target NPC name for the notification
