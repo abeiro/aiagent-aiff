@@ -85,6 +85,56 @@ Event OnKeyUp(int keyCode, float holdTime)
 			EndIf
 		EndIf
 	EndIf
+	
+	 If(keyCode == _currentGodmodeKey)
+	
+		String[] _modes = new String[8]
+		_modes[0] = "STANDARD"
+		_modes[1] = "WHISPER"
+		_modes[2] = "DIRECTOR"
+		_modes[3] = "SPAWN"
+		_modes[4] = "IMPERSONATION"
+		_modes[5] = "CREATION"
+		_modes[6] = "INJECTION_LOG"
+		_modes[7] = "INJECTION_CHAT"
+			
+		If (holdTime >= 0.5) 
+			int j=0
+			UIExtensions.InitMenu("UIWheelMenu")
+			while j < _modes.length
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_modes[j])
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_modes[j])
+				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+				j = j +1
+			endwhile
+			
+			int ret = UIExtensions.OpenMenu("UIWheelMenu")
+			;Debug.Trace("Option " + ret + " selectioned")
+			String currentMode = _modes[ret]
+			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
+		else
+			_currentModeIndex += 1
+			if _currentModeIndex >= _modes.Length
+				_currentModeIndex = 0
+			endif
+
+			; Whisper mode.
+			if (_currentModeIndex==1)
+				Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
+				AIAgentFunctions.setConf("_max_distance_inside",256,256,256);
+				AIAgentFunctions.setConf("_max_distance_outside",256,256,256);
+			else
+				Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
+				AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string);
+				AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string);
+			endif
+			
+			String currentMode = _modes[_currentModeIndex]
+			Debug.Notification("Changed to mode "+currentMode)
+			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
+		endif
+	
+	EndIf
 EndEvent
 
 Event OnKeyDown(int keyCode)
@@ -235,45 +285,7 @@ Event OnKeyDown(int keyCode)
 	
   EndIf
   
-  If(keyCode == _currentGodmodeKey)
-	;_currentGodmodeStatus=!_currentGodmodeStatus
-	;if (_currentGodmodeStatus)
-	;	setConf("_godmode",1);
-	;else
-	;	setConf("_godmode",0);	
-	;endif
-	
-	String[] _modes = new String[8]
-	_modes[0] = "STANDARD"
-	_modes[1] = "WHISPER"
-	_modes[2] = "DIRECTOR"
-	_modes[3] = "SPAWN"
-	_modes[4] = "IMPERSONATION"
-	_modes[5] = "CREATION"
-	_modes[6] = "INJECTION_LOG"
-	_modes[7] = "INJECTION_CHAT"
-
-	_currentModeIndex += 1
-	if _currentModeIndex >= _modes.Length
-		_currentModeIndex = 0
-	endif
-
-	; Whisper mode.
-	if (_currentModeIndex==1)
-		Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
-		AIAgentFunctions.setConf("_max_distance_inside",256,256,256);
-		AIAgentFunctions.setConf("_max_distance_outside",256,256,256);
-	else
-		Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
-		AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string);
-		AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string);
-	endif
-	
-	String currentMode = _modes[_currentModeIndex]
-	Debug.Notification("Changed to mode "+currentMode)
-	AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
-	
-  EndIf
+ 
   
   If(keyCode == _currentOpenMicMuteKey)
 	If !SafeProcess()

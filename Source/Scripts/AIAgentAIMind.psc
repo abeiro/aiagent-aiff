@@ -1336,7 +1336,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		if (place==0)
 			;finalActor.MoveTo(ref)
-			finalActor.SetAngle(0,-180,0)
+			;finalActor.SetAngle(0,-180,0)
 		else
 			;finalActor.DisableNoWait();
 			;finalActor.MoveTo(ref)
