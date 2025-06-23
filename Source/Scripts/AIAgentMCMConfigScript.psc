@@ -1258,7 +1258,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Follow an NPC. Or if reading a book, will have an AI NPC to summarize it.")
 	endIf
 	if (a_option == _keymapOID_K4)
-		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby followers to write an entry.")
+		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby NPCs (800 units) to write an entry.")
 	endIf
 	if (a_option == _keymapOID_K5)
 		SetInfoText("Change AI/LLM Connector.")
