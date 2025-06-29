@@ -196,7 +196,7 @@ event OnConfigInit()
 	Pages[1] = "Behavior"
 	Pages[2] = "Sound"
 	Pages[3] = "AI Agents"
-	Pages[4] = "Utility"
+	Pages[4] = "Tools"
 	
 	
 	_sound_postclip				= 0.0
@@ -453,7 +453,7 @@ event OnPageReset(string a_page)
 		
 	endif
 	
-	if (a_page=="Utility")
+	if (a_page=="Tools")
 		
 		_actionSendLocations = AddToggleOption("Send all locations to server", false)
 

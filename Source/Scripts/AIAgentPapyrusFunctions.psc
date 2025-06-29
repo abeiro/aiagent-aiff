@@ -97,13 +97,24 @@ Event OnKeyUp(int keyCode, float holdTime)
 		_modes[5] = "CREATION"
 		_modes[6] = "INJECTION_LOG"
 		_modes[7] = "INJECTION_CHAT"
+		
+		String[] _label = new String[8]
+
+		_label[0] = "Standard Mode"
+		_label[1] = "Whisper Chat"
+		_label[2] = "Director Mode"
+		_label[3] = "Spawn NPC"
+		_label[4] = "Speech Enhacing"
+		_label[5] = "Speech Creation"
+		_label[6] = "Inject Event"
+		_label[7] = "Inject and Chat"
 			
 		If (holdTime >= 0.5) 
 			int j=0
 			UIExtensions.InitMenu("UIWheelMenu")
 			while j < _modes.length
-				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_modes[j])
-				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_modes[j])
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
 				j = j +1
 			endwhile
@@ -111,6 +122,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 			int ret = UIExtensions.OpenMenu("UIWheelMenu")
 			;Debug.Trace("Option " + ret + " selectioned")
 			String currentMode = _modes[ret]
+			_currentModeIndex = ret
 			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
 		else
 			_currentModeIndex += 1
@@ -119,19 +131,20 @@ Event OnKeyUp(int keyCode, float holdTime)
 			endif
 
 			; Whisper mode.
-			if (_currentModeIndex==1)
-				Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
-				AIAgentFunctions.setConf("_max_distance_inside",256,256,256);
-				AIAgentFunctions.setConf("_max_distance_outside",256,256,256);
-			else
-				Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
-				AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string);
-				AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string);
-			endif
 			
 			String currentMode = _modes[_currentModeIndex]
 			Debug.Notification("Changed to mode "+currentMode)
 			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
+		endif
+		
+		if (_currentModeIndex==1)
+			Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
+			AIAgentFunctions.setConf("_max_distance_inside",256,256,256);
+			AIAgentFunctions.setConf("_max_distance_outside",256,256,256);
+		else
+			Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
+			AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string);
+			AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string);
 		endif
 	
 	EndIf
