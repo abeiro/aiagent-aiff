@@ -100,16 +100,17 @@ Event OnKeyUp(int keyCode, float holdTime)
 		
 		String[] _label = new String[8]
 
-		_label[0] = "Standard Mode"
+		_label[0] = "Standard Chat"
 		_label[1] = "Whisper Chat"
 		_label[2] = "Director Mode"
 		_label[3] = "Spawn NPC"
-		_label[4] = "Speech Enhacing"
-		_label[5] = "Speech Creation"
+		_label[4] = "Chat Assist"
+		_label[5] = "Chat Creation"
 		_label[6] = "Inject Event"
-		_label[7] = "Inject and Chat"
+		_label[7] = "Inject & Chat"
 			
-		If (holdTime >= 0.5) 
+		If (holdTime < 0.5) 
+			; Quick press - Open wheel menu
 			int j=0
 			UIExtensions.InitMenu("UIWheelMenu")
 			while j < _modes.length
@@ -123,15 +124,20 @@ Event OnKeyUp(int keyCode, float holdTime)
 			;Debug.Trace("Option " + ret + " selectioned")
 			String currentMode = _modes[ret]
 			_currentModeIndex = ret
+			; Store mode index for spell system sync
+			StorageUtil.SetIntValue(None, "AIAgent_CurrentModeIndex", _currentModeIndex)
 			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
 		else
+			; Hold down - Cycle mode manually
+			; Get current mode index from storage for consistency with spell system
+			_currentModeIndex = StorageUtil.GetIntValue(None, "AIAgent_CurrentModeIndex", 0)
 			_currentModeIndex += 1
 			if _currentModeIndex >= _modes.Length
 				_currentModeIndex = 0
 			endif
+			; Store updated mode index
+			StorageUtil.SetIntValue(None, "AIAgent_CurrentModeIndex", _currentModeIndex)
 
-			; Whisper mode.
-			
 			String currentMode = _modes[_currentModeIndex]
 			Debug.Notification("Changed to mode "+currentMode)
 			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
