@@ -1350,15 +1350,15 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_usewebsocketstt)
-		SetInfoText("Use WebSocket STT. WIP.")
+		SetInfoText("Use WebSocket STT. Overrides CHIM server STT. Must download separately from the mod page. WIP.")
 	endIf
 	
 	if (a_option == _keymap_godmode)
-		SetInfoText("Toggle Modes. ")
+		SetInfoText("Press to open a UI wheel to change interaction modes. Hold to toggle to the next mode.")
 	endIf
 	
 	if (a_option == _keymap_halt)
-		SetInfoText("Halt AI actions.")
+		SetInfoText("Will stop all CHIM related AI actions.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)
