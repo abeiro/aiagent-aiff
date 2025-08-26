@@ -394,7 +394,8 @@ function StopCurrent(Actor npc) global
 	npc.RemoveFromFaction(SeatFaction)
 	npc.RemoveFromFaction(MoveToFaction)
 	npc.RemoveFromFaction(SandboxFaction)
-	
+	AIAgentFunctions.setLocked(0,npc.GetDisplayName())
+
 	ResetPackages(npc);
 	ActorUtil.ClearPackageOverride(npc)
 	

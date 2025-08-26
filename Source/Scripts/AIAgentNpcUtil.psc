@@ -118,7 +118,7 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 				PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
 			else	
 				Debug.Trace("[CHIM ADV]  ResetActor3D cancelled");
-				;Debug.Notification("[CHIM] spawned NPC ");
+				; Debug.Notification("[CHIM] spawned NPC ");
 			EndIf
 		endif
 		

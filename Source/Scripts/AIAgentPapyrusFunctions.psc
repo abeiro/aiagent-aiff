@@ -159,7 +159,7 @@ EndEvent
 Event OnKeyDown(int keyCode)
    
   If(keyCode == _currentKey)
-  
+	; Text menu entry
 	If !SafeProcess()
       Return
     EndIf
@@ -205,6 +205,127 @@ Event OnKeyDown(int keyCode)
 		  Return
 		EndIf
 
+		; Lets use this for more things
+		
+		Actor leader = Game.GetCurrentCrosshairRef() as Actor
+		
+		if (leader) ; Pointing to NPC
+			String[] _modes = new String[7]
+			_modes[0] = "1"
+			_modes[1] = "2"
+			_modes[2] = "3"
+			_modes[3] = "4"
+			_modes[4] = "5"
+			_modes[5] = "6"
+			_modes[6] = "7"
+			
+			
+			String[] _label = new String[7]
+
+			_label[0] = "Follow NPC"
+			_label[1] = "Update NPC"
+			_label[2] = "Profile 1"
+			_label[3] = "Profile 2"
+			_label[4] = "Profile 3"
+			_label[5] = "Profile 4"
+			_label[6] = "Make wait"
+			
+			
+			UIExtensions.InitMenu("UIWheelMenu")
+
+			int j = 0
+			while j < _modes.length
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+				j = j +1
+			endwhile
+			
+			int ret = UIExtensions.OpenMenu("UIWheelMenu")
+			String currentMode = _modes[ret]
+
+			if (currentMode == "2")
+				Debug.Trace("[CHIM] Udating dynamic profile for "+leader.GetDisplayName());
+				AIAgentFunctions.logMessage(leader.GetDisplayName(),"updateprofiles_batch_async")
+				return
+			elseif (currentMode == "3")
+				AIAgentFunctions.logMessageForActor("1","core_profile_assign",leader.GetDisplayName())
+				return
+			elseif (currentMode == "4")
+				AIAgentFunctions.logMessageForActor("2","core_profile_assign",leader.GetDisplayName())
+				return
+			elseif (currentMode == "5")
+				AIAgentFunctions.logMessageForActor("3","core_profile_assign",leader.GetDisplayName())
+				return
+			elseif (currentMode == "6")
+				AIAgentFunctions.logMessageForActor("4","core_profile_assign",leader.GetDisplayName())
+				return	
+			elseif (currentMode == "7")
+				AIagentAIMind.StartWait(leader)
+				return		
+			elseif (currentMode == "1")	
+				; run legacy code
+			else
+				return
+			endif
+
+		else 
+			String[] _modes = new String[6]
+			_modes[0] = "1"
+			_modes[1] = "2"
+			_modes[2] = "3"
+			_modes[3] = "4"
+			_modes[4] = "5"
+			_modes[5] = "6"
+			
+			
+			String[] _label = new String[6]
+
+			_label[0] = "Follow Nearest"
+			_label[1] = "Model 1"
+			_label[2] = "Model 2"
+			_label[3] = "Model 3"
+			_label[4] = "Model 4"
+			_label[5] = "Focus on Chat"
+		
+			
+			UIExtensions.InitMenu("UIWheelMenu")
+
+			int j = 0
+			while j < _modes.length
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+				j = j +1
+			endwhile
+			
+			int ret = UIExtensions.OpenMenu("UIWheelMenu")
+			String currentMode = _modes[ret]
+
+			if (currentMode == "2")
+				AIAgentFunctions.logMessage("chim_profile_model@1","setconf")
+				return
+			elseif (currentMode == "3")
+				AIAgentFunctions.logMessage("chim_profile_model@2","setconf")
+				return
+			elseif (currentMode == "4")
+				AIAgentFunctions.logMessage("chim_profile_model@3","setconf")
+				return
+			elseif (currentMode == "5")
+				AIAgentFunctions.logMessage("chim_profile_model@4","setconf")
+				return	
+			elseif (currentMode == "6")
+				AIAgentFunctions.logMessage("chim_context_mode@1","setconf")
+				return
+			elseif (currentMode == "1")
+				; run legacy code
+			else
+				return
+			endif
+		
+		endif;
+
+		
 		
 		if (!followingHerika)
 			followingHerika=true;
@@ -216,7 +337,7 @@ Event OnKeyDown(int keyCode)
 				Game.SetPlayerAiDriven(true)
 				
 								
-				Actor leader = Game.GetCurrentCrosshairRef() as Actor
+				
 				if (!leader)
 					leader = AIAgentFunctions.getClosestAgent()
 				EndIf	
@@ -239,7 +360,7 @@ Event OnKeyDown(int keyCode)
 				
 				Actor horse=PO3_SKSEFunctions.GetMount(player)
 				currentPlayerHorse = horse 
-				Actor leader = Game.GetCurrentCrosshairRef() as Actor
+				
 				if (!leader)
 					leader = AIAgentFunctions.getClosestAgent()
 				EndIf	
