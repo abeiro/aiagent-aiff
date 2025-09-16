@@ -1449,11 +1449,16 @@ EndFunction
 
 int Function SpawnItem(string itemname,int itembase,int locationMarker ,String taskid) global
 
-	Debug.Trace("spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
+	Debug.Trace("[CHIM] spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
 	
 	ObjectReference ref
 	if (locationMarker==0)
-		ref=AIAgentFunctions.findLocationsToSafeSpawn(4096)
+		ref=AIAgentFunctions.findLocationsToSafeSpawn(6000)
+		if (!ref)
+			Debug.Trace("[CHIM] UNRESTRICTED spawned_item "+itemname);
+			ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,false)
+			
+		endif
 	else 
 		ref=Game.GetFormEx(locationMarker)  as ObjectReference;
 	endif
@@ -1505,14 +1510,14 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		finalItem.Enable()
 		
 		AIAgentFunctions.logMessage("spawned_item@"+itemname+"@success@"+referencename,"status_msg")
-		Debug.Trace("spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID"+finalItem.GetFormId());
+		Debug.Trace("[CHIM] spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID"+finalItem.GetFormId());
 		
 		if (finalItem.Is3DLoaded())
 			veff.Play(finalItem);
 			hintSound.Play(finalItem)
 		endif
 		if (locationMarker==0)
-			Debug.Notification("Something is hidding near "+referencename);	
+			Debug.Notification("[CHIM] Something is hidding near "+referencename);	
 		endif;
 		
 		RecipeManagerCreateSimple(finalItem.GetFormID(),None,None,None);
@@ -1520,6 +1525,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		return 0
 	else
 		AIAgentFunctions.logMessage("spawned_item@"+itemname+"@error","status_msg")
+		Debug.Trace("[CHIM] ERROR spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
 	EndIf
 
 	return -1

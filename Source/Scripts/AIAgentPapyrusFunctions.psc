@@ -245,7 +245,7 @@ Event OnKeyDown(int keyCode)
 			String currentMode = _modes[ret]
 
 			if (currentMode == "2")
-				Debug.Trace("[CHIM] Udating dynamic profile for "+leader.GetDisplayName());
+				Debug.Trace("[CHIM] Updating dynamic profile for "+leader.GetDisplayName());
 				AIAgentFunctions.logMessage(leader.GetDisplayName(),"updateprofiles_batch_async")
 				return
 			elseif (currentMode == "3")
@@ -412,7 +412,36 @@ Event OnKeyDown(int keyCode)
 		Return
 	EndIf
 	
-	AIAgentSoulGazeEffect.Soulgaze(_nativeSoulGaze);
+	String[] _modes = new String[2]
+	_modes[0] = "1"
+	_modes[1] = "2"
+			
+	String[] _label = new String[2]
+
+	_label[0] = "Soulgaze"
+	_label[1] = "NPC Photo"
+
+	UIExtensions.InitMenu("UIWheelMenu")
+
+	int j = 0
+	while j < _modes.length
+		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+	j = j +1
+	endwhile
+			
+	int ret = UIExtensions.OpenMenu("UIWheelMenu")
+	String currentMode = _modes[ret]
+
+	if (currentMode == "1")
+		AIAgentSoulGazeEffect.Soulgaze(_nativeSoulGaze);
+		return
+	elseif (currentMode == "2")
+		AIAgentSoulGazeEffect.SendProfilePicture(_nativeSoulGaze);
+		return
+	endif
+			
 	
   EndIf
   
