@@ -319,17 +319,17 @@ event OnPageReset(string a_page)
 		_keymapOID_K7		= AddKeyMapOption("Manual AI Activate", _myKey7)
 		;_toggle1OID_B		= AddToggleOption("Enable AI Voice (TTS)", _toggleState1)
 		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
-		_keymapOID_K3		= AddKeyMapOption("Follow and Unfollow NPC/Summarize book", _myKey3)
+		_keymapOID_K3		= AddKeyMapOption("Settings Wheel", _myKey3)
 		;_toggle1OID_D		= AddToggleOption("Use Custom Voicetype or standard", _toggleState3)
 		_keymapOID_K4		= AddKeyMapOption("Write Diary Entry", _myKey4)
-		_keymapOID_K5		= AddKeyMapOption("Switch AI/LLM Model", _myKey5)
+		;_keymapOID_K5		= AddKeyMapOption("Switch AI/LLM Model", _myKey5)
 		_keymapOID_K6		= AddKeyMapOption("Soulgaze", _myKey6)
 		
 		_slider_timeout	= AddSliderOption("AIAgent Connection Timeout",_timeout_int,"{1}" )
 		_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
 		
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
-		_keymap_godmode		= AddKeyMapOption("Toggle Modes", _godmode_key)
+		_keymap_godmode		= AddKeyMapOption("Mode Wheel", _godmode_key)
 		_keymap_halt		= AddKeyMapOption("Halt AI actions", _halt_key)
 		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
 	endif
@@ -1255,7 +1255,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("Follow an NPC. Or if reading a book, will have an AI NPC to summarize it.")
+		SetInfoText("Opens the setting wheel. Will change context if you are looking at an NPC or not.")
 	endIf
 	if (a_option == _keymapOID_K4)
 		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby NPCs (800 units) to write an entry.")
@@ -1354,7 +1354,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_godmode)
-		SetInfoText("Press to open a UI wheel to change interaction modes. Hold to toggle to the next mode.")
+		SetInfoText("Allows you to switch CHIM input modes. Hold to toggle to the next mode.")
 	endIf
 	
 	if (a_option == _keymap_halt)

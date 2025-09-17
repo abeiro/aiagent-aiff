@@ -228,7 +228,7 @@ Event OnKeyDown(int keyCode)
 			_label[3] = "Profile 2"
 			_label[4] = "Profile 3"
 			_label[5] = "Profile 4"
-			_label[6] = "Make wait"
+			_label[6] = "Wait Here"
 			
 			
 			UIExtensions.InitMenu("UIWheelMenu")
@@ -282,11 +282,11 @@ Event OnKeyDown(int keyCode)
 			String[] _label = new String[6]
 
 			_label[0] = "Follow Nearest"
-			_label[1] = "Model 1"
-			_label[2] = "Model 2"
-			_label[3] = "Model 3"
-			_label[4] = "Model 4"
-			_label[5] = "Focus on Chat"
+			_label[1] = "LLM 1"
+			_label[2] = "LLM 2"
+			_label[3] = "LLM 3"
+			_label[4] = "LLM 4"
+			_label[5] = "Focus Chat"
 		
 			
 			UIExtensions.InitMenu("UIWheelMenu")
