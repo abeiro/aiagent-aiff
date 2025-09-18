@@ -282,10 +282,10 @@ Event OnKeyDown(int keyCode)
 			String[] _label = new String[6]
 
 			_label[0] = "Follow Nearest"
-			_label[1] = "LLM 1"
-			_label[2] = "LLM 2"
-			_label[3] = "LLM 3"
-			_label[4] = "LLM 4"
+			_label[1] = "Standard LLM"
+			_label[2] = "Fast LLM"
+			_label[3] = "Powerful LLM"
+			_label[4] = "Experimental LLM"
 			_label[5] = "Focus Chat"
 		
 			
