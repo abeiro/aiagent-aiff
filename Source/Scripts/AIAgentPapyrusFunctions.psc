@@ -412,14 +412,16 @@ Event OnKeyDown(int keyCode)
 		Return
 	EndIf
 	
-	String[] _modes = new String[2]
+	String[] _modes = new String[3]
 	_modes[0] = "1"
 	_modes[1] = "2"
+	_modes[2] = "3"
 			
-	String[] _label = new String[2]
+	String[] _label = new String[3]
 
 	_label[0] = "Soulgaze"
 	_label[1] = "NPC Photo"
+	_label[2] = "Just Upload"
 
 	UIExtensions.InitMenu("UIWheelMenu")
 
@@ -440,6 +442,9 @@ Event OnKeyDown(int keyCode)
 	elseif (currentMode == "2")
 		AIAgentSoulGazeEffect.SendProfilePicture(_nativeSoulGaze);
 		return
+	elseif (currentMode == "3")
+		AIAgentSoulGazeEffect.JustUpload(_nativeSoulGaze);
+		return	
 	endif
 			
 	
