@@ -1255,7 +1255,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("Opens the setting wheel. Will change context if you are looking at an NPC or not.")
+		SetInfoText("Allows you to switch Profiles & LLM's. Will provide different options if you are looking at an NPC or not. Also has a bunch of other useful tools.")
 	endIf
 	if (a_option == _keymapOID_K4)
 		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby NPCs (800 units) to write an entry.")
