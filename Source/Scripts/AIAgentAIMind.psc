@@ -1837,3 +1837,11 @@ function resetCam() global
 	
 endFunction
 
+
+int Function RenameNPC(int refid,String name) global
+	ObjectReference ref=Game.GetFormEx(refid)  as ObjectReference;
+	string oldname=ref.GetDisplayName();
+	ref.SetDisplayName(name,true)
+	Debug.Notification("Renamed '"+oldname+"' to '"+name+"'" );
+
+EndFunction
