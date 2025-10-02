@@ -190,6 +190,7 @@ int			_openmic_mute_keyDefault		= -1
 int			_halt_keyDefault				= -1
 
 event OnConfigInit()
+
 	ModName="CHIM"
 	Pages = new string[5]
 	Pages[0] = "Main"
@@ -198,6 +199,7 @@ event OnConfigInit()
 	Pages[3] = "AI Agents"
 	Pages[4] = "Tools"
 	
+	Debug.Trace("[AIAGENT] OnConfigInit");
 	
 	_sound_postclip				= 0.0
 	_sound_preclip				= 100.0
@@ -267,13 +269,18 @@ endEvent
 
 int function GetVersion()
 
-	return 45
+	return 47
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
 
+	if (a_version == 47 && CurrentVersion < 45)
+		OnConfigInit()
+		
+	endIf
+	
 	if (a_version >= 2 && CurrentVersion < 45)
 		OnConfigInit()
 		
@@ -639,86 +646,87 @@ endEvent
 	
 event OnGameReload()
 	parent.OnGameReload()
+	bool a; to avoid warnings on runtime
 	if (_toggleState1)
 		;controlScript.setTTSOn();
 		getActionMode();
 	endIf
 	if (_toggleState3)
-		controlScript.setVoiceType(1);	
+		a=controlScript.setVoiceType(1);	
 	else
-		controlScript.setVoiceType(0);
+		a=controlScript.setVoiceType(0);
 	endif
 
-	controlScript.setConf("_sound_postclip",_sound_postclip)
-	controlScript.setConf("_sound_preclip",_sound_preclip)
-	controlScript.setConf("_sound_volume",_sound_volume)
-	controlScript.setConf("_sound_ds",_sound_ds)
-	controlScript.setConf("_lip_int",_lip_int)
-	controlScript.setConf("_lip_res",_lip_res)
-	controlScript.setConf("_timeout",_timeout_int)
+	a=controlScript.setConf("_sound_postclip",_sound_postclip)
+	a=controlScript.setConf("_sound_preclip",_sound_preclip)
+	a=controlScript.setConf("_sound_volume",_sound_volume)
+	a=controlScript.setConf("_sound_ds",_sound_ds)
+	a=controlScript.setConf("_lip_int",_lip_int)
+	a=controlScript.setConf("_lip_res",_lip_res)
+	a=controlScript.setConf("_timeout",_timeout_int)
 
 
-	controlScript.setConf("_max_distance_inside",_max_distance_inside)
-	controlScript.setConf("_max_distance_outside",_max_distance_outside)
+	a=controlScript.setConf("_max_distance_inside",_max_distance_inside)
+	a=controlScript.setConf("_max_distance_outside",_max_distance_outside)
 	
 	controlScript.mdi=_max_distance_inside;
 	controlScript.mdo=_max_distance_outside;
 
 	
-	controlScript.setConf("_bored_period",_bored_period)
-	controlScript.setConf("_dynamic_profile_period",_dynamic_profile_period)
+	a=controlScript.setConf("_bored_period",_bored_period)
+	a=controlScript.setConf("_dynamic_profile_period",_dynamic_profile_period)
 	
 	if (_toggleAddAllNPCState)
-		controlScript.setConf("_toggleAddAllNPC",1)
+		a=controlScript.setConf("_toggleAddAllNPC",1)
 	else
-		controlScript.setConf("_toggleAddAllNPC",0)
+		a=controlScript.setConf("_toggleAddAllNPC",0)
 	endif
 
 	if (_rechat_policy_asap)
-		controlScript.setConf("_rechat_policy_asap",0); Inverted
+		a=controlScript.setConf("_rechat_policy_asap",0); Inverted
 	else
-		controlScript.setConf("_rechat_policy_asap",1); Inverted
+		a=controlScript.setConf("_rechat_policy_asap",1); Inverted
 	endif
 
 	
 	if (_animationstate)
-		controlScript.setConf("_animations",1)
+		a=controlScript.setConf("_animations",1)
 	else
-		controlScript.setConf("_animations",0)
+		a=controlScript.setConf("_animations",0)
 	endif
 	
 	if (_pauseDialogueState)
-		controlScript.setConf("_pause_dialogue_when_menu_open",1)
+		a=controlScript.setConf("_pause_dialogue_when_menu_open",1)
 	else
-		controlScript.setConf("_pause_dialogue_when_menu_open",0)
+		a=controlScript.setConf("_pause_dialogue_when_menu_open",0)
 	endif
 	
 	if (_toggle_autoadd_hostile_state)
-		controlScript.setConf("_autoadd_hostile",1)
+		a=controlScript.setConf("_autoadd_hostile",1)
 	else
-		controlScript.setConf("_autoadd_hostile",0)
+		a=controlScript.setConf("_autoadd_hostile",0)
 	endif
 	
 	if (_toggle_autoadd_allraces_state)
-		controlScript.setConf("_autoadd_allraces",1)
+		a=controlScript.setConf("_autoadd_allraces",1)
 	else
-		controlScript.setConf("_autoadd_allraces",0)
+		a=controlScript.setConf("_autoadd_allraces",0)
 	endif
 	
-	controlScript.setSoulgazeModeNative(_toggleState7 as Int)
+	a=controlScript.setSoulgazeModeNative(_toggleState7 as Int)
 	
-	controlScript.setConf("_godmode",0)
+	a=controlScript.setConf("_godmode",0)
 	controlScript._currentGodmodeStatus=false
 	
 	; Open mic settings
 	if (_toggle_openmic_state)
-		controlScript.setConf("_openmic_enabled",1)
+		a=controlScript.setConf("_openmic_enabled",1)
 	else
-		controlScript.setConf("_openmic_enabled",0)
+		a=controlScript.setConf("_openmic_enabled",0)
 	endif
 	
-	controlScript.setConf("_openmic_sensitivity",_openmic_sensitivity)
-	controlScript.setConf("_openmic_enddelay",_openmic_enddelay)
+	a=controlScript.setConf("_openmic_sensitivity",_openmic_sensitivity)
+	a=controlScript.setConf("_openmic_enddelay",_openmic_enddelay)
 	
 endEvent
 

@@ -461,6 +461,7 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 	npc.EvaluatePackage()
 	
 	StorageUtil.SetFormValue(npc, "LastTravelToLocation",akTarget);
+	StorageUtil.SetStringValue(npc, "LastTravelToLocationName",place);
 	Debug.Trace("[CHIM] TravelToLocation "+npc.GetDisplayName()+ " starts travel to "+place+" reference "+akTarget.GetFormId());
 	;Debug.Notification("Mission MoveToTarget start")
 	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
@@ -523,7 +524,23 @@ function TravelToTargetEnd(Actor npc) global
 			endif
 			Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName()+".Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
 			;stayAtPlace(npc,0,"");
+		elseif (dest.GetType()==34) 
+					; TravelToLocation case?
+			String destinationName=StorageUtil.GetStringValue(npc, "LastTravelToLocationName") as String;
+			if (destinationName)
+				Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName()+".Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType())
+				if (!npc.Is3DLoaded())
+					;Only log as background event id npc is not 3dloaded
+					AIAgentFunctions.logMessageForActor(npc.GetDisplayName() +" reaches destination "+destinationName,"backgroundaction",npc.GetDisplayName())
+				endif
+				StorageUtil.SetFormValue(npc, "LastTravelToLocation",None);
+				StorageUtil.SetStringValue(npc, "LastTravelToLocationName",None);
+			endif
+
 		endif
+	else
+		; TravelToLocation case?
+		Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName())
 	endif
 		
 	

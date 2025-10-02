@@ -210,7 +210,7 @@ Event OnKeyDown(int keyCode)
 		Actor leader = Game.GetCurrentCrosshairRef() as Actor
 		
 		if (leader) ; Pointing to NPC
-			String[] _modes = new String[7]
+			String[] _modes = new String[8]
 			_modes[0] = "1"
 			_modes[1] = "2"
 			_modes[2] = "3"
@@ -218,9 +218,10 @@ Event OnKeyDown(int keyCode)
 			_modes[4] = "5"
 			_modes[5] = "6"
 			_modes[6] = "7"
+			_modes[7] = "8"
 			
 			
-			String[] _label = new String[7]
+			String[] _label = new String[8]
 
 			_label[0] = "Follow NPC"
 			_label[1] = "Update NPC"
@@ -229,12 +230,22 @@ Event OnKeyDown(int keyCode)
 			_label[4] = "Profile 3"
 			_label[5] = "Profile 4"
 			_label[6] = "Wait Here"
+			_label[7] = "Follow Me"
 			
 			
 			UIExtensions.InitMenu("UIWheelMenu")
 
 			int j = 0
-			while j < _modes.length
+			int allowedLength=_modes.length
+			
+			if leader.GetrelationShipRank(Game.GetPlayer()) < 0
+				_label[6] = "Force Wait"
+				_label[7] = "Force Follow"
+			elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
+				_label[7] = "Force Follow"
+			endif
+			
+			while j < allowedLength
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
@@ -263,6 +274,9 @@ Event OnKeyDown(int keyCode)
 			elseif (currentMode == "7")
 				AIagentAIMind.StartWait(leader)
 				return		
+			elseif (currentMode == "8")
+				AIagentAIMind.FollowSoft(leader,Game.GetPlayer())
+				return			
 			elseif (currentMode == "1")	
 				; run legacy code
 			else
@@ -292,6 +306,7 @@ Event OnKeyDown(int keyCode)
 			UIExtensions.InitMenu("UIWheelMenu")
 
 			int j = 0
+			int retFnc
 			while j < _modes.length
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
@@ -303,19 +318,19 @@ Event OnKeyDown(int keyCode)
 			String currentMode = _modes[ret]
 
 			if (currentMode == "2")
-				AIAgentFunctions.logMessage("chim_profile_model@1","setconf")
+				retFnc=AIAgentFunctions.logMessage("chim_profile_model@1","setconf")
 				return
 			elseif (currentMode == "3")
-				AIAgentFunctions.logMessage("chim_profile_model@2","setconf")
+				retFnc=AIAgentFunctions.logMessage("chim_profile_model@2","setconf")
 				return
 			elseif (currentMode == "4")
-				AIAgentFunctions.logMessage("chim_profile_model@3","setconf")
+				retFnc=AIAgentFunctions.logMessage("chim_profile_model@3","setconf")
 				return
 			elseif (currentMode == "5")
-				AIAgentFunctions.logMessage("chim_profile_model@4","setconf")
+				retFnc=AIAgentFunctions.logMessage("chim_profile_model@4","setconf")
 				return	
 			elseif (currentMode == "6")
-				AIAgentFunctions.logMessage("chim_context_mode@1","setconf")
+				retFnc=AIAgentFunctions.logMessage("chim_context_mode@1","setconf")
 				return
 			elseif (currentMode == "1")
 				; run legacy code
@@ -412,16 +427,18 @@ Event OnKeyDown(int keyCode)
 		Return
 	EndIf
 	
-	String[] _modes = new String[3]
+	String[] _modes = new String[4]
 	_modes[0] = "1"
 	_modes[1] = "2"
 	_modes[2] = "3"
+	_modes[3] = "4"
 			
-	String[] _label = new String[3]
+	String[] _label = new String[4]
 
 	_label[0] = "Soulgaze"
-	_label[1] = "NPC Photo"
-	_label[2] = "Just Upload"
+	_label[1] = "NPC Photo Zoom"
+	_label[2] = "NPC Photo"
+	_label[3] = "Just Upload"
 
 	UIExtensions.InitMenu("UIWheelMenu")
 
@@ -440,9 +457,12 @@ Event OnKeyDown(int keyCode)
 		AIAgentSoulGazeEffect.Soulgaze(_nativeSoulGaze);
 		return
 	elseif (currentMode == "2")
-		AIAgentSoulGazeEffect.SendProfilePicture(_nativeSoulGaze);
+		AIAgentSoulGazeEffect.SendProfilePicture(_nativeSoulGaze,true);
 		return
 	elseif (currentMode == "3")
+		AIAgentSoulGazeEffect.SendProfilePicture(_nativeSoulGaze,false);
+		return	
+	elseif (currentMode == "4")
 		AIAgentSoulGazeEffect.JustUpload(_nativeSoulGaze);
 		return	
 	endif
@@ -578,14 +598,14 @@ EndFunction
 
 bool Function setNewActionMode( int mode) 
 	AIAgentFunctions.setNewActionMode(mode)
-
+	bool a;To disable Wrnings
 	AIAgentFunctions.setConf("_sgmode",0,_nativeSoulGaze,"");
 	
 
 	; Removed action mode notifications - no longer displayed on save load
 	
 	InitTSE();	
-	thirdPartyInit();	
+	a=thirdPartyInit();	
 EndFunction
 
 bool Function setVoiceType( int mode) 
@@ -632,18 +652,18 @@ Event OnTrackedStatsEvent(string asStatFilter, int aiStatValue)
 	AIAgentFunctions.logMessage(asStatFilter+"@"+aiStatValue,"setconf")
 	Actor player = Game.GetPlayer()
 	if (asStatFilter == "Level Increases") 
-		AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" levels up to "+aiStatValue,"rpg_lvlup")
+		int retFnc=AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" levels up to "+aiStatValue,"rpg_lvlup")
     
     elseif (asStatFilter == "Shouts Learned") 
-		AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" learns a new shout","rpg_shout")
+		int retFnc=AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" learns a new shout","rpg_shout")
 		
 	elseif (asStatFilter == "Dragon Souls Collected") 
-		AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" absorbs a dragon soul.","rpg_soul")
+		int retFnc=AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" absorbs a dragon soul.","rpg_soul")
                 
 	elseif (asStatFilter == "Words of Power Learned") 
-		AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" learns a new Word of Power.","rpg_word")
+		int retFnc=AIAgentFunctions.requestMessage("The Narrator: "+player.GetName()+" learns a new Word of Power.","rpg_word")
 	else
-		AIAgentFunctions.logMessage(asStatFilter+"@"+aiStatValue,"setconf")
+		int retFnc=AIAgentFunctions.logMessage(asStatFilter+"@"+aiStatValue,"setconf")
 	endif
 endEvent
 
@@ -681,7 +701,7 @@ Function sendAllLocations() global
 	while i < lengthA
 		Form j=allLocations[i] as Form
 		Debug.Trace("Adding Location "+j.GetName());
-		AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId(),"util_location_name")
+		int retFnc=AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId(),"util_location_name")
 		i=i+1
 	endwhile
 	return

@@ -44,7 +44,7 @@ function Soulgaze(int mode) global
 	endif 
 endFunction
 
-function SendProfilePicture(int mode) global
+function SendProfilePicture(int mode,bool zoom) global
 	
 	String hints="";
 	
@@ -54,12 +54,16 @@ function SendProfilePicture(int mode) global
 	if ((AIAgentFunctions.isGameVR()==1) || customMode==0)
 		
 		Consoleutil.ExecuteCommand("tm");
-		Consoleutil.ExecuteCommand("fov 60");
-		Consoleutil.ExecuteCommand("tfc");
+		if (zoom)
+			Consoleutil.ExecuteCommand("fov 60");
+			Consoleutil.ExecuteCommand("tfc");
+		endif
 		Utility.wait(1);
 		AIAgentFunctions.shotAndUpload(hints,2)
 		Utility.wait(1);
-		Consoleutil.ExecuteCommand("tfc");
+		if (zoom)
+			Consoleutil.ExecuteCommand("tfc");
+		endif
 		Consoleutil.ExecuteCommand("tm");
 		
 	else
@@ -84,12 +88,17 @@ function SendProfilePicture(int mode) global
 		endwhile
 		
 		Consoleutil.ExecuteCommand("tm");
-		Consoleutil.ExecuteCommand("fov 60");
-		Consoleutil.ExecuteCommand("tfc");
+		if (zoom)
+			Consoleutil.ExecuteCommand("fov 60");
+			Consoleutil.ExecuteCommand("tfc");
+		endif
+		
 		Utility.wait(1);
 		AIAgentFunctions.shotAndUpload(hints,3)
 		Utility.wait(1);
-		Consoleutil.ExecuteCommand("tfc");
+		if (zoom)
+			Consoleutil.ExecuteCommand("tfc");
+		endif
 		Consoleutil.ExecuteCommand("tm");
 		
 	endif 
