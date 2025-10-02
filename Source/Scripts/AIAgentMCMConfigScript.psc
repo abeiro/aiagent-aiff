@@ -147,6 +147,17 @@ bool		_actionSendLocationsState		= false
 int			_toggle_combatdialogue
 bool		_toggle_combatdialogue_state		= false
 
+; Cancel dialogue on combat entry
+int			_toggle_cancel_dialogue_on_combat
+bool		_toggle_cancel_dialogue_on_combat_state		= false
+
+; Combat barks
+int			_toggle_combat_barks
+bool		_toggle_combat_barks_state		= false
+
+int			_slider_combat_barks_period
+float		_combat_barks_period			= 30.0
+
 
 ; AI Agents page variables
 int[] 		_agentToggleOIDs
@@ -186,8 +197,41 @@ bool		_toggle_openmic_stateDefault	= false
 float		_openmic_sensitivityDefault		= 1000.0
 float		_openmic_enddelayDefault		= 1.0
 int			_openmic_mute_keyDefault		= -1
+bool		_toggle_cancel_dialogue_on_combat_stateDefault = false
+bool		_toggle_combat_barks_stateDefault	= false
+float		_combat_barks_periodDefault		= 30.0
 
 int			_halt_keyDefault				= -1
+
+event OnPlayerLoadGame()
+	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
+	int combatBarksValue = AIAgentFunctions.get_conf_i("_combat_barks")
+	if (combatBarksValue > 0)
+		_toggle_combat_barks_state = true
+		controlScript.setConf("_combat_barks", 1)
+	else
+		_toggle_combat_barks_state = false
+		controlScript.setConf("_combat_barks", 0)
+	endIf
+	
+	int combatBarksPeriodValue = AIAgentFunctions.get_conf_i("_combat_barks_period")
+	if (combatBarksPeriodValue >= 5)
+		_combat_barks_period = combatBarksPeriodValue as float
+		controlScript.setConf("_combat_barks_period", _combat_barks_period)
+	else
+		_combat_barks_period = 30.0
+		controlScript.setConf("_combat_barks_period", 30.0)
+	endIf
+	
+	int cancelDialogueValue = AIAgentFunctions.get_conf_i("_cancel_dialogue_on_combat")
+	if (cancelDialogueValue > 0)
+		_toggle_cancel_dialogue_on_combat_state = true
+		controlScript.setConf("_cancel_dialogue_on_combat", 1)
+	else
+		_toggle_cancel_dialogue_on_combat_state = false
+		controlScript.setConf("_cancel_dialogue_on_combat", 0)
+	endIf
+endEvent
 
 event OnConfigInit()
 
@@ -237,6 +281,35 @@ event OnConfigInit()
 	
 	if (CurrentVersion<43)
 		_dynamic_profile_period=20
+	endIf
+	
+	; Load combat barks settings
+	int combatBarksValue = AIAgentFunctions.get_conf_i("_combat_barks")
+	if (combatBarksValue > 0)
+		_toggle_combat_barks_state = true
+		controlScript.setConf("_combat_barks", 1)
+	else
+		_toggle_combat_barks_state = false
+		controlScript.setConf("_combat_barks", 0)
+	endIf
+	
+	int combatBarksPeriodValue = AIAgentFunctions.get_conf_i("_combat_barks_period")
+	if (combatBarksPeriodValue >= 5)
+		_combat_barks_period = combatBarksPeriodValue as float
+		controlScript.setConf("_combat_barks_period", _combat_barks_period)
+	else
+		_combat_barks_period = 30.0
+		controlScript.setConf("_combat_barks_period", 30.0)
+	endIf
+	
+	; Load cancel dialogue on combat setting
+	int cancelDialogueValue = AIAgentFunctions.get_conf_i("_cancel_dialogue_on_combat")
+	if (cancelDialogueValue > 0)
+		_toggle_cancel_dialogue_on_combat_state = true
+		controlScript.setConf("_cancel_dialogue_on_combat", 1)
+	else
+		_toggle_cancel_dialogue_on_combat_state = false
+		controlScript.setConf("_cancel_dialogue_on_combat", 0)
 	endIf
 	
 	if (CurrentVersion<38)
@@ -365,6 +438,10 @@ event OnPageReset(string a_page)
 		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
 		AddEmptyOption(); 
 		_toggle_combatdialogue	= AddToggleOption("Allow combat dialogue", _toggle_combatdialogue_state)
+		_toggle_cancel_dialogue_on_combat = AddToggleOption("Clear dialogue entering combat", _toggle_cancel_dialogue_on_combat_state)
+		AddEmptyOption();
+		_toggle_combat_barks = AddToggleOption("Enable Combat Barks", _toggle_combat_barks_state)
+		_slider_combat_barks_period = AddSliderOption("Combat Bark Interval (seconds)", _combat_barks_period, "{0}")
 		
 	endif
 	
@@ -560,6 +637,13 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(0.1)
 	endIf
 	
+	if (a_option == _slider_combat_barks_period)
+		SetSliderDialogStartValue(_combat_barks_period)
+		SetSliderDialogDefaultValue(30.0)
+		SetSliderDialogRange(5.0, 120.0)
+		SetSliderDialogInterval(5.0)
+	endIf
+	
 endEvent
 
 event OnOptionSliderAccept(int a_option, float a_value)
@@ -638,6 +722,12 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		_openmic_enddelay = a_value
 		controlScript.setConf("_openmic_enddelay",_openmic_enddelay)
 		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+	
+	if (a_option == _slider_combat_barks_period)
+		_combat_barks_period = a_value
+		controlScript.setConf("_combat_barks_period",_combat_barks_period)
+		SetSliderOptionValue(a_option, a_value, "{0}")
 	endIf
 	
 	
@@ -1165,6 +1255,30 @@ event OnOptionSelect(int a_option)
  		SetToggleOptionValue(a_option, _toggle_combatdialogue_state)
  	endIf
 	
+	if (a_option == _toggle_cancel_dialogue_on_combat)
+ 		_toggle_cancel_dialogue_on_combat_state = !_toggle_cancel_dialogue_on_combat_state
+ 
+ 		if (_toggle_cancel_dialogue_on_combat_state)
+ 			controlScript.setConf("_cancel_dialogue_on_combat",1)
+ 		else
+ 			controlScript.setConf("_cancel_dialogue_on_combat",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_cancel_dialogue_on_combat_state)
+ 	endIf
+	
+	if (a_option == _toggle_combat_barks)
+ 		_toggle_combat_barks_state = !_toggle_combat_barks_state
+ 
+ 		if (_toggle_combat_barks_state)
+ 			controlScript.setConf("_combat_barks",1)
+ 		else
+ 			controlScript.setConf("_combat_barks",0)
+ 		endif
+ 
+ 		SetToggleOptionValue(a_option, _toggle_combat_barks_state)
+ 	endIf
+	
 	if (a_option == _actionSendLocations)
  		AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
@@ -1263,7 +1377,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("Opens the setting wheel. Will change context if you are looking at an NPC or not.")
+		SetInfoText("Allows you to switch Profiles & LLM's. Will provide different options if you are looking at an NPC or not. Also has a bunch of other useful tools.")
 	endIf
 	if (a_option == _keymapOID_K4)
 		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby NPCs (800 units) to write an entry.")
@@ -1400,6 +1514,18 @@ event OnOptionHighlight(int a_option)
 
 	if (a_option == _toggle_combatdialogue)
 		SetInfoText("Enable combat dialogue.")
+	endIf
+	
+	if (a_option == _toggle_cancel_dialogue_on_combat)
+		SetInfoText("When enabled, all AI dialogue will be immediately cancelled when you enter combat (prevents NPCs talking during fights)")
+	endIf
+	
+	if (a_option == _toggle_combat_barks)
+		SetInfoText("When enabled (with combat dialogue), AI agents in combat will periodically shout taunts/battle cries")
+	endIf
+	
+	if (a_option == _slider_combat_barks_period)
+		SetInfoText("How often (in seconds) combat barks trigger during active combat. Default: 30 seconds")
 	endIf
 
 	; AI Agents page help text
