@@ -1118,9 +1118,10 @@ endFunction
 function EndDialogue(Actor npc) global
 	; Should be called after NPC stops speech
 	;;npc.ClearLookAt()
-	
+
 	int handle = ModEvent.Create("CHIM_SpeechStopped")
 	if (handle)
+		Debug.Trace("[CHIM] Sending event CHIM_SpeechStopped");
 		ModEvent.PushForm(handle, npc)
 		ModEvent.Send(handle)
 		;Debug.Trace("[CHIM] CHIM_TextReceived sent "+npcname+"@"+text)
