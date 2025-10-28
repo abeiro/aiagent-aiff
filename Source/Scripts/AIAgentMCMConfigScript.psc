@@ -205,6 +205,15 @@ int			_halt_keyDefault				= -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
+	int combatDialogueValue = AIAgentFunctions.get_conf_i("_combat_dialogue")
+	if (combatDialogueValue > 0)
+		_toggle_combatdialogue_state = true
+		controlScript.setConf("_combat_dialogue", 1)
+	else
+		_toggle_combatdialogue_state = false
+		controlScript.setConf("_combat_dialogue", 0)
+	endIf
+	
 	int combatBarksValue = AIAgentFunctions.get_conf_i("_combat_barks")
 	if (combatBarksValue > 0)
 		_toggle_combat_barks_state = true
@@ -281,6 +290,16 @@ event OnConfigInit()
 	
 	if (CurrentVersion<43)
 		_dynamic_profile_period=20
+	endIf
+	
+	; Load combat dialogue settings
+	int combatDialogueValue = AIAgentFunctions.get_conf_i("_combat_dialogue")
+	if (combatDialogueValue > 0)
+		_toggle_combatdialogue_state = true
+		controlScript.setConf("_combat_dialogue", 1)
+	else
+		_toggle_combatdialogue_state = false
+		controlScript.setConf("_combat_dialogue", 0)
 	endIf
 	
 	; Load combat barks settings
@@ -817,6 +836,27 @@ event OnGameReload()
 	
 	a=controlScript.setConf("_openmic_sensitivity",_openmic_sensitivity)
 	a=controlScript.setConf("_openmic_enddelay",_openmic_enddelay)
+	
+	; Combat settings
+	if (_toggle_combatdialogue_state)
+		a=controlScript.setConf("_combat_dialogue",1)
+	else
+		a=controlScript.setConf("_combat_dialogue",0)
+	endif
+	
+	if (_toggle_cancel_dialogue_on_combat_state)
+		a=controlScript.setConf("_cancel_dialogue_on_combat",1)
+	else
+		a=controlScript.setConf("_cancel_dialogue_on_combat",0)
+	endif
+	
+	if (_toggle_combat_barks_state)
+		a=controlScript.setConf("_combat_barks",1)
+	else
+		a=controlScript.setConf("_combat_barks",0)
+	endif
+	
+	a=controlScript.setConf("_combat_barks_period",_combat_barks_period)
 	
 endEvent
 
