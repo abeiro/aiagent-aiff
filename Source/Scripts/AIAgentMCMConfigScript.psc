@@ -460,7 +460,7 @@ event OnPageReset(string a_page)
 		_toggle_cancel_dialogue_on_combat = AddToggleOption("Clear dialogue entering combat", _toggle_cancel_dialogue_on_combat_state)
 		AddEmptyOption();
 		_toggle_combat_barks = AddToggleOption("Enable Combat Barks", _toggle_combat_barks_state)
-		_slider_combat_barks_period = AddSliderOption("Combat Bark Interval (seconds)", _combat_barks_period, "{0}")
+		_slider_combat_barks_period = AddSliderOption("Combat Bark Timer (seconds)", _combat_barks_period, "{0}")
 		
 	endif
 	
@@ -1561,11 +1561,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_combat_barks)
-		SetInfoText("When enabled (with combat dialogue), AI agents in combat will periodically shout taunts/battle cries")
+		SetInfoText("When enabled AI agents in combat will periodically shout taunts/battle cries. Is controlled via Rechat. ")
 	endIf
 	
 	if (a_option == _slider_combat_barks_period)
-		SetInfoText("How often (in seconds) combat barks trigger during active combat. Default: 30 seconds")
+		SetInfoText("How often (in seconds) combat barks trigger during active combat. Will automatically trigger an event when combat starts. Default: 30 seconds")
 	endIf
 
 	; AI Agents page help text
