@@ -768,7 +768,7 @@ function RecoverFromCombat(Actor npc) global;Triggers on defeated actor
 			winner.StopCombat()
 			npc.StopCombat()
 		endif
-		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has lost combat and is wounded. Should surrender and leave the place.","instruction",npc.GetDisplayName())
+		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has lost combat and is wounded bleedingout.","instruction",npc.GetDisplayName())
 		Utility.wait(10);Wait, sometimes opponent still agressive
 
 		npc.RestoreAV("Health",20)	
