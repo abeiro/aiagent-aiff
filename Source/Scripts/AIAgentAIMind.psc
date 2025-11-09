@@ -123,6 +123,32 @@ function MoveToTargetEnd(Actor npc) global
 				LookAt(npc,destinationActor)
 				Debug.SendAnimationEvent(npc,"IdleGive")
 				Utility.wait(1)
+				
+				; Actually transfer the item using stored Form ID
+				int formID = StorageUtil.GetIntValue(npc, "PendingGiveFormID", 0)
+				int itemAmount = StorageUtil.GetIntValue(npc, "PendingGiveAmount", 0)
+				string itemName = StorageUtil.GetStringValue(npc, "PendingGiveItem", "")
+				
+				if (formID > 0 && itemAmount > 0)
+					Debug.Trace("[CHIM] Transferring "+itemAmount+" "+itemName+" (FormID:"+formID+") from "+npc.GetDisplayName()+" to "+destinationActor.GetDisplayName())
+					
+					; Get the Form by ID
+					Form itemForm = Game.GetForm(formID)
+					if (itemForm)
+						; Use MoveInventoryItem for proper transfer with confirmation for gold
+						MoveInventoryItem(npc, destinationActor, itemForm, itemAmount, itemName)
+						
+						Debug.Notification(npc.GetDisplayName()+" gave "+itemAmount+" "+itemName+" to "+destinationActor.GetDisplayName())
+						AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" gave "+itemAmount+" "+itemName+" to "+destinationActor.GetDisplayName(),"itemtransfer",npc.GetDisplayName())
+					else
+						Debug.Trace("[CHIM] ERROR: Could not find Form with ID "+formID)
+					endif
+					
+					; Clear the pending transfer data
+					StorageUtil.SetIntValue(npc, "PendingGiveFormID", 0)
+					StorageUtil.SetIntValue(npc, "PendingGiveAmount", 0)
+					StorageUtil.SetStringValue(npc, "PendingGiveItem", "")
+				endif
 			endif
 			
 			if (intent==2);Trade
@@ -1744,6 +1770,42 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 	
 	
 
+EndFunction
+
+; New function to handle NPC-to-NPC item transfers
+; Called directly from C++ with all necessary parameters
+Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount, string itemName) global
+	Debug.Trace("[CHIM] GiveItemToTarget: "+source.GetDisplayName()+" -> "+target.GetDisplayName()+": "+amount+" "+itemName)
+	
+	if (!source || !target || !itemForm || amount <= 0)
+		Debug.Trace("[CHIM] GiveItemToTarget: Invalid parameters")
+		return
+	endif
+	
+	; Check distance - if close enough, transfer immediately
+	float distance = source.GetDistance(target)
+	Debug.Trace("[CHIM] GiveItemToTarget: Distance = "+distance)
+	
+	if (distance < 512.0)
+		; Close enough - transfer immediately
+		Debug.Trace("[CHIM] GiveItemToTarget: Close enough, transferring immediately")
+		source.RemoveItem(itemForm, amount, true, target)
+		
+		; Notify server of the transfer
+		int currentTime = Utility.GetCurrentRealTime() as int
+		int gameTime = Utility.GetCurrentGameTime() as int
+		string logMessage = "itemtransfer|"+currentTime+"|"+gameTime+"|"+source.GetDisplayName()+" gave "+amount+" "+itemName+" to "+target.GetDisplayName()
+		Debug.TraceUser("ChimHTTPSender", logMessage)
+	else
+		; Too far - store details and initiate movement
+		Debug.Trace("[CHIM] GiveItemToTarget: Too far, initiating movement")
+		StorageUtil.SetIntValue(source, "PendingGiveFormID", itemForm.GetFormID())
+		StorageUtil.SetIntValue(source, "PendingGiveAmount", amount)
+		StorageUtil.SetStringValue(source, "PendingGiveItem", itemName)
+		
+		; Make the NPC walk to the target
+		MoveToTarget(source, target as ObjectReference, 1)
+	endif
 EndFunction
 
 
