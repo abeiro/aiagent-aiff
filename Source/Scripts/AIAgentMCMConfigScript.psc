@@ -205,6 +205,7 @@ int			_halt_keyDefault				= -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
+	
 	int combatDialogueValue = AIAgentFunctions.get_conf_i("_combat_dialogue")
 	if (combatDialogueValue > 0)
 		_toggle_combatdialogue_state = true
@@ -857,7 +858,6 @@ event OnGameReload()
 	endif
 	
 	a=controlScript.setConf("_combat_barks_period",_combat_barks_period)
-	
 endEvent
 
 event OnOptionDefault(int a_option)
@@ -1320,6 +1320,7 @@ event OnOptionSelect(int a_option)
  	endIf
 	
 	if (a_option == _actionSendLocations)
+		ShowMessage("Please..wait 1 minute for the 'Done' message. ")
  		AIAgentPapyrusFunctions.sendAllLocations();
  		ShowMessage("Done")
  	endIf

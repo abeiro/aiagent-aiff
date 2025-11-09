@@ -57,6 +57,9 @@ Event OnKeyUp(int keyCode, float holdTime)
 			Return
 		EndIf
 		
+		
+	
+		
 		; If held for more than 0.5 seconds, trigger all nearby NPCs
 		If (holdTime >= 0.5)
 			Debug.Notification("[CHIM] Diary: Nearby NPCs are writing diary entries")
@@ -70,19 +73,95 @@ Event OnKeyUp(int keyCode, float holdTime)
 				targetName = (crosshairRef.GetBaseObject() as ActorBase).GetName()
 			EndIf
 			
-			If (targetName != "")
-				; Has a target - send diary request to specific actor
+			
+			String[] _modes = new String[8]
+			_modes[0] = "WRITE DIARY"
+			_modes[1] = "GATHER"
+			_modes[2] = ""
+			_modes[3] = ""
+			_modes[4] = ""
+			_modes[5] = ""
+			_modes[6] = "RENAME"
+			_modes[7] = "IDCARD"
+			
+			String[] _label = new String[8]
+
+			_label[0] = "Write Diary"
+			_label[1] = "Gather friends"
+			_label[2] = "-"
+			_label[3] = "-"
+			_label[4] = "-"
+			_label[5] = "-"
+			_label[6] = "Add to BgL"
+			_label[7] = "Copy Name"
+				
+			int j=0
+			UIExtensions.InitMenu("UIWheelMenu")
+			while j < _modes.length
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+				j = j +1
+			endwhile
+			
+			int ret = UIExtensions.OpenMenu("UIWheelMenu")
+			;Debug.Trace("Option " + ret + " selectioned")
+			String currentMode = _modes[ret]
+			_currentModeIndex = ret
+			; Store mode index for spell system sync
+			
+			if ( currentMode ==  "WRITE DIARY")
+			
+				If (targetName != "")
+					; Has a target - send diary request to specific actor
+					Actor targetActor = crosshairRef as Actor
+					If (targetActor)
+						Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+						AIAgentFunctions.requestMessageForActor("Please, update your diary","diary", targetActor.GetDisplayName())
+					Else
+						Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
+					EndIf
+				EndIf
+			ElseIf ( currentMode ==  "GATHER")
+				AIAgentAIMind.GatherAround();
+				
+			ElseIf ( currentMode ==  "IDCARD")
 				Actor targetActor = crosshairRef as Actor
 				If (targetActor)
-					Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
-					AIAgentFunctions.requestMessageForActor("Please, update your diary","diary", targetActor.GetDisplayName())
+					Debug.Notification("[CHIM] " + targetName + " Scroll of Identity gave to "+targetActor.GetDisplayName())
+					;AIAgentAIMind.addRenamedKeyword(crosshairRef,targetName)
+					StorageUtil.SetStringValue(Parent, "RenamedBuffer",targetActor.GetDisplayName());
+
+					
 				Else
-					Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
-				EndIf
-			Else
-				; No target - show error (no closest agent fallback for quick press)
-				Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
-			EndIf
+					Debug.Notification("[CHIM] You must look at a target to use this")
+				endif
+				
+			ElseIf ( currentMode ==  "RENAME")
+				Actor targetActor = crosshairRef as Actor
+				If (targetActor)
+					string originalname = targetActor.GetDisplayName()
+					UIMenuBase menus=UIExtensions.GetMenu("UITextEntryMenu")
+					string savedName=StorageUtil.GetStringValue(Parent, "RenamedBuffer",targetActor.GetDisplayName());
+					if savedName != "None"
+						UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",savedName)
+					endif
+					UIExtensions.OpenMenu("UITextEntryMenu")
+					string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
+					
+					StorageUtil.SetStringValue(Parent, "RenamedBuffer",None);
+
+					UIExtensions.SetMenuPropertyString("UITextEntryMenu","text","")
+					if (messageText != "")
+						AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+targetActor.GetFormId(),"setconf")
+						StorageUtil.SetStringValue(targetActor,"forcedName",messageText)
+					endif
+
+				Else
+					Debug.Notification("[CHIM] You must look at a target to use this")
+				endif
+				
+			EndIf 
 		EndIf
 	EndIf
 	
@@ -475,7 +554,20 @@ Event OnKeyDown(int keyCode)
 		Return
 	EndIf
 	
-	AIAgentFunctions.setDrivenByAI();
+	ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+	
+	If (crosshairRef)
+		Actor targetActor = crosshairRef as Actor
+		if (targetActor)
+			Debug.Trace("[CHIM] NPC under cursor: "+targetActor.GetDisplayName())
+			AIAgentFunctions.setDrivenByAIA(targetActor,false);
+		else
+			Debug.Trace("[CHIM] NO NPC under cursor")
+		endif
+	else 
+		AIAgentFunctions.setDrivenByAI();
+	EndIf
+	
 	
   EndIf
   
@@ -700,12 +792,15 @@ Function sendAllLocations() global
 	int i=0;
 	while i < lengthA
 		Form j=allLocations[i] as Form
-		Debug.Trace("Adding Location "+j.GetName());
-		int retFnc=AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId(),"util_location_name")
+		Location curr=j as Location
+		Location currParent=PO3_SKSEFunctions.GetParentLocation(curr)
+		Location currParent2lvl=PO3_SKSEFunctions.GetParentLocation(currParent)
+		
+		Debug.Trace("Adding Location "+j.GetName() + " / "+currParent.GetName());
+		int retFnc=AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId()+"/"+currParent.GetName()+"/"+currParent2lvl.GetName(),"util_location_name")
 		i=i+1
 	endwhile
 	return
-
 EndFunction
 
 Event CommandManager(String npcname,String  command, String parameter)
