@@ -276,37 +276,3 @@ function sendAllActorsNames()
 		return
 	endif
 endFunction
-
-
-bool Function  FindItemAvoidingRenaming(ObjectReference akRef) global
-    If akRef == None
-        ;Debug.Trace("[REALNAMES - CHIM] No reference provided.")
-        Return false
-    EndIf
-
-    ; SKSE native function - returns all items in the ref's inventory
-    Form[] allItems = PO3_SKSEFunctions.AddAllItemsToArray(akRef, True, False, False)
-
-    If allItems == None
-        ;Debug.Trace("[REALNAMES - CHIM] No items found.")
-        Return false
-    EndIf
-
-    Int count = allItems.Length
-    ;Debug.Trace("[REALNAMES - CHIM] Found " + count + " total item(s) in inventory.")
-
-    Int i = 0
-    While i < count
-        Form item = allItems[i]
-        If item
-            String itemName = item.GetName()
-            If itemName != "" && itemName == "Scroll of Identity"
-                Debug.Trace("[REALNAMES - CHIM] Found item: " + itemName + " (FormID: " + item.GetFormID() + ")")
-				return true
-            EndIf
-        EndIf
-        i += 1
-    EndWhile
-	return false
-EndFunction
-
