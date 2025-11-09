@@ -29,6 +29,7 @@ function ResetPackages(Actor npc) global
 	Package WaitPackage = Game.GetFormFromFile(0x02021F, "AIAgent.esp") as Package ; Package MoveToTarget
 	Package FollowPlayerPackage = Game.GetFormFromFile(0x2226d,"AIAgent.esp") as Package		; FollowPlayerPackage
 	Package SandboxPackage = Game.GetFormFromFile(0x20ce2,"AIAgent.esp") as Package		; Package sandboxPackage 
+	Package doNothing = Game.GetForm(0x654e2) as Package ; Package doNothing
 
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	;
 
@@ -42,6 +43,7 @@ function ResetPackages(Actor npc) global
 	ActorUtil.RemovePackageOverride(npc, WaitPackage)
 	ActorUtil.RemovePackageOverride(npc, FollowPlayerPackage)
 	ActorUtil.RemovePackageOverride(npc, SandboxPackage)
+	ActorUtil.RemovePackageOverride(npc, doNothing)
 	;ActorUtil.ClearPackageOverride(npc)
 	
 	npc.EvaluatePackage()
@@ -49,6 +51,9 @@ function ResetPackages(Actor npc) global
 	PO3_SKSEFunctions.SetLinkedRef(npc,None,MoveTargetKw)
 	
 	SheatheWeapon(npc);
+	
+	AIAgentFunctions.setLocked(0,npc.GetDisplayName())
+	AIAgentFunctions.setAnimationBusy(0,npc.GetDisplayName())
 	;npc.EnableAI(true) 
 
 
@@ -522,16 +527,18 @@ function TravelToTargetEnd(Actor npc) global
 				Utility.wait(3)
 				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
 			endif
-			Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName()+".Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+			Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
 			;stayAtPlace(npc,0,"");
 		elseif (dest.GetType()==34) 
 					; TravelToLocation case?
 			String destinationName=StorageUtil.GetStringValue(npc, "LastTravelToLocationName") as String;
 			if (destinationName)
-				Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName()+".Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType())
+				Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType())
 				if (!npc.Is3DLoaded())
 					;Only log as background event id npc is not 3dloaded
-					AIAgentFunctions.logMessageForActor(npc.GetDisplayName() +" reaches destination "+destinationName,"backgroundaction",npc.GetDisplayName())
+					;AIAgentFunctions.logMessageForActor(npc.GetDisplayName() +" reaches destination "+destinationName,"backgroundaction",npc.GetDisplayName())
+					Package doNothing = Game.GetForm(0x654e2) as Package ; Package Travelto
+					ActorUtil.AddPackageOverride(npc, doNothing,100)
 				endif
 				StorageUtil.SetFormValue(npc, "LastTravelToLocation",None);
 				StorageUtil.SetStringValue(npc, "LastTravelToLocationName",None);
@@ -664,6 +671,7 @@ function AttackTarget(Actor npc, ObjectReference akTarget,bool lethal=true) glob
 	;npc.ModActorValue("aggression", 3)
 	;npc.ModActorValue("morality", 0)
 	;npc.SetPlayerTeammate(false,true);
+	Debug.trace("[CHIM] AttackTarget "+npc.getDisplayName()+" vs "+ targetAsActor.getDisplayName())
 	
 	if (targetAsActor)
 	
@@ -680,7 +688,7 @@ function AttackTarget(Actor npc, ObjectReference akTarget,bool lethal=true) glob
 			
 			if (!lethal)
 				; To-DO reover this values after combat
-				
+				Debug.trace("[CHIM] Non Lethal AttackTarget "+npc.getDisplayName()+" vs "+ targetAsActor.getDisplayName())
 				if (!StorageUtil.HasIntValue(npc, "CHIM_Protected"))
 					bool originallyProtected=AIAgentNpcUtil.getProperActorBase(npc).IsProtected();
 					if (originallyProtected)
@@ -723,7 +731,8 @@ function AttackTarget(Actor npc, ObjectReference akTarget,bool lethal=true) glob
 				AIAgentNpcUtil.getProperActorBase(targetAsActor).SetProtected()
 				
 				npc.SetNoBleedoutRecovery(true);
-				targetAsActor.SetNoBleedoutRecovery(true);
+				targetAsActor.SetNoBleedoutRecovery(true)
+				;npc.SendAssaultAlarm();
 			endif
 			npc.startCombat(targetAsActor);
 			
@@ -759,7 +768,7 @@ function RecoverFromCombat(Actor npc) global;Triggers on defeated actor
 			winner.StopCombat()
 			npc.StopCombat()
 		endif
-		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has lost combat and is wounded bleedingout.","instruction",npc.GetDisplayName())
+		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has lost combat and is wounded. Should surrender and leave the place.","instruction",npc.GetDisplayName())
 		Utility.wait(10);Wait, sometimes opponent still agressive
 
 		npc.RestoreAV("Health",20)	
@@ -1839,10 +1848,224 @@ function resetCam() global
 endFunction
 
 
-int Function RenameNPC(int refid,String name) global
-	ObjectReference ref=Game.GetFormEx(refid)  as ObjectReference;
-	string oldname=ref.GetDisplayName();
-	ref.SetDisplayName(name,true)
-	Debug.Notification("Renamed '"+oldname+"' to '"+name+"'" );
+Function GatherAround()  global
+
+	
+	Actor[] actors = AIAgentFunctions.findAllNearbyActors()
+	; remove player actor from the list
+	;actors = PapyrusUtil.RemoveActor(actors,Game.GetPlayer())
+	int i = actors.length - 1
+	Actor actorAtIndex = None
+	
+	; iterating reversed as we modify the array
+	while i>=0
+		actorAtIndex = actors[i]
+		bool mustCome= actorAtIndex.GetrelationShipRank(Game.GetPlayer()) >= 0		; Non-friends wont come
+		mustCome = mustCome && (!actorAtIndex.IsHostileToActor(Game.GetPlayer()))	; Hostiles wont come
+		mustCome = mustCome && (actorAtIndex.Getrace().isPlayable())				; Only playable races
+		if (mustCome) 
+			Debug.Trace("[CHIM] "+actorAtIndex.getDisplayName() +" will come to player"); 
+			stayAtPlace(actorAtIndex,1,"papyrus");
+		else
+			Debug.Trace("[CHIM] "+actorAtIndex.getDisplayName() +" won't  come to player"); 
+		Endif
+		i -= 1
+	endwhile
+
+	;AIAgentFunctions.logMessage(Game.getPlayer().GetDisplayName()+" calls everyone around","infoaction");
+	AIAgentFunctions.requestMessage(Game.getPlayer().GetDisplayName()+" calls everyone around","bored");
+
+endFunction
+
+Function addRenamedKeyword(ObjectReference akTarget,string newName) global
+	Form  AIAgentNoRenameMarker = Game.GetFormFromFile(0x02481f,"AIAgent.esp") as Form 	; Check this form
+	akTarget.AddItem(AIAgentNoRenameMarker,1,true)
+	Actor akTargetActor=akTarget as Actor
+	StorageUtil.SetStringValue(akTarget,"forcedName",newName)
+	Debug.Trace("[CHIM] Added avoid renaming item to "+akTargetActor.GetDisplayName()); 
+
+endFunction
+
+; Experiment.
+bool Function projectNPC(Form actorForm) global
+
+	Package doNothing = Game.GetForm(0x654e2) as Package ; Package Travelto
+
+	Actor aktarget = actorForm as Actor
+	
+	Debug.Trace("[CHIM] projectNPC actor: "+aktarget.GetDisplayName())
+	
+	akTarget.SetAllowFlying(true);
+	akTarget.SetDontMove(true);
+	akTarget.SetLookAt(Game.GetPlayer(),true)
+	akTarget.setScale(0.3);
+	akTarget.SetAnimationVariableBool("bHumanoidFootIKDisable", False)
+	akTarget.SetMotionType(4)
+	ActorUtil.AddPackageOverride(akTarget, doNothing,100)
+
+	Actor PlayerRef = Game.GetPlayer()
+	;akTarget.Disable(false)
+	;akTarget.EnableAI(false)
+	akTarget.MoveTo(PlayerRef, 120.0 * Math.Sin(PlayerRef.GetAngleZ()), 120.0 * Math.Cos(PlayerRef.GetAngleZ()), PlayerRef.GetHeight() - 25.0 , false)
+	akTarget.setGhost(true)
+	akTarget.setAlpha(0.5)
+	;akTarget.Enable(false)
+	akTarget.QueueNiNodeUpdate();
+	float angleToPlayer = akTarget.GetHeadingAngle(PlayerRef)
+	akTarget.SetAngle(0.0, 0.0, PlayerRef.GetAngleZ() + angleToPlayer)
+	;ActorUtil.RemovePackageOverride(akTarget, doNothing)
 
 EndFunction
+
+
+Int Function StringToInt(String str) global
+    If str == ""
+        Return 0
+    EndIf
+
+    Int len = StringUtil.GetLength(str)
+    Int result = 0
+    Int sign = 1
+    Int i = 0
+
+    ; Handle optional minus sign
+    If StringUtil.GetNthChar(str, 0) == "-"
+        sign = -1
+        i = 1
+    EndIf
+
+    While i < len
+        String c = StringUtil.GetNthChar(str, i)
+        If StringUtil.IsDigit(c)
+            Int digit = StringUtil.AsOrd(c) - StringUtil.AsOrd("0")
+            result = result * 10 + digit
+        Else
+            ; Non-digit character encountered – invalid number
+            Return 0  ; or handle error as needed
+        EndIf
+        i += 1
+    EndWhile
+
+    Return sign * result
+EndFunction
+
+String Function DecToHex(Int n) global
+	String hexChars = "0123456789ABCDEF"
+	String res = ""
+	Int count = 0
+
+	; Handle zero explicitly
+	If n == 0
+		res = "0"
+		count = 1
+	Else
+		While n > 0
+			res = StringUtil.GetNthChar(hexChars, n % 16) + res
+			n /= 16
+			count += 1
+		EndWhile
+	EndIf
+
+	; Pad with leading zeros if needed
+	While count < 8
+		res = "0" + res
+		count += 1
+	EndWhile
+
+	Return res
+EndFunction
+
+bool Function BackgroundCmd(Form actorForm,string command) global
+
+	Actor aktarget = actorForm as Actor
+	
+	if (akTarget)
+		Debug.Trace("[CHIM] BackgroundCmd, actor: "+aktarget.GetDisplayName())
+		String[] cmd = StringUtil.Split(command, "/")
+		Debug.Trace("[CHIM] BackgroundCmd, parm0: "+cmd[0])
+		if cmd.length>1
+			Debug.Trace("[CHIM] BackgroundCmd, parm1: "+cmd[1])
+		endif
+		
+		if (cmd[0] == "TravelTo") 
+			Int locrefId=StringToInt(cmd[1])
+			Location destination = Game.GetFormEx(locrefId) as Location;
+			if (destination)
+				Debug.Trace("[CHIM] BackgroundCmd, destination: "+destination.GetName()+ ", FormId:"+DecToHex(locrefId))
+				ObjectReference destMarker= AIAgentFunctions.getLocationMarkerFor(destination);
+				Debug.Trace("[CHIM] BackgroundCmd, destMarker: "+DecToHex(destMarker.GetFormId()))
+				
+				if (destMarker)
+					TravelToLocation(akTarget,destMarker,destination.GetName())
+				endif
+			else
+				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
+			endif
+		elseif 	(cmd[0] == "SendNote") 
+			
+			WICourierScript  courier = Game.GetFormEx(0x00039f82) as WICourierScript;
+			
+			if (courier)
+				Debug.Trace("[CHIM] BackgroundCmd, SendNote: "+cmd[1])
+				Book itemToSpawnBase=Game.GetFormFromFile(0x022d30, "AIAgent.esp") as Book ; Package Travelto
+				ObjectReference finalItem=Game.GetPlayer().PlaceAtMe(itemToSpawnBase,1,true,true) 
+				finalItem.setDisplayName(cmd[1]);
+				courier.addRefToContainer(finalItem)
+				
+			else
+				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find WICourierScript")
+			endif
+
+		elseif 	(cmd[0] == "ReturnHome") 
+			
+			ResetPackages(akTarget); SHould apply default NPC package
+
+		elseif 	(cmd[0] == "Track") 
+			float x = 0;
+			float y = 0
+			float z = 0
+			string name
+			
+			Location loc= akTarget.GetCurrentLocation()
+			Location currParentLvl1=PO3_SKSEFunctions.GetParentLocation(loc)
+			Location currParentLvl2=PO3_SKSEFunctions.GetParentLocation(currParentLvl1)
+			Debug.Trace(akTarget.GetDisplayName()+"/"+loc.GetName()+"/"+currParentLvl1.GetName()+"/"+currParentLvl2.GetName())
+
+			if (akTarget.IsInInterior() && false)
+				
+				ObjectReference destMarker= AIAgentFunctions.getWorldLocationMarkerFor(currParentLvl1);
+				Debug.Trace("[CHIM] BackgroundCmd, Track: "+loc.GetName()+ " "+currParentLvl1.GetName());
+				x=destMarker.GetPositionX();
+				y=destMarker.GetPositionY();
+				z=destMarker.GetPositionZ();
+				name=currParentLvl1.GetName()
+				Debug.Trace("[CHIM] BackgroundCmd,"+akTarget.GetDisplayName()+"  parentLoc.GetPosition, Track: "+x+","+y+","+z);
+			else
+				ObjectReference destMarker=AIAgentFunctions.getWorldLocationMarkerFor(loc);
+				if (!destMarker)
+					destMarker=AIAgentFunctions.getWorldLocationMarkerFor(currParentLvl1);
+					Debug.Trace("[CHIM] BackgroundCmd, "+akTarget.GetDisplayName()+" loc.parent.GetPosition , Track: "+currParentLvl1.GetName()+ ": "+x+","+y+","+z);
+				endif;
+				if (destMarker)
+					
+					x=destMarker.GetPositionX();
+					y=destMarker.GetPositionY();
+					z=destMarker.GetPositionZ();
+					Debug.Trace("[CHIM] BackgroundCmd, "+akTarget.GetDisplayName()+" loc.GetPosition, Track: "+loc.GetName()+ ": "+x+","+y+","+z);
+					name=loc.GetName()
+				else
+					x=akTarget.GetPositionX();
+					y=akTarget.GetPositionY();
+					z=akTarget.GetPositionZ();
+					name=loc.GetName();
+					Debug.Trace("[CHIM] BackgroundCmd, "+akTarget.GetDisplayName()+" akTarget.GetPosition, Track: "+x+","+y+","+z);
+				endif
+			endif
+
+			int retFnc=AIAgentFunctions.logMessage(akTarget.GetDisplayName()+"/"+x+"/"+y+"/"+z+"/"+name,"util_location_npc")
+		endif
+	endif
+	
+
+EndFunction
+
