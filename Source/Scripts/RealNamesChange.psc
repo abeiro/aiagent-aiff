@@ -32,6 +32,8 @@ Faction Property FacCreature Auto
 FormList Property UniquesRename Auto
 FormList Property NonUniqueNoRename Auto
 
+
+
 Function ChangeName(Actor akTarget, String newFirstName, String newLastName)
 
 	ActorBase TargetRef = akTarget.GetLeveledActorBase()
@@ -68,12 +70,17 @@ Function ChangeName(Actor akTarget, String newFirstName, String newLastName)
 	
 	string creatorMod=PO3_SKSEFunctions.GetFormModName(TargetBase,false)
 	If (creatorMod=="AIAgent.esp")
-		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename: "+akTarget.getDisplayName())
+		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename (AIAgent.esp): "+akTarget.getDisplayName())
 		ShouldRename=false
 	else
-		Debug.Trace("[REALNAMES - CHIM] Allowing to rename: "+akTarget.getDisplayName())
+		;Debug.Trace("[REALNAMES - CHIM] Allowing to rename (not AIAgent.esp):  "+akTarget.getDisplayName())
 	EndIf
 	
+	if (StorageUtil.GetStringValue(akTarget,"forcedName","") != "" )
+		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename (StorageUtil): "+akTarget.getDisplayName())
+		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename (StorageUtil): <"+newFirstName+ "> <"+newLastName+">")
+		ShouldRename=false
+	endif
 	
 	If !ShouldRename
 		; Debug.Notification("Target is a unique NPC. You cannot change its name!")
