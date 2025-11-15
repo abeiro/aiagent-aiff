@@ -46,9 +46,9 @@ function ResetPackages(Actor npc) global
 	ActorUtil.RemovePackageOverride(npc, doNothing)
 	;ActorUtil.ClearPackageOverride(npc)
 	
-	npc.EvaluatePackage()
-
 	PO3_SKSEFunctions.SetLinkedRef(npc,None,MoveTargetKw)
+	
+	npc.EvaluatePackage()
 	
 	SheatheWeapon(npc);
 	
@@ -475,20 +475,29 @@ endFunction
 ;Travel to location
 
 function TravelToLocation(Actor npc, ObjectReference akTarget,String place) global
-	ResetPackages(npc);
+	
 	Package TraveltoPackage = Game.GetFormFromFile(0x01ABFE, "AIAgent.esp") as Package ; Package Travelto
 	Faction TraveToFaction=Game.GetFormFromFile(0x01A69C, "AIAgent.esp") as Faction ; Faction TravelTo
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
 	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
-	
+		
+	if (npc.Is3dLoaded())
+		; Properly reset
+		PO3_SKSEFunctions.SetLinkedRef(npc,None)
+		ResetPackages(npc);
+		Utility.wait(1); Give some time to package stack to apply
+		
+	endif;		
+
 	npc.RemoveFromFaction(SandboxFaction)
 	npc.RemoveFromFaction(FollowFaction)
 	npc.RemoveFromFaction(WaitFaction)
 	
 	npc.SetFactionRank(TraveToFaction,1)
+
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
-	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100, 0)
+	ActorUtil.AddPackageOverride(npc, TraveltoPackage, 100)
 	npc.EvaluatePackage()
 	
 	StorageUtil.SetFormValue(npc, "LastTravelToLocation",akTarget);
@@ -563,6 +572,7 @@ function TravelToTargetEnd(Actor npc) global
 				if (!npc.Is3DLoaded())
 					;Only log as background event id npc is not 3dloaded
 					;AIAgentFunctions.logMessageForActor(npc.GetDisplayName() +" reaches destination "+destinationName,"backgroundaction",npc.GetDisplayName())
+					Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType()+ ", npc should wait here")
 					Package doNothing = Game.GetForm(0x654e2) as Package ; Package Travelto
 					ActorUtil.AddPackageOverride(npc, doNothing,100)
 				endif
@@ -2055,7 +2065,7 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			Location destination = Game.GetFormEx(locrefId) as Location;
 			if (destination)
 				Debug.Trace("[CHIM] BackgroundCmd, destination: "+destination.GetName()+ ", FormId:"+DecToHex(locrefId))
-				ObjectReference destMarker= AIAgentFunctions.getLocationMarkerFor(destination);
+				ObjectReference destMarker= AIAgentFunctions.getWorldLocationMarkerFor(destination);
 				Debug.Trace("[CHIM] BackgroundCmd, destMarker: "+DecToHex(destMarker.GetFormId()))
 				
 				if (destMarker)
@@ -2082,7 +2092,12 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 		elseif 	(cmd[0] == "ReturnHome") 
 			
 			ResetPackages(akTarget); SHould apply default NPC package
-
+			
+		elseif 	(cmd[0] == "StayAtPlace") 
+			; TO-DO select a better package here
+			Package doNothing = Game.GetForm(0x654e2) as Package ; Package Travelto
+			ActorUtil.AddPackageOverride(akTarget, doNothing,99)
+			
 		elseif 	(cmd[0] == "Track") 
 			float x = 0;
 			float y = 0
@@ -2092,17 +2107,33 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			Location loc= akTarget.GetCurrentLocation()
 			Location currParentLvl1=PO3_SKSEFunctions.GetParentLocation(loc)
 			Location currParentLvl2=PO3_SKSEFunctions.GetParentLocation(currParentLvl1)
-			Debug.Trace(akTarget.GetDisplayName()+"/"+loc.GetName()+"/"+currParentLvl1.GetName()+"/"+currParentLvl2.GetName())
+			string lvl1s = ""
+			string lvl2s = ""
+			if currParentLvl1
+				lvl1s = currParentLvl1.GetName()
+			endif
+			if currParentLvl2
+				lvl2s = currParentLvl2.GetName()
+			endif
 
-			if (akTarget.IsInInterior() && false)
-				
-				ObjectReference destMarker= AIAgentFunctions.getWorldLocationMarkerFor(currParentLvl1);
-				Debug.Trace("[CHIM] BackgroundCmd, Track: "+loc.GetName()+ " "+currParentLvl1.GetName());
-				x=destMarker.GetPositionX();
-				y=destMarker.GetPositionY();
-				z=destMarker.GetPositionZ();
-				name=currParentLvl1.GetName()
-				Debug.Trace("[CHIM] BackgroundCmd,"+akTarget.GetDisplayName()+"  parentLoc.GetPosition, Track: "+x+","+y+","+z);
+			bool useRawCoords= false
+			;;useRawCoords = !akTarget.IsInInterior() 
+			Worldspace cws= akTarget.GetWorldSpace()
+			
+			Debug.Trace("[CHIM] "+akTarget.GetDisplayName()+"/"+loc.GetName()+"/"+lvl1s+"/"+lvl2s+" worldspace "+cws.GetName())
+
+			if (cws.GetName() == "Skyrim" || cws.GetName() == "")
+				if !akTarget.IsInInterior() 
+					useRawCoords = true
+				endif
+			endif
+			
+			if (useRawCoords)
+				x=akTarget.GetPositionX();
+				y=akTarget.GetPositionY();
+				z=akTarget.GetPositionZ();
+				name=loc.GetName();
+				Debug.Trace("[CHIM] BackgroundCmd, "+akTarget.GetDisplayName()+",Not interior, akTarget.GetPosition, Track: "+x+","+y+","+z);
 			else
 				ObjectReference destMarker=AIAgentFunctions.getWorldLocationMarkerFor(loc);
 				if (!destMarker)
