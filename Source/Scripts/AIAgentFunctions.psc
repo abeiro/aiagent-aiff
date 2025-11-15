@@ -39,12 +39,11 @@ Actor function getAgentByName(String npcName) Global Native
 Actor[] function findAllNearbyAgents() Global Native
 Actor[] function findAllAgents() Global Native
 Actor[] function findAllNearbyNonAgents() Global Native
-Actor[] function findAllNearbyActors() Global Native
+Actor[] function findAllNearbyActors(bool onlyBgl) Global Native; Only gets actors with BgL flag
 
 ; Helpers
 ObjectReference function getLocationMarkerFor(Location loc) Global Native
 ObjectReference function getWorldLocationMarkerFor(Location loc) Global Native
-
 ObjectReference function getNearestDoor() global Native
 ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restriction=true) global Native
 

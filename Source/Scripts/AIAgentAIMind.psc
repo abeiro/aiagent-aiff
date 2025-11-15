@@ -1996,7 +1996,8 @@ endFunction
 Function GatherAround()  global
 
 	
-	Actor[] actors = AIAgentFunctions.findAllNearbyActors()
+	
+	Actor[] actors = AIAgentFunctions.findAllNearbyActors(true)
 	; remove player actor from the list
 	;actors = PapyrusUtil.RemoveActor(actors,Game.GetPlayer())
 	int i = actors.length - 1
@@ -2005,9 +2006,9 @@ Function GatherAround()  global
 	; iterating reversed as we modify the array
 	while i>=0
 		actorAtIndex = actors[i]
-		bool mustCome= actorAtIndex.GetrelationShipRank(Game.GetPlayer()) >= 0		; Non-friends wont come
-		mustCome = mustCome && (!actorAtIndex.IsHostileToActor(Game.GetPlayer()))	; Hostiles wont come
-		mustCome = mustCome && (actorAtIndex.Getrace().isPlayable())				; Only playable races
+		bool mustCome= true
+		;mustCome = mustCome && (!actorAtIndex.IsHostileToActor(Game.GetPlayer()))	; Hostiles wont come
+		;mustCome = mustCome && (actorAtIndex.Getrace().isPlayable())				; Only playable races
 		if (mustCome) 
 			Debug.Trace("[CHIM] "+actorAtIndex.getDisplayName() +" will come to player"); 
 			stayAtPlace(actorAtIndex,1,"papyrus");

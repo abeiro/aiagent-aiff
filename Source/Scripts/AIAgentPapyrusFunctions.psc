@@ -68,9 +68,12 @@ Event OnKeyUp(int keyCode, float holdTime)
 			; Quick press - normal behavior (target or closest)
 			; Get the target NPC name for the notification
 			ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+			Actor leader = None
 			String targetName = ""
 			If (crosshairRef && crosshairRef.GetBaseObject() as ActorBase)
 				targetName = (crosshairRef.GetBaseObject() as ActorBase).GetName()
+				leader = crosshairRef as Actor
+
 			EndIf
 			
 			
@@ -79,8 +82,8 @@ Event OnKeyUp(int keyCode, float holdTime)
 			_modes[1] = "GATHER"
 			_modes[2] = ""
 			_modes[3] = ""
-			_modes[4] = ""
-			_modes[5] = ""
+			_modes[4] = "WAIT"
+			_modes[5] = "FOLLOW"
 			_modes[6] = "RENAME"
 			_modes[7] = "IDCARD"
 			
@@ -90,17 +93,31 @@ Event OnKeyUp(int keyCode, float holdTime)
 			_label[1] = "Gather friends"
 			_label[2] = "-"
 			_label[3] = "-"
-			_label[4] = "-"
-			_label[5] = "-"
+			_label[4] = "Wait Here"
+			_label[5] = "Follow Me"
 			_label[6] = "Add to BgL"
 			_label[7] = "Copy Name"
-				
+
+			if leader
+				if leader.GetrelationShipRank(Game.GetPlayer()) < 0
+					_label[4] = "Force Wait"
+					_label[5] = "Force Follow"
+				elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
+					_label[5] = "Force Follow"
+				endif
+			endif
+			
 			int j=0
 			UIExtensions.InitMenu("UIWheelMenu")
 			while j < _modes.length
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
-				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+				if j == 7
+					UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,false); temp disable
+				else
+					UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+				endif
+				
 				j = j +1
 			endwhile
 			
@@ -109,7 +126,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 			String currentMode = _modes[ret]
 			_currentModeIndex = ret
 			; Store mode index for spell system sync
-			
+			Debug.trace("[CHIM] Wheel mode "+currentMode)
 			if ( currentMode ==  "WRITE DIARY")
 			
 				If (targetName != "")
@@ -130,7 +147,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 				If (targetActor)
 					Debug.Notification("[CHIM] " + targetName + " Scroll of Identity gave to "+targetActor.GetDisplayName())
 					;AIAgentAIMind.addRenamedKeyword(crosshairRef,targetName)
-					StorageUtil.SetStringValue(Parent, "RenamedBuffer",targetActor.GetDisplayName());
+					StorageUtil.SetStringValue(targetActor, "RenamedBuffer",targetActor.GetDisplayName());
 
 					
 				Else
@@ -138,29 +155,51 @@ Event OnKeyUp(int keyCode, float holdTime)
 				endif
 				
 			ElseIf ( currentMode ==  "RENAME")
-				Actor targetActor = crosshairRef as Actor
-				If (targetActor)
-					string originalname = targetActor.GetDisplayName()
+				If (leader)
+					string originalname = leader.GetDisplayName()
+					Debug.trace("[CHIM] Wheel originalname "+originalname)
+
 					UIMenuBase menus=UIExtensions.GetMenu("UITextEntryMenu")
-					string savedName=StorageUtil.GetStringValue(Parent, "RenamedBuffer",targetActor.GetDisplayName());
+					string savedName=StorageUtil.GetStringValue(leader, "RenamedBuffer",leader.GetDisplayName());
 					if savedName != "None"
 						UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",savedName)
+					else
+						UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",originalname)
 					endif
+					Debug.trace("[CHIM] Wheel savedName "+savedName)
+
 					UIExtensions.OpenMenu("UITextEntryMenu")
 					string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
 					
-					StorageUtil.SetStringValue(Parent, "RenamedBuffer",None);
+					StorageUtil.SetStringValue(leader, "RenamedBuffer",None);
 
 					UIExtensions.SetMenuPropertyString("UITextEntryMenu","text","")
 					if (messageText != "")
-						AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+targetActor.GetFormId(),"setconf")
-						StorageUtil.SetStringValue(targetActor,"forcedName",messageText)
+						AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+leader.GetFormId(),"setconf")
+						StorageUtil.SetStringValue(leader,"forcedName",messageText)
 					endif
 
 				Else
 					Debug.Notification("[CHIM] You must look at a target to use this")
 				endif
-				
+			elseif (currentMode == "WAIT")
+				Actor targetActor = crosshairRef as Actor
+				If (targetActor)
+					AIagentAIMind.StartWait(leader)
+				else
+					Debug.Notification("[CHIM] You must look at a target to use this")
+				endif
+				return		
+			elseif (currentMode == "FOLLOW")
+				Actor targetActor = crosshairRef as Actor
+				If (targetActor)
+					AIagentAIMind.FollowSoft(leader,Game.GetPlayer())
+				else
+					Debug.Notification("[CHIM] You must look at a target to use this")
+				endif
+				return				
+			else
+				Debug.Notification("[CHIM] Error")
 			EndIf 
 		EndIf
 	EndIf
@@ -308,21 +347,14 @@ Event OnKeyDown(int keyCode)
 			_label[3] = "Profile 2"
 			_label[4] = "Profile 3"
 			_label[5] = "Profile 4"
-			_label[6] = "Wait Here"
-			_label[7] = "Follow Me"
+			_label[6] = ""
+			_label[7] = ""
 			
 			
 			UIExtensions.InitMenu("UIWheelMenu")
 
 			int j = 0
-			int allowedLength=_modes.length
-			
-			if leader.GetrelationShipRank(Game.GetPlayer()) < 0
-				_label[6] = "Force Wait"
-				_label[7] = "Force Follow"
-			elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
-				_label[7] = "Force Follow"
-			endif
+			int allowedLength=_modes.length - 2; Temp, two free slots here
 			
 			while j < allowedLength
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
@@ -350,12 +382,6 @@ Event OnKeyDown(int keyCode)
 			elseif (currentMode == "6")
 				AIAgentFunctions.logMessageForActor("4","core_profile_assign",leader.GetDisplayName())
 				return	
-			elseif (currentMode == "7")
-				AIagentAIMind.StartWait(leader)
-				return		
-			elseif (currentMode == "8")
-				AIagentAIMind.FollowSoft(leader,Game.GetPlayer())
-				return			
 			elseif (currentMode == "1")	
 				; run legacy code
 			else
