@@ -164,16 +164,57 @@ function MoveToTargetEnd(Actor npc) global
 				Utility.wait(1)
 			endif
 			
-			if (intent==3);spawn
-				Debug.trace("[CHIM] MoveToTargetEnd , introducing spawned NPC");
-				AIAgentFunctions.requestMessageForActor("The Narrator:"+npc.GetDisplayName()+" appears in scene, directly pointing to its goal.","instruction",npc.GetDisplayName())
-				stayAtPlace(npc,0);
+		if (intent==3);spawn
+			Debug.trace("[CHIM] MoveToTargetEnd , introducing spawned NPC");
+			AIAgentFunctions.requestMessageForActor("The Narrator:"+npc.GetDisplayName()+" appears in scene, directly pointing to its goal.","instruction",npc.GetDisplayName())
+			stayAtPlace(npc,0);
+		endif
+		
+		Debug.Trace("[CHIM] MoveToTargetEnd: "+npc.GetDisplayName()+". Move destination was "+destinationActor.GetDisplayName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+		
+	else
+		; destination is not an Actor - could be an item pickup
+		if (intent==4);pickup
+			; Get the pending pickup data
+			string itemName
+			itemName = StorageUtil.GetStringValue(npc, "PendingPickupItem", "")
+			
+			if (itemName != "")
+				; Play pickup animation
+				Debug.SendAnimationEvent(npc, "IdlePickup")
+				Utility.Wait(0.5)
+				
+				; Activate the item to pick it up
+				ObjectReference itemRef
+				itemRef = destination as ObjectReference
+				if (itemRef)
+					npc.Activate(itemRef)
+					
+					; Wait a moment for the pickup to process
+					Utility.Wait(0.5)
+					
+					; Refresh the NPC's inventory so they know what they picked up
+					Debug.TraceUser("ChimHTTPSender", "AIAgentRefreshInventory|"+npc.GetFormID())
+					
+					; Notify server of the pickup
+					int currentTime
+					currentTime = Utility.GetCurrentRealTime() as int
+					int gameTime
+					gameTime = Utility.GetCurrentGameTime() as int
+					string logMessage
+					logMessage = "itempickup|"+currentTime+"|"+gameTime+"|"+npc.GetDisplayName()+" picked up "+itemName
+					Debug.TraceUser("ChimHTTPSender", logMessage)
+					AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" picked up "+itemName,"itempickup",npc.GetDisplayName())
+					
+					Debug.Notification(npc.GetDisplayName()+" picked up "+itemName)
+				endif
+				
+				; Clear the pending pickup data
+				StorageUtil.SetStringValue(npc, "PendingPickupItem", "")
 			endif
-			
-			Debug.Trace("[CHIM] MoveToTargetEnd: "+npc.GetDisplayName()+". Move destination was "+destinationActor.GetDisplayName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
-			
 		endif
 	endif
+endif
 	
 	StorageUtil.SetFormValue(npc, "LastMoveToLocation",None);
 	StorageUtil.SetIntValue(npc, "MoveToTargetIntent",0);
@@ -1827,6 +1868,48 @@ Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount,
 	endif
 EndFunction
 
+Function PickupItemFromWorld(Actor npc, ObjectReference itemRef, string itemName) global
+	if (!npc || !itemRef)
+		return
+	endif
+	
+	; Check distance to item
+	float distance
+	distance = npc.GetDistance(itemRef)
+	
+	if (distance < 64.0)
+		; Close enough - pick up immediately
+		Debug.SendAnimationEvent(npc, "IdlePickup")
+		Utility.Wait(0.5)
+		
+		; Activate the item to pick it up
+		npc.Activate(itemRef)
+		
+		; Wait a moment for the pickup to process
+		Utility.Wait(0.5)
+		
+		; Refresh the NPC's inventory so they know what they picked up
+		Debug.TraceUser("ChimHTTPSender", "AIAgentRefreshInventory|"+npc.GetFormID())
+		
+		; Notify server of the pickup
+		int currentTime
+		currentTime = Utility.GetCurrentRealTime() as int
+		int gameTime
+		gameTime = Utility.GetCurrentGameTime() as int
+		string logMessage
+		logMessage = "itempickup|"+currentTime+"|"+gameTime+"|"+npc.GetDisplayName()+" picked up "+itemName
+		Debug.TraceUser("ChimHTTPSender", logMessage)
+		
+		Debug.Notification(npc.GetDisplayName()+" picked up "+itemName)
+	else
+		; Too far - store details and initiate movement
+		StorageUtil.SetStringValue(npc, "PendingPickupItem", itemName)
+		
+		; Make the NPC walk to the item (intent=4 for pickup)
+		MoveToTarget(npc, itemRef, 4)
+	endif
+EndFunction
+
 
 function PlaceCam(Actor npc) global
 
@@ -2161,5 +2244,41 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 	endif
 	
 
+EndFunction
+
+; Helper function to convert FormID to hex string (last 4 digits only)
+string Function GetFormIDHexString(int formID) global
+	string hexChars
+	hexChars = "0123456789ABCDEF"
+	
+	; We only care about the last 4 hex digits (16 bits) for disambiguation
+	; This avoids issues with negative numbers and is sufficient to distinguish duplicates
+	int workingID
+	workingID = formID
+	
+	; If negative, mask to get positive representation of lower bits
+	if (workingID < 0)
+		workingID = workingID + 2147483648  ; Add 2^31 to flip sign bit
+		workingID = workingID + 2147483648  ; Add another 2^31 (total +2^32 equivalent)
+	endif
+	
+	; Build last 4 hex digits only
+	string result
+	result = ""
+	int remainingValue
+	remainingValue = workingID
+	int digitCount
+	digitCount = 0
+	
+	; Get last 4 hex digits (16 bits)
+	while (digitCount < 4)
+		int digit
+		digit = remainingValue % 16
+		result = StringUtil.GetNthChar(hexChars, digit) + result
+		remainingValue = remainingValue / 16
+		digitCount += 1
+	endWhile
+	
+	return result
 EndFunction
 
