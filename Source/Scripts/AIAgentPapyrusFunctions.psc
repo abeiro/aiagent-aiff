@@ -193,7 +193,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 			elseif (currentMode == "FOLLOW")
 				Actor targetActor = crosshairRef as Actor
 				If (targetActor)
-					AIagentAIMind.FollowSoft(leader,Game.GetPlayer())
+					AIagentAIMind.Follow(leader,Game.GetPlayer())
 				else
 					Debug.Notification("[CHIM] You must look at a target to use this")
 				endif

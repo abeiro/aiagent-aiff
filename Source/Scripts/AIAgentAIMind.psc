@@ -1082,11 +1082,12 @@ Function ReleaseFromConversation(Actor npc) global
 	if (isRunningPackage)
 		Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
 		ActorUtil.RemovePackageOverride(npc, isRunningPackage)
+		Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+		npc.RemoveFromFaction(FollowFaction);
+		Debug.Trace("[CHIM] "+npc.GetDisplayName()+" stops PackageSoft")
 	EndIf		
 	StorageUtil.SetFormValue(npc, "PackageSoft",None);
 	
-	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
-	npc.RemoveFromFaction(FollowFaction);
 	
 	npc.EvaluatePackage()
 	
