@@ -77,112 +77,101 @@ Event OnKeyUp(int keyCode, float holdTime)
 			EndIf
 			
 			
-			String[] _modes = new String[8]
-			_modes[0] = "WRITE DIARY"
-			_modes[1] = "GATHER"
-			_modes[2] = ""
-			_modes[3] = ""
-			_modes[4] = "WAIT"
-			_modes[5] = "FOLLOW"
-			_modes[6] = "RENAME"
-			_modes[7] = "IDCARD"
-			
-			String[] _label = new String[8]
+		String[] _modes = new String[8]
+		_modes[0] = "Write Diary"
+		_modes[1] = "GATHER"
+		_modes[2] = "FOLLOW_NPC"
+		_modes[3] = "UPDATE_NPC"
+		_modes[4] = "WAIT"
+		_modes[5] = "FOLLOW"
+		_modes[6] = "HALT"
+		_modes[7] = "RENAME"
+		
+		String[] _label = new String[8]
 
-			_label[0] = "Write Diary"
-			_label[1] = "Gather friends"
-			_label[2] = "-"
-			_label[3] = "-"
-			_label[4] = "Wait Here"
-			_label[5] = "Follow Me"
-			_label[6] = "Add to BgL"
-			_label[7] = "Copy Name"
+		_label[0] = "Write Diary"
+		_label[1] = "Gather friends"
+		_label[2] = "Follow NPC"
+		_label[3] = "Update NPC"
+		_label[4] = "Wait Here"
+		_label[5] = "Follow Me"
+		_label[6] = "Stop All AI"
+		_label[7] = "Add to BgL"
 
-			if leader
-				if leader.GetrelationShipRank(Game.GetPlayer()) < 0
-					_label[4] = "Force Wait"
-					_label[5] = "Force Follow"
-				elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
-					_label[5] = "Force Follow"
-				endif
+		if leader
+			if leader.GetrelationShipRank(Game.GetPlayer()) < 0
+				_label[4] = "Force Wait"
+				_label[5] = "Force Follow"
+			elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
+				_label[5] = "Force Follow"
 			endif
+		endif
+		
+		int j=0
+		UIExtensions.InitMenu("UIWheelMenu")
+		while j < _modes.length
+			UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+			UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+			UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+			j = j +1
+		endwhile
 			
-			int j=0
-			UIExtensions.InitMenu("UIWheelMenu")
-			while j < _modes.length
-				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
-				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
-				if j == 7
-					UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,false); temp disable
-				else
-					UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
-				endif
-				
-				j = j +1
-			endwhile
-			
-			int ret = UIExtensions.OpenMenu("UIWheelMenu")
-			;Debug.Trace("Option " + ret + " selectioned")
-			String currentMode = _modes[ret]
-			_currentModeIndex = ret
-			; Store mode index for spell system sync
-			Debug.trace("[CHIM] Wheel mode "+currentMode)
-			if ( currentMode ==  "WRITE DIARY")
-			
-				If (targetName != "")
-					; Has a target - send diary request to specific actor
-					Actor targetActor = crosshairRef as Actor
-					If (targetActor)
-						Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
-						AIAgentFunctions.requestMessageForActor("Please, update your diary","diary", targetActor.GetDisplayName())
-					Else
-						Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
-					EndIf
-				EndIf
-			ElseIf ( currentMode ==  "GATHER")
-				AIAgentAIMind.GatherAround();
-				
-			ElseIf ( currentMode ==  "IDCARD")
+		int ret = UIExtensions.OpenMenu("UIWheelMenu")
+		;Debug.Trace("Option " + ret + " selectioned")
+		String currentMode = _modes[ret]
+		_currentModeIndex = ret
+		; Store mode index for spell system sync
+		Debug.trace("[CHIM] Wheel mode "+currentMode)
+		if ( currentMode ==  "Write Diary")
+		
+			If (targetName != "")
+				; Has a target - send diary request to specific actor
 				Actor targetActor = crosshairRef as Actor
 				If (targetActor)
-					Debug.Notification("[CHIM] " + targetName + " Scroll of Identity gave to "+targetActor.GetDisplayName())
-					;AIAgentAIMind.addRenamedKeyword(crosshairRef,targetName)
-					StorageUtil.SetStringValue(targetActor, "RenamedBuffer",targetActor.GetDisplayName());
-
-					
+					Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+					AIAgentFunctions.requestMessageForActor("Please, update your diary","diary", targetActor.GetDisplayName())
 				Else
-					Debug.Notification("[CHIM] You must look at a target to use this")
-				endif
-				
-			ElseIf ( currentMode ==  "RENAME")
-				If (leader)
-					string originalname = leader.GetDisplayName()
-					Debug.trace("[CHIM] Wheel originalname "+originalname)
-
-					UIMenuBase menus=UIExtensions.GetMenu("UITextEntryMenu")
-					string savedName=StorageUtil.GetStringValue(leader, "RenamedBuffer",leader.GetDisplayName());
-					if savedName != "None"
-						UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",savedName)
-					else
-						UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",originalname)
+					Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
+				EndIf
+			EndIf
+		ElseIf ( currentMode ==  "GATHER")
+			AIAgentAIMind.GatherAround();
+			
+		ElseIf ( currentMode ==  "FOLLOW_NPC")
+			If (leader)
+				if (!followingHerika)
+					followingHerika=true;
+					Actor player=Game.GetPlayer()
+					if (true)	
+						Game.SetPlayerAiDriven(true)
+						currentPlayerFollowTarget = leader;
+						float offsetCustomX=0
+						float offsetCustomZ=150
+						Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
+						player.TranslateToRef(leader,100)
+						RegisterForSingleUpdate(1.0)
+						Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
 					endif
-					Debug.trace("[CHIM] Wheel savedName "+savedName)
-
-					UIExtensions.OpenMenu("UITextEntryMenu")
-					string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
-					
-					StorageUtil.SetStringValue(leader, "RenamedBuffer",None);
-
-					UIExtensions.SetMenuPropertyString("UITextEntryMenu","text","")
-					if (messageText != "")
-						AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+leader.GetFormId(),"setconf")
-						StorageUtil.SetStringValue(leader,"forcedName",messageText)
-					endif
-
-				Else
-					Debug.Notification("[CHIM] You must look at a target to use this")
+				else
+					Actor player=Game.GetPlayer()
+					player.ClearKeepOffsetFromActor();
+					Game.SetPlayerAiDriven(false)
+					Game.EnablePlayerControls()
+					followingHerika=false;
 				endif
-			elseif (currentMode == "WAIT")
+			Else
+				Debug.Notification("[CHIM] You must look at a target to use this")
+			EndIf
+			
+		ElseIf ( currentMode ==  "UPDATE_NPC")
+			If (leader)
+				Debug.Trace("[CHIM] Updating dynamic profile for "+leader.GetDisplayName());
+				AIAgentFunctions.logMessage(leader.GetDisplayName(),"updateprofiles_batch_async")
+			Else
+				Debug.Notification("[CHIM] You must look at a target to use this")
+			EndIf
+			
+		elseif (currentMode == "WAIT")
 				Actor targetActor = crosshairRef as Actor
 				If (targetActor)
 					AIagentAIMind.StartWait(leader)
@@ -190,17 +179,62 @@ Event OnKeyUp(int keyCode, float holdTime)
 					Debug.Notification("[CHIM] You must look at a target to use this")
 				endif
 				return		
-			elseif (currentMode == "FOLLOW")
-				Actor targetActor = crosshairRef as Actor
-				If (targetActor)
-					AIagentAIMind.Follow(leader,Game.GetPlayer())
-				else
-					Debug.Notification("[CHIM] You must look at a target to use this")
-				endif
-				return				
+		elseif (currentMode == "FOLLOW")
+			Actor targetActor = crosshairRef as Actor
+			If (targetActor)
+				AIagentAIMind.Follow(leader,Game.GetPlayer())
 			else
-				Debug.Notification("[CHIM] Error")
-			EndIf 
+				Debug.Notification("[CHIM] You must look at a target to use this")
+			endif
+			return
+		elseif (currentMode == "HALT")
+			Debug.Notification("[CHIM] Stopping AI actions")
+			ObjectReference crosshairRef2 = Game.GetCurrentCrosshairRef()
+			Actor crActor = crosshairRef2 as Actor
+			if (crActor) 
+				AIAgentAIMind.StopCurrent(crActor)
+			else	
+				Actor[] actors=AIAgentFunctions.findAllNearbyAgents()
+				int i = 0
+				while i < actors.Length
+					Actor akActor = actors[i]
+					Debug.Trace("[CHIM] Stopping actor: " + akActor)
+					AIAgentAIMind.StopCurrent(akActor)
+					i += 1
+				endWhile
+			endif
+			return
+		elseif (currentMode == "RENAME")
+			If (leader)
+				string originalname = leader.GetDisplayName()
+				Debug.trace("[CHIM] Wheel originalname "+originalname)
+
+				UIMenuBase menus=UIExtensions.GetMenu("UITextEntryMenu")
+				string savedName=StorageUtil.GetStringValue(leader, "RenamedBuffer",leader.GetDisplayName());
+				if savedName != "None"
+					UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",savedName)
+				else
+					UIExtensions.SetMenuPropertyString("UITextEntryMenu","text",originalname)
+				endif
+				Debug.trace("[CHIM] Wheel savedName "+savedName)
+
+				UIExtensions.OpenMenu("UITextEntryMenu")
+				string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
+				
+				StorageUtil.SetStringValue(leader, "RenamedBuffer",None);
+
+				UIExtensions.SetMenuPropertyString("UITextEntryMenu","text","")
+				if (messageText != "")
+					AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+leader.GetFormId(),"setconf")
+					StorageUtil.SetStringValue(leader,"forcedName",messageText)
+				endif
+			Else
+				Debug.Notification("[CHIM] You must look at a target to use this")
+			EndIf
+			return				
+		else
+			Debug.Notification("[CHIM] Error")
+		EndIf
 		EndIf
 	EndIf
 	
@@ -328,35 +362,23 @@ Event OnKeyDown(int keyCode)
 		Actor leader = Game.GetCurrentCrosshairRef() as Actor
 		
 		if (leader) ; Pointing to NPC
-			String[] _modes = new String[8]
+			String[] _modes = new String[4]
 			_modes[0] = "1"
 			_modes[1] = "2"
 			_modes[2] = "3"
 			_modes[3] = "4"
-			_modes[4] = "5"
-			_modes[5] = "6"
-			_modes[6] = "7"
-			_modes[7] = "8"
 			
-			
-			String[] _label = new String[8]
+			String[] _label = new String[4]
 
-			_label[0] = "Follow NPC"
-			_label[1] = "Update NPC"
-			_label[2] = "Profile 1"
-			_label[3] = "Profile 2"
-			_label[4] = "Profile 3"
-			_label[5] = "Profile 4"
-			_label[6] = ""
-			_label[7] = ""
-			
+			_label[0] = "Profile 1"
+			_label[1] = "Profile 2"
+			_label[2] = "Profile 3"
+			_label[3] = "Profile 4"
 			
 			UIExtensions.InitMenu("UIWheelMenu")
 
 			int j = 0
-			int allowedLength=_modes.length - 2; Temp, two free slots here
-			
-			while j < allowedLength
+			while j < _modes.length
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
@@ -366,24 +388,18 @@ Event OnKeyDown(int keyCode)
 			int ret = UIExtensions.OpenMenu("UIWheelMenu")
 			String currentMode = _modes[ret]
 
-			if (currentMode == "2")
-				Debug.Trace("[CHIM] Updating dynamic profile for "+leader.GetDisplayName());
-				AIAgentFunctions.logMessage(leader.GetDisplayName(),"updateprofiles_batch_async")
-				return
-			elseif (currentMode == "3")
+			if (currentMode == "1")
 				AIAgentFunctions.logMessageForActor("1","core_profile_assign",leader.GetDisplayName())
 				return
-			elseif (currentMode == "4")
+			elseif (currentMode == "2")
 				AIAgentFunctions.logMessageForActor("2","core_profile_assign",leader.GetDisplayName())
 				return
-			elseif (currentMode == "5")
+			elseif (currentMode == "3")
 				AIAgentFunctions.logMessageForActor("3","core_profile_assign",leader.GetDisplayName())
 				return
-			elseif (currentMode == "6")
+			elseif (currentMode == "4")
 				AIAgentFunctions.logMessageForActor("4","core_profile_assign",leader.GetDisplayName())
 				return	
-			elseif (currentMode == "1")	
-				; run legacy code
 			else
 				return
 			endif
@@ -541,9 +557,9 @@ Event OnKeyDown(int keyCode)
 	String[] _label = new String[4]
 
 	_label[0] = "Soulgaze"
-	_label[1] = "NPC Photo Zoom"
+	_label[1] = "NPC Photo Zoomed"
 	_label[2] = "NPC Photo"
-	_label[3] = "Just Upload"
+	_label[3] = "Screenshot Upload"
 
 	UIExtensions.InitMenu("UIWheelMenu")
 

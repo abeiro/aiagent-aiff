@@ -414,24 +414,25 @@ event OnPageReset(string a_page)
 	
 	
 	if (a_page=="Main" || a_page=="")
-		_keymapOID_K2 = AddKeyMapOption("Voice Chat/Summarize Book", _myKey2)
-		_keymapOID_K = AddKeyMapOption("Text Chat", _myKey)	
-		_keymapOID_K7		= AddKeyMapOption("Manual AI Activate", _myKey7)
-		;_toggle1OID_B		= AddToggleOption("Enable AI Voice (TTS)", _toggleState1)
-		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
+		; === Communication Hotkeys ===
+		_keymapOID_K = AddKeyMapOption("Text Chat", _myKey)
+		_keymapOID_K2 = AddKeyMapOption("Voice Chat", _myKey2)
+		
+		; === Wheel Hotkeys ===
+		_keymapOID_K4		= AddKeyMapOption("Roleplay Wheel", _myKey4)
 		_keymapOID_K3		= AddKeyMapOption("Settings Wheel", _myKey3)
-		;_toggle1OID_D		= AddToggleOption("Use Custom Voicetype or standard", _toggleState3)
-		_keymapOID_K4		= AddKeyMapOption("Write Diary Entry", _myKey4)
-		;_keymapOID_K5		= AddKeyMapOption("Switch AI/LLM Model", _myKey5)
-		_keymapOID_K6		= AddKeyMapOption("Soulgaze", _myKey6)
-		
-		_slider_timeout	= AddSliderOption("AIAgent Connection Timeout",_timeout_int,"{1}" )
-		_toggleAnimation		= AddToggleOption("Enable animations", _animationstate)
-		
-		_toggle1OID_E		= AddToggleOption("Soulgaze HD", _toggleState7)
 		_keymap_godmode		= AddKeyMapOption("Mode Wheel", _godmode_key)
-		_keymap_halt		= AddKeyMapOption("Halt AI actions", _halt_key)
-		;_toggle1OID_Rereg		= AddToggleOption("Register mod name again", false)
+		_keymapOID_K6		= AddKeyMapOption("Soulgaze Wheel", _myKey6)
+		
+		; === Action Hotkeys ===
+		_keymapOID_K7		= AddKeyMapOption("Manual AI Activate", _myKey7)
+		_keymap_halt		= AddKeyMapOption("Halt AI Actions", _halt_key)
+		
+		; === Settings ===
+		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
+		_toggleAnimation		= AddToggleOption("Enable Animations", _animationstate)
+		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
+		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
 	endif
 	
 
@@ -1403,13 +1404,13 @@ event OnOptionHighlight(int a_option)
 	{Called when the user highlights an option}
 	
 	if (a_option == _keymapOID_K)
-		SetInfoText("Open a textbox to communiate with AI NPCs.")
+		SetInfoText("Open a text box to communicate with AI NPCs via typed messages.")
 	endIf
 	if (a_option == _toggle1OID_B)
 		SetInfoText("Enables Text-to-Speech for AI NPCs.")
 	endIf
 	if (a_option == _keymapOID_K2)
-		SetInfoText("Push-to-Talk key to speak with an AI NPC. Make sure your microphone is setup as your default recording device in Windows. Also allows an AI NPC to summarize books you have open.")
+		SetInfoText("Push-to-Talk: Speak with AI NPCs or summarize open books. Ensure your microphone is set as default recording device in Windows.")
 	endIf
 	if (a_option == _toggle1OID_C)
 		SetInfoText("Enable AI to perform actions.")
@@ -1418,19 +1419,19 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("Allows you to switch Profiles & LLM's. Will provide different options if you are looking at an NPC or not. Also has a bunch of other useful tools.")
+		SetInfoText("Settings Wheel - Looking at NPC: Assign profiles (1-4). Not looking: Follow nearest NPC, switch LLM models, toggle focus chat.")
 	endIf
 	if (a_option == _keymapOID_K4)
-		SetInfoText("Create a diary entry for the NPC you are looking at. Hold and release for all nearby NPCs (800 units) to write an entry.")
+		SetInfoText("Roleplay Wheel - Write Diary, Gather NPCs, Follow NPC, Update NPC, Wait/Follow, Stop All AI, Add to BgL. Hold it for nearby NPCs to write diary entries.")
 	endIf
 	if (a_option == _keymapOID_K5)
 		SetInfoText("Change AI/LLM Connector.")
 	endIf
 	if (a_option == _keymapOID_K6)
-		SetInfoText("Take a screenshot and sends to an ITT AI service to summarize what is shown.")
+		SetInfoText("Soulgaze Wheel - Take screenshots for ITT: Full soulgaze, NPC photos (zoomed/standard), or raw upload.")
 	endIf
 	if (a_option == _keymapOID_K7)
-		SetInfoText("Import the NPC you are looking at into CHIM. Can use it to turn their AI on and off.")
+		SetInfoText("Manually activate/deactivate AI control for the targeted NPC or all nearby NPCs if none targeted.")
 	endIf
 	if (a_option == _slider_volume)
 		SetInfoText("Set AI NPC speech volume.")
@@ -1445,7 +1446,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Adjust AI NPC volume at distance.")
 	endIf
 	if (a_option == _toggle1OID_E)
-		SetInfoText("Enable to use SoulGaze HD. Will directly access the DirectX backbuffer, so compression will be made by server. Disable to use SoulGaze via in-game screenshot (VR users should disable this).")
+		SetInfoText("Enable HD mode for Soulgaze (DirectX backbuffer access, server compression). Disable for in-game screenshots (VR users should disable).")
 	endIf
 	
 	if (a_option == _slider_lip_int)
@@ -1457,11 +1458,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _slider_timeout)
-		SetInfoText("Timeout in seconds when requesting data from the CHIM Server. Recommend to leave at 60.")
+		SetInfoText("Connection timeout when requesting data from CHIM Server. Recommended: 60 seconds.")
 	endIf
 	
 	if (a_option == _toggleAnimation)
-		SetInfoText("Allow AI NPCs to perform animations during interactions.")
+		SetInfoText("Enable AI NPCs to perform animations during interactions.")
 	endIf
 	
 	if (a_option == _toggle1OID_Rereg)
@@ -1517,11 +1518,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_godmode)
-		SetInfoText("Allows you to switch CHIM input modes. Hold to toggle to the next mode.")
+		SetInfoText("Mode Wheel - Switch between chat modes: Standard, Whisper, Director, Spawn NPC, Chat Assist, Creation, Inject. Hold to cycle modes.")
 	endIf
 	
 	if (a_option == _keymap_halt)
-		SetInfoText("Will stop all CHIM related AI actions.")
+		SetInfoText("Immediately stop all CHIM AI actions for targeted NPC or all nearby NPCs.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)
