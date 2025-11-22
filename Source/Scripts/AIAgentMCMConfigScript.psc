@@ -1535,7 +1535,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_godmode)
-		SetInfoText("Mode Wheel - Switch between chat modes: Standard, Whisper, Director, Spawn NPC, Chat Assist, Creation, Inject. Hold to cycle modes.")
+		SetInfoText("Mode Wheel - Switch between chat modes: Standard, Whisper, Director, Spawn NPC, Cheat Mode, Auto Chat, Inject. Hold to cycle modes.")
 	endIf
 	
 	if (a_option == _keymap_halt)

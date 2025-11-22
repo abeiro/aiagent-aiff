@@ -241,26 +241,26 @@ Event OnKeyUp(int keyCode, float holdTime)
 	
 	 If(keyCode == _currentGodmodeKey)
 	
-		String[] _modes = new String[8]
-		_modes[0] = "STANDARD"
-		_modes[1] = "WHISPER"
-		_modes[2] = "DIRECTOR"
-		_modes[3] = "SPAWN"
-		_modes[4] = "IMPERSONATION"
-		_modes[5] = "CREATION"
-		_modes[6] = "INJECTION_LOG"
-		_modes[7] = "INJECTION_CHAT"
-		
-		String[] _label = new String[8]
+	String[] _modes = new String[8]
+	_modes[0] = "STANDARD"
+	_modes[1] = "WHISPER"
+	_modes[2] = "DIRECTOR"
+	_modes[3] = "SPAWN"
+	_modes[4] = "CHEATMODE"
+	_modes[5] = "AUTOCHAT"
+	_modes[6] = "INJECTION_LOG"
+	_modes[7] = "INJECTION_CHAT"
+	
+	String[] _label = new String[8]
 
-		_label[0] = "Standard Chat"
-		_label[1] = "Whisper Chat"
-		_label[2] = "Director Mode"
-		_label[3] = "Spawn NPC"
-		_label[4] = "Chat Assist"
-		_label[5] = "Chat Creation"
-		_label[6] = "Inject Event"
-		_label[7] = "Inject & Chat"
+	_label[0] = "Standard Chat"
+	_label[1] = "Whisper Chat"
+	_label[2] = "Director Mode"
+	_label[3] = "Spawn NPC"
+	_label[4] = "Cheat Mode"
+	_label[5] = "Auto Chat"
+	_label[6] = "Inject Event"
+	_label[7] = "Inject & Chat"
 			
 		If (holdTime < 0.5) 
 			; Quick press - Open wheel menu
@@ -1150,8 +1150,8 @@ Function OpenModeWheel()
 	_modes[1] = "WHISPER"
 	_modes[2] = "DIRECTOR"
 	_modes[3] = "SPAWN"
-	_modes[4] = "IMPERSONATION"
-	_modes[5] = "CREATION"
+	_modes[4] = "CHEATMODE"
+	_modes[5] = "AUTOCHAT"
 	_modes[6] = "INJECTION_LOG"
 	_modes[7] = "INJECTION_CHAT"
 	
@@ -1160,8 +1160,8 @@ Function OpenModeWheel()
 	_label[1] = "Whisper Chat"
 	_label[2] = "Director Mode"
 	_label[3] = "Spawn NPC"
-	_label[4] = "Chat Assist"
-	_label[5] = "Chat Creation"
+	_label[4] = "Cheat Mode"
+	_label[5] = "Auto Chat"
 	_label[6] = "Inject Event"
 	_label[7] = "Inject & Chat"
 		
