@@ -1367,10 +1367,17 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 
 	ObjectReference ref;
 	bool move=true;
+	
+	bool isMob  = false
+	
+	if (FormIdClothing == 0)
+		isMob = true;
+	endif
+	
 	if (place==0)
 		if (Game.GetPlayer().IsInInterior())
 			ref=AIAgentFunctions.getNearestDoor();
-			if (!ref)
+			if (!ref || isMob)
 				ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
 				Debug.Trace("[CHIM] Interior. spawning on safe spawn")
 			else
@@ -1410,18 +1417,22 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			finalActor=ref.PlaceAtMe(finalNpcToSpawn,1,true,true) as Actor
 		endif
 		
-		
-		finalActor.RemoveAllItems();
-		finalActor.SetActorValue("Aggression",0)
-		finalActor.RemoveFromAllFactions();
-		;finalActor.MakePlayerFriend(); Check this
-		finalActor.SetRelationshipRank(Game.GetPlayer(), 0) ; Check this
-		
-		
-		finalActor.SetOutfit(clothing,false)
-		finalActor.SetDisplayName(npcName,1)
-		
-		
+		if isMob
+			finalActor.RemoveAllItems();
+			finalActor.SetActorValue("Aggression",1)
+			finalActor.SetRelationshipRank(Game.GetPlayer(), -3) ; Check this
+			finalActor.SetDisplayName(npcName,1)
+		else
+			finalActor.RemoveAllItems();
+			finalActor.SetActorValue("Aggression",0)
+			finalActor.RemoveFromAllFactions();
+			;finalActor.MakePlayerFriend(); Check this
+			finalActor.SetRelationshipRank(Game.GetPlayer(), 0) ; Check this
+			
+			
+			finalActor.SetOutfit(clothing,false)
+			finalActor.SetDisplayName(npcName,1)
+		endif
 		
 		
 		finalActor.EvaluatePackage()

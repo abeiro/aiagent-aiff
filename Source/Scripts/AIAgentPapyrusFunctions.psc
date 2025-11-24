@@ -837,9 +837,11 @@ Function sendAllLocations() global
 		Location curr=j as Location
 		Location currParent=PO3_SKSEFunctions.GetParentLocation(curr)
 		Location currParent2lvl=PO3_SKSEFunctions.GetParentLocation(currParent)
-		
-		Debug.Trace("Adding Location "+j.GetName() + " / "+currParent.GetName());
-		int retFnc=AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId()+"/"+currParent.GetName()+"/"+currParent2lvl.GetName(),"util_location_name")
+		ObjectReference destMarker= AIAgentFunctions.getWorldLocationMarkerFor(curr);
+		if destMarker
+			Debug.Trace("Adding Location "+j.GetName() + " / "+currParent.GetName());
+			int retFnc=AIAgentFunctions.logMessage(j.GetName()+"/"+j.GetFormId()+"/"+currParent.GetName()+"/"+currParent2lvl.GetName(),"util_location_name")
+		endif
 		i=i+1
 	endwhile
 	return
