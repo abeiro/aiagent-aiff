@@ -139,6 +139,9 @@ int			_godmode_key					= -1
 int			_keymap_halt
 int			_halt_key					= -1
 
+int			_keymap_masterwheel
+int			_masterwheel_key				= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 
@@ -202,6 +205,8 @@ bool		_toggle_combat_barks_stateDefault	= false
 float		_combat_barks_periodDefault		= 30.0
 
 int			_halt_keyDefault				= -1
+
+int			_masterwheel_keyDefault			= -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
@@ -417,6 +422,9 @@ event OnPageReset(string a_page)
 		; === Communication Hotkeys ===
 		_keymapOID_K = AddKeyMapOption("Text Chat", _myKey)
 		_keymapOID_K2 = AddKeyMapOption("Voice Chat", _myKey2)
+		
+		; === Master Wheel ===
+		_keymap_masterwheel		= AddKeyMapOption("Master Wheel", _masterwheel_key)
 		
 		; === Wheel Hotkeys ===
 		_keymapOID_K4		= AddKeyMapOption("Roleplay Wheel", _myKey4)
@@ -1090,6 +1098,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_masterwheel)
+			controlScript.removeBinding(_masterwheel_key)
+			_masterwheel_key = a_keyCode
+			controlScript.doBinding11(_masterwheel_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1419,7 +1436,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("If using mods like RDO, check this to force default voice, so dialog Follow me should appear. Note that checking this will disable custom voiced sounds. As of version 0.9.x, this shouldn't be needed.")
 	endIf
 	if (a_option == _keymapOID_K3)
-		SetInfoText("Settings Wheel - Looking at NPC: Assign profiles (1-4). Not looking: Follow nearest NPC, switch LLM models, toggle focus chat.")
+		SetInfoText("Settings Wheel - Looking at NPC: Assign profiles (1-4). Not looking: Switch LLM models, toggle focus chat.")
 	endIf
 	if (a_option == _keymapOID_K4)
 		SetInfoText("Roleplay Wheel - Write Diary, Gather NPCs, Follow NPC, Update NPC, Wait/Follow, Stop All AI, Add to BgL. Hold it for nearby NPCs to write diary entries.")
@@ -1518,11 +1535,15 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_godmode)
-		SetInfoText("Mode Wheel - Switch between chat modes: Standard, Whisper, Director, Spawn NPC, Chat Assist, Creation, Inject. Hold to cycle modes.")
+		SetInfoText("Mode Wheel - Switch between chat modes: Standard, Whisper, Director, Spawn NPC, Cheat Mode, Auto Chat, Inject. Hold to cycle modes.")
 	endIf
 	
 	if (a_option == _keymap_halt)
 		SetInfoText("Immediately stop all CHIM AI actions for targeted NPC or all nearby NPCs.")
+	endIf
+	
+	if (a_option == _keymap_masterwheel)
+		SetInfoText("Master Wheel - Quick access menu to open any of the 4 wheels: Roleplay, Settings, Mode, or Soulgaze.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)
