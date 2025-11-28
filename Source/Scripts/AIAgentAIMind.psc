@@ -2283,3 +2283,112 @@ string Function GetFormIDHexString(int formID) global
 	return result
 EndFunction
 
+; Cast Fire & Forget or instant spells
+function CastSpellOnTarget(Actor caster, int spellFormId, int targetFormId) global
+	Spell spellToCast = Game.GetForm(spellFormId) as Spell
+	Actor target = Game.GetForm(targetFormId) as Actor
+	
+	if (!spellToCast)
+		Debug.Notification("[CHIM] Spell not found")
+		return
+	endif
+	
+	if (!caster.HasSpell(spellToCast))
+		Debug.Notification("[CHIM] " + caster.GetDisplayName() + " doesn't know " + spellToCast.GetName())
+		return
+	endif
+	
+	; Equip spell in right hand
+	caster.EquipSpell(spellToCast, 1)
+	Utility.Wait(0.1)
+	
+	; If target is valid and not self, aim at target
+	if (target && target != caster)
+		caster.SetLookAt(target, true)
+		Utility.Wait(0.2)
+	endif
+	
+	; Cast the spell
+	spellToCast.Cast(caster, target)
+	
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
+endFunction
+
+; Cast Concentration spells (charge to max)
+function CastConcentrationSpell(Actor caster, int spellFormId, int targetFormId) global
+	Spell spellToCast = Game.GetForm(spellFormId) as Spell
+	Actor target = Game.GetForm(targetFormId) as Actor
+	
+	if (!spellToCast || !caster.HasSpell(spellToCast))
+		return
+	endif
+	
+	; Equip spell in right hand
+	caster.EquipSpell(spellToCast, 1)
+	Utility.Wait(0.1)
+	
+	; Aim at target if valid
+	if (target && target != caster)
+		caster.SetLookAt(target, true)
+		Utility.Wait(0.2)
+	endif
+	
+	; Draw weapon to start casting
+	caster.DrawWeapon()
+	
+	; Use spell cost to estimate charge time (higher cost = longer charge)
+	; Base charge time between 1-2.5 seconds based on spell cost
+	float spellCost = spellToCast.GetEffectiveMagickaCost(caster) as float
+	float chargeTime = 1.0
+	if (spellCost > 100.0)
+		chargeTime = 2.5
+	elseif (spellCost > 50.0)
+		chargeTime = 2.0
+	elseif (spellCost > 25.0)
+		chargeTime = 1.5
+	endif
+	
+	Utility.Wait(chargeTime)
+	
+	; Cast fully charged
+	spellToCast.Cast(caster, target)
+	
+	; Sheathe after casting
+	Utility.Wait(0.5)
+	caster.SheatheWeapon()
+	
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName() + " (charged)")
+endFunction
+
+; Cast Constant Effect spells (for random 3-5 seconds)
+function CastConstantSpell(Actor caster, int spellFormId, int targetFormId) global
+	Spell spellToCast = Game.GetForm(spellFormId) as Spell
+	Actor target = Game.GetForm(targetFormId) as Actor
+	
+	if (!spellToCast || !caster.HasSpell(spellToCast))
+		return
+	endif
+	
+	; Equip spell in right hand
+	caster.EquipSpell(spellToCast, 1)
+	Utility.Wait(0.1)
+	
+	; Aim at target if valid
+	if (target && target != caster)
+		caster.SetLookAt(target, true)
+		Utility.Wait(0.2)
+	endif
+	
+	; Cast the spell
+	spellToCast.Cast(caster, target)
+	
+	; Hold for random duration (3-5 seconds)
+	float duration = Utility.RandomFloat(3.0, 5.0)
+	Utility.Wait(duration)
+	
+	; Stop casting
+	caster.SheatheWeapon()
+	
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName() + " for " + duration + "s")
+endFunction
+
