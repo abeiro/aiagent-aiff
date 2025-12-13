@@ -2283,7 +2283,7 @@ string Function GetFormIDHexString(int formID) global
 	return result
 EndFunction
 
-; Cast Fire & Forget or instant spells
+; Cast Fire & Forget or instant spells - simplified to just cast on target
 function CastSpellOnTarget(Actor caster, int spellFormId, int targetFormId) global
 	Spell spellToCast = Game.GetForm(spellFormId) as Spell
 	Actor target = Game.GetForm(targetFormId) as Actor
@@ -2298,97 +2298,67 @@ function CastSpellOnTarget(Actor caster, int spellFormId, int targetFormId) glob
 		return
 	endif
 	
-	; Equip spell in right hand
-	caster.EquipSpell(spellToCast, 1)
-	Utility.Wait(0.1)
-	
-	; If target is valid and not self, aim at target
-	if (target && target != caster)
-		caster.SetLookAt(target, true)
-		Utility.Wait(0.2)
-	endif
-	
-	; Cast the spell
+	; Simply cast the spell on the target
 	spellToCast.Cast(caster, target)
 	
 	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
+	
+	; Log the spell cast event
+	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
 endFunction
 
-; Cast Concentration spells (charge to max)
+; Cast Concentration spells - cast and interrupt after 3-5 seconds
 function CastConcentrationSpell(Actor caster, int spellFormId, int targetFormId) global
 	Spell spellToCast = Game.GetForm(spellFormId) as Spell
 	Actor target = Game.GetForm(targetFormId) as Actor
 	
-	if (!spellToCast || !caster.HasSpell(spellToCast))
+	if (!spellToCast)
+		Debug.Notification("[CHIM] Spell not found")
 		return
 	endif
 	
-	; Equip spell in right hand
-	caster.EquipSpell(spellToCast, 1)
-	Utility.Wait(0.1)
-	
-	; Aim at target if valid
-	if (target && target != caster)
-		caster.SetLookAt(target, true)
-		Utility.Wait(0.2)
+	if (!caster.HasSpell(spellToCast))
+		Debug.Notification("[CHIM] " + caster.GetDisplayName() + " doesn't know " + spellToCast.GetName())
+		return
 	endif
 	
-	; Draw weapon to start casting
-	caster.DrawWeapon()
-	
-	; Use spell cost to estimate charge time (higher cost = longer charge)
-	; Base charge time between 1-2.5 seconds based on spell cost
-	float spellCost = spellToCast.GetEffectiveMagickaCost(caster) as float
-	float chargeTime = 1.0
-	if (spellCost > 100.0)
-		chargeTime = 2.5
-	elseif (spellCost > 50.0)
-		chargeTime = 2.0
-	elseif (spellCost > 25.0)
-		chargeTime = 1.5
-	endif
-	
-	Utility.Wait(chargeTime)
-	
-	; Cast fully charged
+	; Cast the spell (starts channeling for concentration spells)
 	spellToCast.Cast(caster, target)
 	
-	; Sheathe after casting
-	Utility.Wait(0.5)
-	caster.SheatheWeapon()
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
 	
-	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName() + " (charged)")
+	; Log the spell cast event
+	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+	
+	; Wait 3-5 seconds then stop the spell
+	float channelDuration = Utility.RandomFloat(3.0, 5.0)
+	Utility.Wait(channelDuration)
+	
+	; Interrupt the spell casting
+	caster.InterruptCast()
 endFunction
 
-; Cast Constant Effect spells (for random 3-5 seconds)
+; Cast Constant Effect spells - simplified to just cast on target
 function CastConstantSpell(Actor caster, int spellFormId, int targetFormId) global
 	Spell spellToCast = Game.GetForm(spellFormId) as Spell
 	Actor target = Game.GetForm(targetFormId) as Actor
 	
-	if (!spellToCast || !caster.HasSpell(spellToCast))
+	if (!spellToCast)
+		Debug.Notification("[CHIM] Spell not found")
 		return
 	endif
 	
-	; Equip spell in right hand
-	caster.EquipSpell(spellToCast, 1)
-	Utility.Wait(0.1)
-	
-	; Aim at target if valid
-	if (target && target != caster)
-		caster.SetLookAt(target, true)
-		Utility.Wait(0.2)
+	if (!caster.HasSpell(spellToCast))
+		Debug.Notification("[CHIM] " + caster.GetDisplayName() + " doesn't know " + spellToCast.GetName())
+		return
 	endif
 	
-	; Cast the spell
+	; Simply cast the spell on the target
 	spellToCast.Cast(caster, target)
 	
-	; Hold for random duration (3-5 seconds)
-	float duration = Utility.RandomFloat(3.0, 5.0)
-	Utility.Wait(duration)
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
 	
-	; Stop casting
-	caster.SheatheWeapon()
-	
-	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName() + " for " + duration + "s")
+	; Log the spell cast event
+	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
 endFunction
 
