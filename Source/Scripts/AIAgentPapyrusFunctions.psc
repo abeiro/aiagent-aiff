@@ -1,5 +1,9 @@
 Scriptname AIAgentPapyrusFunctions extends Quest  
 
+Spell Property IntimacySpell  Auto  
+AIAgentFollowNPCQuestScript Property FollowNPCQuestScript Auto
+
+
 
 int			_currentKey = 0x52
 int			_currentKeyVoice
@@ -21,7 +25,7 @@ int		_nativeSoulGaze= 1
 
 int _currentModeIndex = 0 
 
-Spell Property IntimacySpell  Auto  
+float storedMusicVolValue 
 
 
 Actor	currentPlayerFollowTarget;
@@ -31,6 +35,32 @@ Actor	currentPlayerHorse;
 float Property mdi auto
 float Property mdo auto
 
+
+String Function DecToHex(Int n) global
+	String hexChars = "0123456789ABCDEF"
+	String res = ""
+	Int count = 0
+
+	; Handle zero explicitly
+	If n == 0
+		res = "0"
+		count = 1
+	Else
+		While n > 0
+			res = StringUtil.GetNthChar(hexChars, n % 16) + res
+			n /= 16
+			count += 1
+		EndWhile
+	EndIf
+
+	; Pad with leading zeros if needed
+	While count < 8
+		res = "0" + res
+		count += 1
+	EndWhile
+
+	Return res
+EndFunction
 
 Event OnInit()
 	doBinding(_currentKey)
@@ -58,8 +88,6 @@ Event OnKeyUp(int keyCode, float holdTime)
 			Return
 		EndIf
 		
-		
-	
 		
 		; If held for more than 0.5 seconds, trigger all nearby NPCs
 		If (holdTime >= 0.5)
@@ -141,27 +169,37 @@ Event OnKeyUp(int keyCode, float holdTime)
 		ElseIf ( currentMode ==  "FOLLOW_NPC")
 			If (leader)
 				if (!followingHerika)
-					followingHerika=true;
+					followingHerika=true
 					Actor player=Game.GetPlayer()
-					if (true)	
-						Game.SetPlayerAiDriven(true)
-						currentPlayerFollowTarget = leader;
-						float offsetCustomX=0
-						float offsetCustomZ=150
-						Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-						player.TranslateToRef(leader,100)
-						RegisterForSingleUpdate(1.0)
-						Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
-					endif
+					Game.SetPlayerAiDriven(true)
+					currentPlayerFollowTarget = leader
+					Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
+					
+					FollowNPCQuestScript.startFollowing(leader);
+					
+					Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
 				else
 					Actor player=Game.GetPlayer()
-					player.ClearKeepOffsetFromActor();
+					
+					player.ClearKeepOffsetFromActor()
 					Game.SetPlayerAiDriven(false)
 					Game.EnablePlayerControls()
-					followingHerika=false;
+					
+					FollowNPCQuestScript.stopFollowing(leader);
+					followingHerika=false
 				endif
 			Else
-				Debug.Notification("[CHIM] You must look at a target to use this")
+				if (followingHerika)
+					
+					Actor player=Game.GetPlayer()
+					player.ClearKeepOffsetFromActor()
+					Game.SetPlayerAiDriven(false)
+					Game.EnablePlayerControls()
+					FollowNPCQuestScript.stopFollowing(leader);
+					followingHerika=false
+				else
+					Debug.Notification("[CHIM] You must look at a target to use this")
+				endif
 			EndIf
 			
 		ElseIf ( currentMode ==  "UPDATE_NPC")
@@ -183,7 +221,8 @@ Event OnKeyUp(int keyCode, float holdTime)
 		elseif (currentMode == "FOLLOW")
 			Actor targetActor = crosshairRef as Actor
 			If (targetActor)
-				AIagentAIMind.Follow(leader,Game.GetPlayer())
+				;AIagentAIMind.Follow(leader,Game.GetPlayer())
+				AIagentAIMind.stayAtPlace(leader,1)
 			else
 				Debug.Notification("[CHIM] You must look at a target to use this")
 			endif
@@ -458,70 +497,7 @@ Event OnKeyDown(int keyCode)
 		
 		endif;
 
-		
-		
-		if (!followingHerika)
-			followingHerika=true;
-			
-			Actor player=Game.GetPlayer()
-			;if (!player.IsOnMount()) 
-			if (true)	
-			
-				Game.SetPlayerAiDriven(true)
-				
-								
-				
-				if (!leader)
-					leader = AIAgentFunctions.getClosestAgent()
-				EndIf	
-				
-				currentPlayerFollowTarget = leader;
-				
-				float offsetCustomX=0
-				float offsetCustomZ=150
-				;player.ForceActorValue("SpeedMult",leader.GetActorValue("SpeedMult"));
-				Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-				;Game.GetPlayer().SetLookAt(leader,true)
-				;float zOffset = Game.GetPlayer().GetHeadingAngle(leader)
-				;Game.GetPlayer().SetAngle(leader.GetAngleX(), leader.GetAngleY(), leader.GetAngleZ() + zOffset)
 
-				;player.KeepOffsetFromActor(leader, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 1350, afFollowRadius = 150)
-				player.TranslateToRef(leader,100)
-				RegisterForSingleUpdate(1.0)
-				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
-			else
-				
-				Actor horse=PO3_SKSEFunctions.GetMount(player)
-				currentPlayerHorse = horse 
-				
-				if (!leader)
-					leader = AIAgentFunctions.getClosestAgent()
-				EndIf	
-				
-				currentPlayerFollowTarget = leader;
-				
-				player.PathToReference(leader, 1)
-
-				
-				;player.setVehicle(currentPlayerHorse)
-				;Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-				;Utility.Wait(1)
-				;player.KeepOffsetFromActor(leader, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 1350, afFollowRadius = 100)
-				;RegisterForSingleUpdate(3.0)
-				
-				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is horse-following "+leader.GetDisplayName())
-			
-			endif
-		
-			
-		else
-			Actor player=Game.GetPlayer()
-			player.ClearKeepOffsetFromActor();
-			Game.SetPlayerAiDriven(false)
-			Game.EnablePlayerControls()
-			followingHerika=false;
-			
-		endif
 	endif
   EndIf
   If(keyCode == _currentDiaryKey)
@@ -700,17 +676,8 @@ EndEvent
 
 Event OnUpdate()
     ;Debug.Notification("Updating...")
-    If(followingHerika)
-		
-		float offsetCustomX=0
-		float offsetCustomZ=150
-		Actor leader = currentPlayerFollowTarget
-		;Game.GetPlayer().ClearKeepOffsetFromActor()
-		;Game.GetPlayer().SetLookAt(leader,true)
-		;Game.GetPlayer().KeepOffsetFromActor(leader, afOffsetX = offsetCustomX, afOffsetY =  0, afOffsetZ = offsetCustomZ, afOffsetAngleZ=0, afCatchUpRadius = 350, afFollowRadius = 150)
-		Game.GetPlayer().TranslateToRef(leader,100.0)
-		RegisterForSingleUpdate(3.0)
-    EndIf
+	
+
 Endevent
 
 Function removeBinding(int keycode) 
@@ -792,6 +759,11 @@ bool Function setNewActionMode( int mode)
 
 	; Removed action mode notifications - no longer displayed on save load
 	
+	if (!FollowNPCQuestScript)
+		Quest source =  Game.GetFormFromFile(0x2a3e4,"AIAgent.esp") as Quest;
+		FollowNPCQuestScript = source as AIAgentFollowNPCQuestScript
+	endif
+		
 	InitTSE();	
 	a=thirdPartyInit();	
 EndFunction
@@ -880,7 +852,7 @@ Bool Function SafeProcess(bool allowMenuMode = false)
 	EndIf
 EndFunction
 
-Function sendAllLocations() global
+Function sendAllLocationsOld() global
 
 	Form[] allLocations=PO3_SKSEFunctions.GetAllForms(104)
 	Debug.Trace("Total "+allLocations.Length);
@@ -901,8 +873,12 @@ Function sendAllLocations() global
 	return
 EndFunction
 
+
+
 Event CommandManager(String npcname,String  command, String parameter)
-	
+
+	Debug.Trace("[CHIM] CommandManager: <"+npcname+"> <"+command+"> <"+parameter+">")
+
 	if (command=="AnimationEvent")
 		Actor npc=AIAgentFunctions.getAgentByName(npcname);
 		;if (actor->IsInCombat() || actor->IsOnMount() || actor->IsHorse() || actor->IsPlayer() ) {
@@ -911,7 +887,47 @@ Event CommandManager(String npcname,String  command, String parameter)
 		else
 			OnAnimationEvent(npc,parameter)
 		endif;
-		
+	elseif (command=="IntCmd")
+		if (parameter=="MuteMusic")
+			storedMusicVolValue=Utility.GetINIFloat("fVal2:AudioMenu")
+			Debug.Trace("[CHIM] Storing music volumne:"+storedMusicVolValue);
+			Utility.SetINIFloat("fVal2:AudioMenu",0.0)
+			
+			MusicType silence =  Game.GetForm(0x0001ba72) as MusicType;	30 seconds silence
+			silence.add();
+			
+		elseif (parameter=="UnmuteMusic")
+			Utility.SetINIFloat("fVal2:AudioMenu",storedMusicVolValue)
+			MusicType silence =  Game.GetForm(0x0001ba72) as MusicType
+			silence.remove();
+		elseif (parameter=="InterruptScene")
+			Actor npc=AIAgentFunctions.getAgentByName(npcname);
+			;if (actor->IsInCombat() || actor->IsOnMount() || actor->IsHorse() || actor->IsPlayer() ) {
+			if (npc.IsInCombat() || npc.IsOnMount() || npc.IsFlying() || npc.IsUnconscious() || npc == Game.GetPlayer()  )
+				Debug.Trace("[CHIM] [ANIMATION aborted]")
+			else
+				Debug.Trace("[CHIM] [INTERRUPTING SCENE]: "+npc.GetCurrentScene())
+				if (npc.GetCurrentScene())
+					; Stop bard quest 
+					Scene currentScene=npc.GetCurrentScene();
+
+					Quest cQuest=Game.GetForm(0x00074a55) as Quest
+					Topic stopSinging=Game.GetForm(0x0005583a) as Topic
+					Debug.Trace("[CHIM] [INTERRUPTING SCENE]: "+npc.GetCurrentScene()+ " quest "+cQuest.getFormId())
+					
+					(cQuest as BardSongsScript).StopAllSongs()
+					AIAgentFunctions.SayTo(npc,Game.GetPlayer(),stopSinging)
+					currentScene.Stop();
+					Debug.SendAnimationEvent(npc, "IdleForceDefaultState")
+
+					
+				endif
+				
+				Package doNothing = Game.GetForm(0x654e2) as Package ; Package doNothing
+				ActorUtil.AddPackageOverride(npc, doNothing, 99, 0)
+				npc.EvaluatePackage()
+			endif;
+		endif	
 	endif
 	
 
@@ -993,18 +1009,28 @@ Function OpenRoleplayWheel()
 				Game.SetPlayerAiDriven(true)
 				currentPlayerFollowTarget = leader
 				Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-				player.TranslateToRef(leader,100)
-				RegisterForSingleUpdate(1.0)
+				
 				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
 			else
 				Actor player=Game.GetPlayer()
 				player.ClearKeepOffsetFromActor()
 				Game.SetPlayerAiDriven(false)
 				Game.EnablePlayerControls()
+				FollowNPCQuestScript.stopFollowing(leader);
 				followingHerika=false
 			endif
 		Else
-			Debug.Notification("[CHIM] You must look at a target to use this")
+			if (followingHerika)
+				Actor player=Game.GetPlayer()
+				player.ClearKeepOffsetFromActor()
+				Game.SetPlayerAiDriven(false)
+				Game.EnablePlayerControls()
+				
+				FollowNPCQuestScript.stopFollowing(leader);
+				followingHerika=false
+			else
+				Debug.Notification("[CHIM] You must look at a target to use this")
+			endif
 		EndIf
 	ElseIf ( currentMode ==  "UPDATE_NPC")
 		If (leader)
@@ -1060,7 +1086,6 @@ Function OpenRoleplayWheel()
 			if (messageText != "")
 				AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+leader.GetFormId(),"setconf")
 				StorageUtil.SetStringValue(leader,"forcedName",messageText)
-				Debug.Notification("[CHIM] Added to Background Life. Save your game for changes to take effect.")
 			endif
 		Else
 			Debug.Notification("[CHIM] You must look at a target to use this")
@@ -1230,4 +1255,194 @@ Function OpenSoulgazeWheel()
 		AIAgentSoulGazeEffect.JustUpload(_nativeSoulGaze)
 	endif
 EndFunction
+
+
+
+Function sendAllLocations() global
+
+	; --- Load all location keywords we care about ---
+	Keyword isCave         = Game.GetForm(0x000130ef) as Keyword
+	Keyword isDungeon      = Game.GetForm(0x000130db) as Keyword
+	Keyword isInn          = Game.GetForm(0x0001cb87) as Keyword
+	Keyword isTown         = Game.GetForm(0x00013166) as Keyword
+	Keyword isCity         = Game.GetForm(0x00013168) as Keyword
+	Keyword isHold         = Game.GetForm(0x00016771) as Keyword
+	Keyword isFarm         = Game.GetForm(0x00018ef0) as Keyword
+	Keyword isMine         = Game.GetForm(0x00018ef1) as Keyword
+	Keyword isJail         = Game.GetForm(0x0001cd59) as Keyword
+	Keyword isShip         = Game.GetForm(0x0001cd5b) as Keyword
+	Keyword isHouse        = Game.GetForm(0x0001cb85) as Keyword
+	Keyword isStore        = Game.GetForm(0x0001cb86) as Keyword
+	Keyword isGuild        = Game.GetForm(0x0001cd5a) as Keyword
+	Keyword isTemple       = Game.GetForm(0x0001cd56) as Keyword
+	Keyword isCastle       = Game.GetForm(0x0001cd57) as Keyword
+	Keyword isNordicRuin   = Game.GetForm(0x000130f2) as Keyword
+	Keyword isDwelling     = Game.GetForm(0x000130dc) as Keyword
+	Keyword isBanditCamp   = Game.GetForm(0x000130df) as Keyword
+	Keyword isDragonLair   = Game.GetForm(0x000130e0) as Keyword
+	Keyword isFalmerHive   = Game.GetForm(0x000130e4) as Keyword
+	Keyword isDwarvenRuin  = Game.GetForm(0x000130f0) as Keyword
+	Keyword isSettlement   = Game.GetForm(0x00013167) as Keyword
+	Keyword isLumberMill   = Game.GetForm(0x00018ef2) as Keyword
+	Keyword isHabitation   = Game.GetForm(0x00039793) as Keyword
+	Keyword isDraugrCrypt  = Game.GetForm(0x000130e2) as Keyword
+	Keyword isVampireLair  = Game.GetForm(0x000130eb) as Keyword
+	Keyword isWarlockLair  = Game.GetForm(0x000130ec) as Keyword
+	Keyword isMilitaryFort = Game.GetForm(0x000130e7) as Keyword
+	Keyword isMilitaryCamp = Game.GetForm(0x000130e8) as Keyword
+	Keyword isWerewolfLair = Game.GetForm(0x000130ed) as Keyword
+	Keyword isForswornCamp = Game.GetForm(0x000130ee) as Keyword
+	Keyword isGiantCamp    = Game.GetForm(0x000130e5) as Keyword
+	Keyword isAnimalDen    = Game.GetForm(0x000130de) as Keyword
+	Keyword isCemetery     = Game.GetForm(0x0001cd58) as Keyword
+	Keyword isShipwreck    = Game.GetForm(0x0001929f) as Keyword
+	Keyword isPlayerHouse  = Game.GetForm(0x000fc1a3) as Keyword
+	; ---------------------------------------------------------------------------------------------
+
+
+	; --- Get all locations ---
+	Form[] allLocations = PO3_SKSEFunctions.GetAllForms(104)
+	Debug.Trace("Total " + allLocations.Length)
+
+	int lengthA = allLocations.Length
+	int i = 0
+
+	while i < lengthA
+		Location curr = allLocations[i] as Location
+
+		if curr
+			ObjectReference destMarker = AIAgentFunctions.getWorldLocationMarkerFor(curr)
+			
+			if destMarker
+				; -------------------------------
+				;  CLASSIFY THIS LOCATION
+				; -------------------------------
+				String types = ""
+
+				; Start checking all keywords (multiple allowed)
+				if curr.HasKeyword(isCity)
+					types += "City,"
+				endif
+				if curr.HasKeyword(isTown)
+					types += "Town,"
+				endif
+				if curr.HasKeyword(isHold)
+					types += "Hold,"
+				endif
+				if curr.HasKeyword(isInn)
+					types += "Inn,"
+				endif
+				if curr.HasKeyword(isStore)
+					types += "Store,"
+				endif
+				if curr.HasKeyword(isHouse)
+					types += "House,"
+				endif
+				if curr.HasKeyword(isPlayerHouse)
+					types += "Player House,"
+				endif
+				if curr.HasKeyword(isFarm)
+					types += "Farm,"
+				endif
+				if curr.HasKeyword(isMine)
+					types += "Mine,"
+				endif
+				if curr.HasKeyword(isJail)
+					types += "Jail,"
+				endif
+				if curr.HasKeyword(isTemple)
+					types += "Temple,"
+				endif
+				if curr.HasKeyword(isCastle)
+					types += "Castle,"
+				endif
+				if curr.HasKeyword(isGuild)
+					types += "Guild,"
+				endif
+				if curr.HasKeyword(isSettlement)
+					types += "Settlement,"
+				endif
+				if curr.HasKeyword(isHabitation)
+					types += "Habitation,"
+				endif
+				if curr.HasKeyword(isLumberMill)
+					types += "Lumber Mill,"
+				endif
+
+				; --- Dungeons & Wilderness ---
+				if curr.HasKeyword(isDungeon)
+					types += "Dungeon,"
+				endif
+				if curr.HasKeyword(isCave)
+					types += "Cave,"
+				endif
+				if curr.HasKeyword(isNordicRuin)
+					types += "Nordic Ruin,"
+				endif
+				if curr.HasKeyword(isDwarvenRuin)
+					types += "Dwarven Ruin,"
+				endif
+				if curr.HasKeyword(isDraugrCrypt)
+					types += "Draugr Crypt,"
+				endif
+				if curr.HasKeyword(isFalmerHive)
+					types += "Falmer Hive,"
+				endif
+				if curr.HasKeyword(isDragonLair)
+					types += "Dragon Lair,"
+				endif
+				if curr.HasKeyword(isVampireLair)
+					types += "Vampire Lair,"
+				endif
+				if curr.HasKeyword(isWarlockLair)
+					types += "Warlock Lair,"
+				endif
+				if curr.HasKeyword(isWerewolfLair)
+					types += "Werewolf Lair,"
+				endif
+				if curr.HasKeyword(isBanditCamp)
+					types += "Bandit Camp,"
+				endif
+				if curr.HasKeyword(isForswornCamp)
+					types += "Forsworn Camp,"
+				endif
+				if curr.HasKeyword(isGiantCamp)
+					types += "Giant Camp,"
+				endif
+				if curr.HasKeyword(isAnimalDen)
+					types += "Animal Den,"
+				endif
+				if curr.HasKeyword(isMilitaryFort)
+					types += "Military Fort,"
+				endif
+				if curr.HasKeyword(isMilitaryCamp)
+					types += "Military Camp,"
+				endif
+
+				; --- Misc ---
+				if curr.HasKeyword(isShip)
+					types += "Ship,"
+				endif
+				if curr.HasKeyword(isShipwreck)
+					types += "Shipwreck,"
+				endif
+				if curr.HasKeyword(isCemetery)
+					types += "Cemetery,"
+				endif
+
+				; --------------------------
+				; SEND LOG ENTRY
+				; --------------------------
+				Location currParent = PO3_SKSEFunctions.GetParentLocation(curr)
+				Location currParent2 = PO3_SKSEFunctions.GetParentLocation(currParent)
+
+				AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + currParent.GetName() + "/" + currParent2.GetName() + "/" + types,"util_location_name")
+			endif
+		endif
+
+		i += 1
+	endwhile
+
+EndFunction
+
 

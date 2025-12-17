@@ -45,9 +45,12 @@ Actor[] function findAllNearbyActors(bool onlyBgl) Global Native; Only gets acto
 ObjectReference function getLocationMarkerFor(Location loc) Global Native
 ObjectReference function getWorldLocationMarkerFor(Location loc) Global Native
 ObjectReference function getNearestDoor() global Native
-ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restriction=true) global Native
+ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restriction=true) global Native;restriction, ref must have a name
 
-int Function isUsingFurniture(Actor actor) global Native
+int Function isUsingFurniture(Actor akActor) global Native
+int Function isInContainer(ObjectReference item) global Native
+
+int Function SayTo(Actor source,Actor dest,Form topicToSay) global Native
 
 ; Test functions
 int function sendAllVoices() Global Native
@@ -56,3 +59,14 @@ int function  testRemoveAll() Global Native
 
 ; Legacy 
 int function getHerikaFormId()  Global Native
+
+
+; Utils
+
+int function jsonGetInt(string keyName,string jsonString) global native
+int function jsonGetFormId(string keyName,string jsonString) global native
+string function jsonGetString(string keyName,string jsonString) global native
+float function jsonGetFloat(string keyName,string jsonString) global native
+Actor function jsonGetActor(string keyName,string jsonString) global native
+ObjectReference function jsonGetReference(string keyName,string jsonString) global native
+FormList function jsonGetFormList(string keyName,string jsonString) global native

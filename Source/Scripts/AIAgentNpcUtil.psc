@@ -57,7 +57,7 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 	RaceMenu rcMenu = rcQuest as RaceMenu
 
 	If destBase && sourceBase
-		Debug.Trace("[CHIM ADV] CopyApearanceFromTo start");
+		Debug.Trace("[CHIM ADV] CopyApearanceFromToComplex start");
 		int totalPresets = rcMenu.MAX_PRESETS
 		int i = 0
 		While i < totalPresets
@@ -112,12 +112,12 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		if (dest.Is3DLoaded())
 			PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
 		else
-			Debug.Trace("[CHIM ADV]  ResetActor3D cancelled...will retry");
+			Debug.Trace("[CHIM ADV] CopyApearanceFromToComplex  ResetActor3D cancelled...will retry");
 			Utility.wait(5)
 			if (dest.Is3DLoaded())
 				PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
 			else	
-				Debug.Trace("[CHIM ADV]  ResetActor3D cancelled");
+				Debug.Trace("[CHIM ADV] CopyApearanceFromToComplex  ResetActor3D cancelled");
 				; Debug.Notification("[CHIM] spawned NPC ");
 			EndIf
 		endif
@@ -135,7 +135,7 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		dest.QueueNiNodeUpdate()
 		
 	else
-		Debug.Trace("CHIM ADV] CopyApearanceFromTo cancelled");
+		Debug.Trace("CHIM ADV] CopyApearanceFromToComplex cancelled destBase,sourceBase: <"+source.GetFormID()+"> <"+dest.GetFormId()+">")
 	Endif
 endFunction
 
@@ -207,7 +207,7 @@ function CopyApearanceFromTo(Actor source, Actor dest) global
 		dest.QueueNiNodeUpdate()
 		
 	else
-		Debug.Trace("CHIM ADV] CopyApearanceFromTo cancelled");
+		Debug.Trace("CHIM ADV] CopyApearanceFromTo cancelled destBase,sourceBase: <"+source.GetFormID()+"> <"+dest.GetFormId()+">")
 	Endif
 endFunction
 
@@ -310,3 +310,26 @@ bool Function  FindItemAvoidingRenaming(ObjectReference akRef) global
 	return false
 EndFunction
 
+
+bool function MakeFollower(Actor akTarget) global
+
+	Faction PotentialFollowerFaction = Game.GetForm(0x0005c84d) as Faction
+	Faction CurrentFollowerFaction = Game.GetForm(0x0005c84e) as Faction 
+
+	akTarget.AddToFaction(PotentialFollowerFaction)
+    akTarget.SetFactionRank(PotentialFollowerFaction, 0)
+
+    ; Make them your active follower
+    akTarget.AddToFaction(CurrentFollowerFaction)
+    akTarget.SetFactionRank(CurrentFollowerFaction, 1)
+
+	Quest nwsFF = (Game.GetFormFromFile(0x0000434F, "nwsFollowerFramework.esp") as Quest)
+    ; Tell the follower quest to follow the player
+	if (nwsFF)
+		(nwsFF as nwsFollowerControllerScript).RecruitAction(akTarget)
+	endif
+	;(nwsFF as nwsFollowerControllerScript).FollowerFollowMe(akTarget, 1)
+
+
+    ;Debug.Notification(akTarget.GetDisplayName() + " is now your follower.")
+endFunction
