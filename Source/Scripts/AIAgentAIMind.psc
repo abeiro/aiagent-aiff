@@ -2294,3 +2294,82 @@ string Function GetFormIDHexString(int formID) global
 	return result
 EndFunction
 
+; Cast Fire & Forget or instant spells - simplified to just cast on target
+function CastSpellOnTarget(Actor caster, int spellFormId, int targetFormId) global
+	Spell spellToCast = Game.GetForm(spellFormId) as Spell
+	Actor target = Game.GetForm(targetFormId) as Actor
+	
+	if (!spellToCast)
+		Debug.Notification("[CHIM] Spell not found")
+		return
+	endif
+	
+	if (!caster.HasSpell(spellToCast))
+		Debug.Notification("[CHIM] " + caster.GetDisplayName() + " doesn't know " + spellToCast.GetName())
+		return
+	endif
+	
+	; Simply cast the spell on the target
+	spellToCast.Cast(caster, target)
+	
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
+	
+	; Log the spell cast event
+	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+endFunction
+
+; Cast Concentration spells - cast and interrupt after 3-5 seconds
+function CastConcentrationSpell(Actor caster, int spellFormId, int targetFormId) global
+	Spell spellToCast = Game.GetForm(spellFormId) as Spell
+	Actor target = Game.GetForm(targetFormId) as Actor
+	
+	if (!spellToCast)
+		Debug.Notification("[CHIM] Spell not found")
+		return
+	endif
+	
+	if (!caster.HasSpell(spellToCast))
+		Debug.Notification("[CHIM] " + caster.GetDisplayName() + " doesn't know " + spellToCast.GetName())
+		return
+	endif
+	
+	; Cast the spell (starts channeling for concentration spells)
+	spellToCast.Cast(caster, target)
+	
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
+	
+	; Log the spell cast event
+	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+	
+	; Wait 3-5 seconds then stop the spell
+	float channelDuration = Utility.RandomFloat(3.0, 5.0)
+	Utility.Wait(channelDuration)
+	
+	; Interrupt the spell casting
+	caster.InterruptCast()
+endFunction
+
+; Cast Constant Effect spells - simplified to just cast on target
+function CastConstantSpell(Actor caster, int spellFormId, int targetFormId) global
+	Spell spellToCast = Game.GetForm(spellFormId) as Spell
+	Actor target = Game.GetForm(targetFormId) as Actor
+	
+	if (!spellToCast)
+		Debug.Notification("[CHIM] Spell not found")
+		return
+	endif
+	
+	if (!caster.HasSpell(spellToCast))
+		Debug.Notification("[CHIM] " + caster.GetDisplayName() + " doesn't know " + spellToCast.GetName())
+		return
+	endif
+	
+	; Simply cast the spell on the target
+	spellToCast.Cast(caster, target)
+	
+	Debug.Notification("[CHIM] " + caster.GetDisplayName() + " casts " + spellToCast.GetName())
+	
+	; Log the spell cast event
+	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+endFunction
+

@@ -1060,6 +1060,7 @@ Function OpenRoleplayWheel()
 			if (messageText != "")
 				AIAgentFunctions.logMessage("chim_renamenpc@"+originalname+"@"+messageText+"@"+leader.GetFormId(),"setconf")
 				StorageUtil.SetStringValue(leader,"forcedName",messageText)
+				Debug.Notification("[CHIM] Added to Background Life. Save your game for changes to take effect.")
 			endif
 		Else
 			Debug.Notification("[CHIM] You must look at a target to use this")
