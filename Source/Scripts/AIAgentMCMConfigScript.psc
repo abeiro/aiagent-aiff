@@ -145,6 +145,8 @@ int			_masterwheel_key				= -1
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 
+int			_actionSendVoices
+
 
 ; combat dialogue
 int			_toggle_combatdialogue
@@ -569,6 +571,7 @@ event OnPageReset(string a_page)
 	if (a_page=="Tools")
 		
 		_actionSendLocations = AddToggleOption("Send all locations to server", false)
+		_actionSendVoices = AddToggleOption("Send all vanilla voice samples to server", false)
 
 	
 	endif
@@ -1339,11 +1342,17 @@ event OnOptionSelect(int a_option)
 	
 	if (a_option == _actionSendLocations)
 		ShowMessage("Please..wait 1 minute for the 'Done' message. ")
- 		AIAgentPapyrusFunctions.sendAllLocations();
- 		ShowMessage("Done")
- 	endIf
- 	
- 	; Handle AI Agents page options
+		AIAgentPapyrusFunctions.sendAllLocations();
+		ShowMessage("Done")
+	endIf
+	
+	if (a_option == _actionSendVoices)
+		ShowMessage("Uploading all voice samples. Will take 5-10 seconds.")
+		AIAgentFunctions.sendAllVoices()
+		ShowMessage("Voice samples uploaded successfully")
+	endIf
+	
+	; Handle AI Agents page options
  	if (a_option == _toggleAddAllNowNPC)
  		AIAgentFunctions.testAddAllNPCAround()
  		ForcePageReset()
@@ -1556,6 +1565,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _actionSendLocations)
 		SetInfoText("Will send all locations found in-game to server, so TravelTo action can work better")
+	endIf
+	
+	if (a_option == _actionSendVoices)
+		SetInfoText("Upload all vanilla Skyrim voice type samples to the server. This may take 5-10 seconds.")
 	endIf
 	
 	if (a_option == _toggle_openmic)
