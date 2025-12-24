@@ -2548,6 +2548,11 @@ Function addRenamedKeyword(ObjectReference akTarget,string newName) global
 
 endFunction
 
+Function ShowTrainingMenu(Actor trainer) global
+	Debug.Trace("[CHIM] ShowTrainingMenu: Opening training for "+trainer.GetDisplayName())
+	Game.ShowTrainingMenu(trainer)
+EndFunction
+
 ; Experiment.
 bool Function projectNPC(Form actorForm) global
 
