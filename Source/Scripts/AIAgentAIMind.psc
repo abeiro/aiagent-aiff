@@ -2549,9 +2549,6 @@ Function addRenamedKeyword(ObjectReference akTarget,string newName) global
 endFunction
 
 Function ShowTrainingMenu(Actor trainer) global
-    Debug.Trace("[CHIM] ShowTrainingMenu: Opening training for "+trainer.GetDisplayName())
-    ; This function is now a passthrough - the C++ code handles it directly
-    ; Calling Game.ShowTrainingMenu from the proper thread context
     Game.ShowTrainingMenu(trainer)
 EndFunction
 
