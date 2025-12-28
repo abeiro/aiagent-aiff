@@ -127,6 +127,14 @@ Scriptname AIAgentScriptProxy
 ; 201 = RemoveAddedForm
 ; 202 = Revert
 
+; === EffectShader (300–399) ===
+; 300 = Play
+; 301 = Stop
+
+; === ActorUtil (400–499) ===
+; 400 = AddPackageOverride
+
+
 ; =============================================================================
 ; MASTER DISPATCH FUNCTION
 ; =============================================================================
@@ -137,6 +145,10 @@ Function ExecuteCommand(int cmdID, string jsonString) global
         ExecuteCommandObjectReference(cmdID, jsonString)
     elseif cmdID >= 200 && cmdID < 300
         ExecuteCommandFormList(cmdID, jsonString)
+	elseif cmdID >= 300 && cmdID < 400
+        ExecuteCommandEffectShader(cmdID, jsonString)
+	elseif cmdID >= 400 && cmdID < 500
+        ExecuteCommandActorUtil(cmdID, jsonString)	
     else
         Debug.Trace("[CHIM] AIProxy: ExecuteCommand - Unsupported cmdID range: " + cmdID)
     endif
@@ -793,7 +805,10 @@ Function ExecuteCommandActor(int cmdID, string jsonString) global
     elseif cmdID == 80 ; RemoveFromAllFactions
         akActor.RemoveFromAllFactions()
         Debug.Trace("[CHIM] AIProxy: RemoveFromAllFactions SUCCESS")
-    else
+    elseif cmdID == 81 ; EvaluatePackage
+        akActor.EvaluatePackage()
+        Debug.Trace("[CHIM] AIProxy: EvaluatePackage SUCCESS")
+	else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN Actor cmdID: " + cmdID)
     endif
 EndFunction
@@ -1140,5 +1155,111 @@ Function ExecuteCommandFormList(int cmdID, string jsonString) global
 
     else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN FormList cmdID: " + cmdID)
+    endif
+EndFunction
+
+
+; =============================================================================
+; EffectShader SPECIFIC COMMAND HANDLER
+; Handles FormList native functions (cmdID 300–399)
+; Only non-getter, actionable functions included.
+; =============================================================================
+Function ExecuteCommandEffectShader(int cmdID, string jsonString) global
+    Debug.Trace("[CHIM] AIProxy: ExecuteCommandEffectShader(cmdID=" + cmdID + ")")
+    if cmdID <= 0 || !jsonString
+        Debug.Trace("[CHIM] AIProxy: Invalid cmdID or null JSON")
+        return
+    endif
+
+    EffectShader akEffectShader = AIAgentFunctions.jsonGetEffectShader("targetObjectFormId", jsonString)
+    if !akEffectShader
+        Debug.Trace("[CHIM] AIProxy: Target is not a valid EffectShader")
+        return
+    endif
+
+    if cmdID == 300 ; Play
+        ObjectReference akObject = AIAgentFunctions.jsonGetReference("akObject", jsonString)
+        if !akObject
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandEffectShader -> Play - invalid akObject")
+            return
+        endif
+		
+		float afDuration=AIAgentFunctions.jsonGetFloat("afDuration", jsonString)
+        if !afDuration
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandEffectShader -> Play - invalid afDuration")
+            return
+        endif
+		akEffectShader.Play(akObject,afDuration)
+        Debug.Trace("[CHIM] AIProxy: ExecuteCommandEffectShader -> Play SUCCESS")
+
+    elseif cmdID == 301 ; Stop
+        ObjectReference akObject = AIAgentFunctions.jsonGetReference("akObject", jsonString)
+        if !akObject
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandEffectShader -> Stop - invalid akObject")
+            return
+        endif
+        akEffectShader.Stop(akObject)
+		Debug.Trace("[CHIM] AIProxy: ExecuteCommandEffectShader -> Stop SUCCESS")
+    else
+        Debug.Trace("[CHIM] AIProxy: UNKNOWN FormList cmdID: " + cmdID)
+    endif
+EndFunction
+
+; =============================================================================
+; ActorUtil SPECIFIC COMMAND HANDLER
+; Handles FormList native functions (cmdID 400–499)
+; Only non-getter, actionable functions included.
+; =============================================================================
+Function ExecuteCommandActorUtil(int cmdID, string jsonString) global
+    Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil(cmdID=" + cmdID + ")")
+    if cmdID <= 0 || !jsonString
+        Debug.Trace("[CHIM] AIProxy: Invalid cmdID or null JSON")
+        return
+    endif
+
+    if cmdID == 400 ; AddPackageOverride
+        Actor akActor = AIAgentFunctions.jsonGetActor("akActor", jsonString)
+        if !akActor
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> Play - invalid akObject")
+            return
+        endif
+		
+		int formID = AIAgentFunctions.jsonGetFormId("apForm", jsonString)
+        if formID == 0
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil - missing apForm")
+            return
+        endif
+        Package apPackage = Game.GetFormEx(formID) as Package
+        if !apPackage
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil - form not found: " + formID)
+            return
+        endif
+		
+		int priority =  AIAgentFunctions.jsonGetInt("aiPriority", jsonString)
+		
+		ActorUtil.AddPackageOverride(akActor, apPackage, priority)
+		Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> AddPackageOverride SUCCESS <"+apPackage.getFormId()+ "> on "+akActor.GetDisplayName())
+		
+	elseif cmdID == 401 ; SetLinkedRef
+        Actor akActor = AIAgentFunctions.jsonGetActor("akActor", jsonString)
+        if !akActor
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> Play - invalid akObject")
+            return
+        endif
+		
+		string asRef = AIAgentFunctions.jsonGetString("asRef", jsonString)
+        
+		
+		if (asref == "door")
+			ObjectReference reference = AIAgentFunctions.getNearestDoor()
+			PO3_SKSEFunctions.SetLinkedRef(akActor,reference)
+			Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> SetLinkedRef SUCCESS <"+reference.getFormId()+ "> on "+akActor.GetDisplayName())
+
+		else
+			Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil SetLinkedRef refname: " + asref)
+		endif
+		
+    else
+        Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil cmdID: " + cmdID)
     endif
 EndFunction

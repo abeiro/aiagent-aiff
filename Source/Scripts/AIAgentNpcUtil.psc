@@ -101,6 +101,7 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		
 		; Will apply later
 		StorageUtil.SetFormValue(dest, "CustomHairColor", sourcecolor)
+		StorageUtil.SetFormValue(dest, "OriginalNPC", sourceBase)
 		
 
 		TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 3)

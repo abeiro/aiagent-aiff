@@ -437,19 +437,20 @@ endFunction
 
 function Follow(Actor npc, ObjectReference akTarget) global
 	
-	
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" following "+akTarget.GetDisplayName())
 	ResetPackages(npc);
 	Package FollowPackage = Game.GetFormFromFile(0x01BC25, "AIAgent.esp") as Package 
-	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
 
-	
-	
+	npc.RemoveFromFaction(SandboxFaction)
 	npc.SetFactionRank(FollowFaction,1)
+	
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw)
 	ActorUtil.AddPackageOverride(npc, FollowPackage, 100, 0)
 	npc.EvaluatePackage()
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" following  "+akTarget.GetDisplayName())
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" following "+akTarget.GetDisplayName())
 
 	
 	
@@ -1452,7 +1453,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 
 	Debug.Trace("[CHIM] SpawnAgent <"+npcName+"> <"+DecToHex(FormIdNPC)+"> <"+DecToHex(FormIdNPCSource)+">");
 	Faction AIAssisted = Game.GetFormFromFile(0x021d0b,"AIAgent.esp") as Faction	; 
-	Faction PlayerEnemies=Game.GetFormFromFile(0x02cb7e , "AIAgent.esp") as Faction 
+	Faction PlayerEnemies=Game.GetFormFromFile(0x02f317 , "AIAgent.esp") as Faction 
 
 	ObjectReference ref;
 	bool move=true;
@@ -1607,8 +1608,6 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 
 			;CopyApearanceFromTo(finalSourceActor,finalActor);
 			CopyApearanceFromToComplex(finalSourceActor,finalActor); Copy appearance from source to dest
-
-			
 			
 			if (place==0)
 				;finalActor.MoveTo(ref)
@@ -1632,18 +1631,20 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			; Info purposes
 			ActorBase instancedActBase=getProperActorBase(finalActor);
 			int hp = getProperActorBase(finalActor).GetNumHeadParts()
-			Debug.Trace("HeadParts Num : "+hp)
+			Debug.Trace("[CHIM] HeadParts Num : "+hp)
 			int i = 0
 			WHILE i < hp
-				Debug.Trace("Player HeadPart("+i+") : "+instancedActBase.GetNthHeadPart(i).GetName()+" "+instancedActBase.GetNthHeadPart (i).GetType())
+				Debug.Trace("[CHIM] Player HeadPart("+i+") : "+instancedActBase.GetNthHeadPart(i).GetName()+" "+instancedActBase.GetNthHeadPart (i).GetType())
 				int j=0;
 				int ehp=instancedActBase.GetNthHeadPart(i).GetNumExtraParts();
 				WHILE j < ehp
-					Debug.Trace("Player ExtraHeadPart("+j+") : "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetName()+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetType())
+					Debug.Trace("[CHIM] Player ExtraHeadPart("+j+") : "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetName()+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetType())
 					j += 1
 				EndWHILE
 				i += 1
 			EndWHILE
+		else
+			;
 		endif
 		
 		; TaskId Patch. 1 is aggresive.
@@ -1680,11 +1681,17 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		if isEnemy
 			;finalActor.SendAssaultAlarm()
 			Debug.Trace("[CHIM] isEnemy "+finalActor.GetDisplayName()+":"+isEnemy)
-			finalActor.AddToFaction(PlayerEnemies); So item is not marked as stolen
+			finalActor.AddToFaction(PlayerEnemies); 
 			finalActor.SetRelationshipRank(Game.GetPlayer(), -3) ; Check this
-			finalActor.SetActorValue("Aggression",2)
+			finalActor.SetActorValue("Aggression",1)
 		endif
 		
+		if isEnemy && isMob
+			Debug.Trace("[CHIM] mustPatrol "+finalActor.GetDisplayName()+" at "+ref.getName()+" <"+DecToHex(ref.GetFormID())+">")
+			PO3_SKSEFunctions.SetLinkedRef(finalActor,ref)
+			Package forcedPatrol = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
+			ActorUtil.AddPackageOverride(finalActor,forcedPatrol,99);
+		endif
 		
 		Faction[] akFactions=finalActor.GetFactions(-128,127)
 		int j = 0
@@ -1707,8 +1714,11 @@ EndFunction
 
 int Function SpawnBook(string itemname,int itembase,int locationMarker ,String taskid,String content) global
 
-
-	SpawnItem(itemname,itembase,locationMarker ,taskid) 
+	Debug.Trace("[CHIM] SpawnBook, SendNote: "+itemname)
+	Book itemToSpawnBase=Game.GetFormFromFile(0x022d30, "AIAgent.esp") as Book 
+	
+				
+	SpawnItem(itemname,itemToSpawnBase.GetFormId(),locationMarker ,taskid) 
 	
 EndFunction
 
@@ -1745,14 +1755,16 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			; lets try to spawn inside that cell
 			int doors= localCell.getNumRefs(29); Get doors
 			int i = 0
-			Debug.Trace("[CHIM] No container in cell, maybe because cell is unloaded, will spawn at door ");
+			Debug.Trace("[CHIM] No container in cell, maybe because cell is unloaded, will spawn at door , number of doors:"+doors);
 			while i < doors
 				ObjectReference doorRef = localCell.GetNthRef(i,29);
 				ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
 				if (doorDest)
-					i = doors
-					Debug.Trace("[CHIM] Will spawn at door  "+DecToHex(doorDest.GetFormId()));
-					ref = doorDest
+					if (doorDest.isEnabled())
+						i = doors
+						Debug.Trace("[CHIM] Will spawn at door  0x"+DecToHex(doorDest.GetFormId()));
+						ref = doorDest
+					endIf
 				endif
 				i = i +1
 			endwhile
@@ -1924,7 +1936,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			finalItem.SetDisplayName(itemname,true)
 			finalItem.SetName(itemname)
 			ref.AddItem(finalItem,1,true)
-			StorageUtil.SetIntValue(finalItem, "CHIM_PLACED_AT_CONTAINER",1);
+			StorageUtil.SetIntValue(finalItem, "chim_placed_at_container",1);
 
 		else 
 			Debug.Trace("[CHIM] Spawning on location "+DecToHex(ref.GetFormId()));
@@ -2108,7 +2120,7 @@ Function EndQuestNotification(String title,String taskid) global
 	
 	ObjectReference[] doors = PO3_SKSEFunctions.FindAllReferencesOfFormType(Game.GetPlayer(), 29,10000)
 	int nDoors = doors.length
-	
+	; Send nearby cells, so quest manager can know attached cells
 	if (nDoors > 0 )
 		int i = 0
 		while i < nDoors
@@ -2155,13 +2167,13 @@ Function AddDelayedHint(ObjectReference finalItem) global
 	VisualEffect veff=Game.GetForm(0x0008cc8a)  as VisualEffect	
 	Sound hintSound =Game.GetFormFromFile(0x0237F4,"AIAgent.esp")  as Sound	
 	
-	int alreadyplaced = StorageUtil.GetIntValue(finalItem, "CHIM_PLACED_AT_CONTAINER",0);
+	int alreadyplaced = StorageUtil.GetIntValue(finalItem, "chim_placed_at_container",0);
 	if (alreadyplaced == 1)
 		Debug.Trace("[CHIM] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> already placed at <"+finalItem.GetCurrentLocation().GetName()+">");
 		return
 	endif
 	
-	int trackingEnabled = StorageUtil.GetIntValue(finalItem, "CHIM_TRACKING_ENABLED",0);
+	int trackingEnabled = StorageUtil.GetIntValue(finalItem, "chim_track_enabled",0);
 	if (trackingEnabled == 0)
 		Debug.Trace("[CHIM] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> not being tracked <"+finalItem.GetCurrentLocation().GetName()+">");
 		return
@@ -2246,7 +2258,7 @@ Function AddDelayedHint(ObjectReference finalItem) global
 		if (chest.GetBaseObject().getType()==43 || chest.GetBaseObject().getType()==28)	; if locationMarker is a NPC, item will go into its inventory
 			Debug.Trace("[CHIM] Moving "+finalItem.GetDisplayName()+" inside container "+chest.GetDisplayName()+" "+DecToHex(chest.GetFormId()))
 			chest.Additem(finalItem,1,true)
-			StorageUtil.SetIntValue(finalItem, "CHIM_PLACED_AT_CONTAINER",1);
+			StorageUtil.SetIntValue(finalItem, "chim_placed_at_container",1);
 		else
 			Debug.Trace("[CHIM] Moving "+finalItem.GetDisplayName()+" near door "+chest.GetDisplayName()+" "+DecToHex(chest.GetFormId()))
 			finalItem.MoveTo(chest,1)
@@ -2272,17 +2284,29 @@ EndFunction
 
 Function SetQuestTracker(ObjectReference ref) global
 	Debug.Trace("[CHIM] SetQuestTracker: "+ref.GetDisplayName()+"  <"+DecToHex(ref.GetFormID())+">");
-	StorageUtil.SetIntValue(ref, "CHIM_TRACKING_ENABLED",1);
+	StorageUtil.SetIntValue(ref, "chim_track_enabled",1);
 	AIAgentTrackerQuestScript Tracker = Game.GetFormFromFile(0x029E82, "AIAgent.esp") as AIAgentTrackerQuestScript ; Tracking Quest
 	Tracker.SetTrackedReference(ref)
 EndFunction
 
 Function AddDelayedNPC(Actor akActor) global
 
+	Debug.Trace("[CHIM] AddDelayedNPC checking "+akActor.GetDisplayName())
+
 	if (StorageUtil.HasFormValue(akActor,"CustomHairColor"))
 		ColorForm HairColor=StorageUtil.GetFormValue(akActor, "CustomHairColor") as ColorForm
 		PO3_SKSEFunctions.SetHairColor(akActor,HairColor )	
-		Debug.Trace("[CHIM] AddDelayedNPC: "+akActor.GetDisplayName()+" at "+HairColor.GetName());
+		Debug.Trace("[CHIM] AddDelayedNPC: "+akActor.GetDisplayName()+" , hair color "+DecToHex(HairColor.getFormid()));
+	endif
+	ActorBase SourceActor =StorageUtil.GetFormValue(akActor, "OriginalNPC",none) as ActorBase;
+
+	if SourceActor
+		Actor finalSourceActor=Game.GetPlayer().PlaceAtMe(SourceActor,1,false,true) as Actor; Spawn source actor instance
+		Debug.Trace("[CHIM] AddDelayedNPC Source actorbase is "+DecToHex(SourceActor.GetFormID()))
+		CopyApearanceFromToComplex(finalSourceActor,akActor); Copy appearance from source to dest
+		finalSourceActor.Disable(); Remove source actor as is not needed anymore.
+	else
+		Debug.Trace("[CHIM] AddDelayedNPC: No OriginalNPC");
 	endif
 	
 EndFunction
@@ -2361,6 +2385,7 @@ Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount,
 		int currentTime = Utility.GetCurrentRealTime() as int
 		int gameTime = Utility.GetCurrentGameTime() as int
 		string logMessage = "itemtransfer|"+currentTime+"|"+gameTime+"|"+source.GetDisplayName()+" gave "+amount+" "+itemName+" to "+target.GetDisplayName()
+		Debug.SendAnimationEvent(source,"IdleGive")
 		Debug.TraceUser("ChimHTTPSender", logMessage)
 	else
 		; Too far - store details and initiate movement
@@ -2672,7 +2697,7 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			
 			if (courier)
 				Debug.Trace("[CHIM] BackgroundCmd, SendNote: "+cmd[1])
-				Book itemToSpawnBase=Game.GetFormFromFile(0x022d30, "AIAgent.esp") as Book ; Package Travelto
+				Book itemToSpawnBase=Game.GetFormFromFile(0x022d30, "AIAgent.esp") as Book 
 				ObjectReference finalItem=Game.GetPlayer().PlaceAtMe(itemToSpawnBase,1,true,true) 
 				finalItem.setDisplayName(cmd[1]);
 				courier.addRefToContainer(finalItem)
@@ -2692,7 +2717,7 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 		
 		elseif 	(cmd[0] == "MoveToPlayer") 
 			; TO-DO select a better package here
-			MoveToPlayer(akTarget,"backgroundaction",8)
+			MoveToPlayer(akTarget,"backgroundaction",5)
 		
 		elseif 	(cmd[0] == "SeekAndKillPlayer") 
 			; TO-DO select a better package here
