@@ -93,7 +93,7 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 
 		ColorForm hairColor = sourceBase.GetHairColor()
 		destBase.SetHairColor(hairColor)
-	
+		rcMenu.SaveHair()
 		ColorForm sourcecolor=PO3_SKSEFunctions.GetHairColor(source);
 		if (dest.Is3DLoaded())
 			PO3_SKSEFunctions.SetHairColor(dest,sourcecolor )
@@ -104,12 +104,6 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		StorageUtil.SetFormValue(dest, "OriginalNPC", sourceBase)
 		
 
-		TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 3)
-		if txst
-			PO3_SKSEFunctions.SetHeadPartTextureSet(dest, txst, 3)
-		endIf
-
-	
 		if (dest.Is3DLoaded())
 			PO3_SKSEFunctions.ResetActor3D(dest, "PO3_ALPHA")
 		else
@@ -123,6 +117,11 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 			EndIf
 		endif
 		
+		
+
+		TextureSet faceTXST = sourceBase.getFaceTextureSet()
+		destBase.SetFaceTextureSet(faceTXST)
+		
 		destBase.SetVoiceType(sourceBase.GetVoiceType())
 		destBase.SetSkin(sourceBase.GetSkin())
 		destBase.SetSkinFar(sourceBase.GetSkinFar())
@@ -132,8 +131,50 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		dest.setWeight(sourceWeight)
 		dest.updateWeight(sourceWeight / 100.0 - destWeight / 100.0)
 		
+		if SKSE.GetPluginVersion("PapyrusExtender") >= 0
+			PO3_SKSEFunctions.SetHairColor(dest, PO3_SKSEFunctions.GetHairColor(source))
+			PO3_SKSEFunctions.SetSkinColor(dest, PO3_SKSEFunctions.GetSkinColor(source))
+		
+			If eyes
+				TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 2)
+				if txst
+					PO3_SKSEFunctions.SetHeadPartTextureSet(dest, txst, 2)
+				endIf
+			Endif
+
+			If hair
+				TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 3)
+				if txst
+					PO3_SKSEFunctions.SetHeadPartTextureSet(dest, txst, 3)
+				endIf
+			Endif
+
+			If facialHair
+				TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 4)
+				if txst
+					PO3_SKSEFunctions.SetHeadPartTextureSet(dest, txst, 4)
+				endIf
+			Endif
+
+			If scar
+				TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 5)
+				if txst
+					PO3_SKSEFunctions.SetHeadPartTextureSet(dest, txst, 5)
+				endIf
+			Endif
+
+			If brows
+				TextureSet txst = PO3_SKSEFunctions.GetHeadPartTextureSet(source, 6)
+				if txst
+					PO3_SKSEFunctions.SetHeadPartTextureSet(dest, txst, 6)
+				endIf
+			Endif
+		endIf
+		
+		PO3_SKSEFunctions.ResetActor3D(dest, "PO3_TINT")
 		dest.RegenerateHead()
 		dest.QueueNiNodeUpdate()
+		
 		
 	else
 		Debug.Trace("CHIM ADV] CopyApearanceFromToComplex cancelled destBase,sourceBase: <"+source.GetFormID()+"> <"+dest.GetFormId()+">")

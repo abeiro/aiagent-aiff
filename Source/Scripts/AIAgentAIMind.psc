@@ -1451,7 +1451,7 @@ EndFunction
 
 int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int FormIdWeapon,Int place,String taskid,Int FormIdNPCSource) global
 
-	Debug.Trace("[CHIM] SpawnAgent <"+npcName+"> <"+DecToHex(FormIdNPC)+"> <"+DecToHex(FormIdNPCSource)+">");
+	Debug.Trace("[CHIM] [SPAWN_AGENT] SpawnAgent <"+npcName+"> <"+DecToHex(FormIdNPC)+"> <"+DecToHex(FormIdNPCSource)+">");
 	Faction AIAssisted = Game.GetFormFromFile(0x021d0b,"AIAgent.esp") as Faction	; 
 	Faction PlayerEnemies=Game.GetFormFromFile(0x02f317 , "AIAgent.esp") as Faction 
 
@@ -1473,9 +1473,9 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		Location loc = Game.GetFormEx(place) as Location
 		Location loc2 = Game.GetPlayer().GetCurrentLocation()
 
-		;if Location is the same that current player's location, spawn nearby
+		;if Location is the same that current player's location, spawn nearby, review this, at cave's aoutdorrs will spawn outdoors if playr nearby
 		if (loc.IsSameLocation(loc2))
-			Debug.Trace("[CHIM] Will change "+place+"  for nearby ")
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Will change "+loc.GetName()+"  for nearby ")
 			place = 0;
 		endif
 		
@@ -1485,15 +1485,15 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			ref=AIAgentFunctions.getNearestDoor();
 			if (!ref || isMob || isEnemy)
 				ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
-				Debug.Trace("[CHIM] Interior. spawning on safe spawn")
+				Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on safe spawn")
 			else
-				Debug.Trace("[CHIM] Interior. spawning on nearest door")		
+				Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on nearest door")		
 			
 				move=false;
 			endif
 		else
 			ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,false);
-			Debug.Trace("[CHIM] Exterior. spawning on safe spawn")
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Exterior. spawning on safe spawn")
 		endif
 	else
 		Location loc = Game.GetFormEx(place) as Location
@@ -1505,22 +1505,22 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		;if same cell is the same that current player's location, spawn nearby
 		if (ref.GetParentCell() ==  Game.GetPlayer().GetParentCell())
 			
-			Debug.Trace("[CHIM] Will change "+ref.GetName()+"  for nearby ")
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Will change "+ref.GetName()+"  for nearby ")
 			if (Game.GetPlayer().IsInInterior())
 				ref=AIAgentFunctions.getNearestDoor();
 				if (!ref || isMob)
 					ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
-					Debug.Trace("[CHIM] Interior. spawning on safe spawn")
+					Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on safe spawn")
 				else
-					Debug.Trace("[CHIM] Interior. spawning on nearest door")			
+					Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on nearest door")			
 					move=false;
 				endif
 			else
 				ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,false);
-				Debug.Trace("[CHIM] Exterior. spawning on safe spawn")
+				Debug.Trace("[CHIM] [SPAWN_AGENT] Exterior. spawning on safe spawn")
 			endif
 		elseif (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon))
-			Debug.Trace("[CHIM] dest location has cave/dungeon  flag");
+			Debug.Trace("[CHIM] [SPAWN_AGENT] dest location has cave/dungeon  flag");
 			ObjectReference localRef=ref
 			Cell localCell = localRef.getParentCell();
 			int doors= localCell.getNumRefs(29); Get doors
@@ -1528,30 +1528,30 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 				int i = 0
 				while i < doors
 					ObjectReference doorRef = localCell.GetNthRef(i,29);
-					Debug.Trace("[CHIM] SpawnAgent Found DOOR ref "+DecToHex(doorRef.GetFormId()));
+					Debug.Trace("[CHIM] [SPAWN_AGENT] SpawnAgent Found DOOR ref "+DecToHex(doorRef.GetFormId()));
 					ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
 					if (doorDest)
 						ref = doorDest
-						Debug.Trace("[CHIM] SpawnAgent Found DOOR destination  "+DecToHex(doorDest.GetFormId()));
+						Debug.Trace("[CHIM] [SPAWN_AGENT] SpawnAgent Found DOOR destination  "+DecToHex(doorDest.GetFormId()));
 						i = doors
 					endif
 					i = i +1
 				endwhile
 			else
-				Debug.Trace("[CHIM] SpawnAgent Not doors found at location:"+DecToHex(loc.GetFormId()))
+				Debug.Trace("[CHIM] [SPAWN_AGENT] SpawnAgent Not doors found at location:"+DecToHex(loc.GetFormId()))
 			endif
-			;Fallback
-			if (!ref)
+			;Fallback;Note:Spawning on doors feels akward, as they're gonna be right in front of the door.
+			if (!ref ||true)
 				ref=AIAgentFunctions.getWorldLocationMarkerFor(loc);		
-				Debug.Trace("[CHIM] SpawnAgent spawning on fallback:"+DecToHex(ref.GetFormId()))
+				Debug.Trace("[CHIM] [SPAWN_AGENT] SpawnAgent spawning on fallback:"+DecToHex(ref.GetFormId()))
 			endif
 		endif
-		Debug.Trace("[CHIM] Spawning on designed location "+ref.GetName()+ "<"+DecToHex(ref.GetFormId())+">")
+		Debug.Trace("[CHIM] [SPAWN_AGENT] Spawning on designed location "+ref.GetName()+ "<"+DecToHex(ref.GetFormId())+">")
 	endif
 	
 	
 	if (ref)
-		Debug.Trace("[CHIM] spawning "+npcName+" / FormIdNPC "+FormIdNPC+ " / FormIdClothing:"+FormIdClothing+" / FormIdWeapon: "+FormIdWeapon+" / FormIdNPCSource: "+FormIdNPCSource);		
+		Debug.Trace("[CHIM] [SPAWN_AGENT] spawning "+npcName+" / FormIdNPC "+FormIdNPC+ " / FormIdClothing:"+FormIdClothing+" / FormIdWeapon: "+FormIdWeapon+" / FormIdNPCSource: "+FormIdNPCSource);		
 		ActorBase finalNpcToSpawn ;
 		
 		finalNpcToSpawn = Game.GetFormFromFile(FormIdNPC, "AIAgent.esp") as ActorBase ; We should choose a correct template here
@@ -1578,9 +1578,9 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		if isMob
 			finalActor.SetRelationshipRank(Game.GetPlayer(), -3) ; Check this
 			finalActor.SetDisplayName(npcName,1)
-
+			StorageUtil.SetStringValue(finalActor,"forced_name",npcName)
 		else
-			Debug.Trace("[CHIM] Standard behavior");
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Standard behavior");
 			finalActor.RemoveAllItems();
 			finalActor.RemoveFromAllFactions();
 			;finalActor.MakePlayerFriend(); Check this
@@ -1589,6 +1589,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 
 			finalActor.SetOutfit(clothing,false)
 			finalActor.SetDisplayName(npcName,1)
+			StorageUtil.SetStringValue(finalActor,"forced_name",npcName)
 		endif
 		
 		
@@ -1603,7 +1604,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		if !isMob		
 			ActorBase source = Game.GetForm(FormIdNPCSource) as ActorBase; Will use this actor base as source to copy hair.
 			Actor finalSourceActor=Game.GetPlayer().PlaceAtMe(source,1,false,true) as Actor; Spawn source actor instance
-			Debug.Trace("[CHIM] Source actorbase is "+source.GetFormID())
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Source actorbase is "+source.GetFormID())
 
 
 			;CopyApearanceFromTo(finalSourceActor,finalActor);
@@ -1631,14 +1632,14 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			; Info purposes
 			ActorBase instancedActBase=getProperActorBase(finalActor);
 			int hp = getProperActorBase(finalActor).GetNumHeadParts()
-			Debug.Trace("[CHIM] HeadParts Num : "+hp)
+			Debug.Trace("[CHIM] [SPAWN_AGENT] HeadParts Num : "+hp)
 			int i = 0
 			WHILE i < hp
-				Debug.Trace("[CHIM] Player HeadPart("+i+") : "+instancedActBase.GetNthHeadPart(i).GetName()+" "+instancedActBase.GetNthHeadPart (i).GetType())
+				Debug.Trace("[CHIM] [SPAWN_AGENT] Player HeadPart("+i+") : "+instancedActBase.GetNthHeadPart(i).GetName()+" "+instancedActBase.GetNthHeadPart (i).GetType())
 				int j=0;
 				int ehp=instancedActBase.GetNthHeadPart(i).GetNumExtraParts();
 				WHILE j < ehp
-					Debug.Trace("[CHIM] Player ExtraHeadPart("+j+") : "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetName()+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetType())
+					Debug.Trace("[CHIM] [SPAWN_AGENT] Player ExtraHeadPart("+j+") : "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetName()+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetType())
 					j += 1
 				EndWHILE
 				i += 1
@@ -1680,23 +1681,24 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		if isEnemy
 			;finalActor.SendAssaultAlarm()
-			Debug.Trace("[CHIM] isEnemy "+finalActor.GetDisplayName()+":"+isEnemy)
+			Debug.Trace("[CHIM] [SPAWN_AGENT] isEnemy "+finalActor.GetDisplayName()+":"+isEnemy)
 			finalActor.AddToFaction(PlayerEnemies); 
 			finalActor.SetRelationshipRank(Game.GetPlayer(), -3) ; Check this
 			finalActor.SetActorValue("Aggression",1)
 		endif
 		
-		if isEnemy && isMob
-			Debug.Trace("[CHIM] mustPatrol "+finalActor.GetDisplayName()+" at "+ref.getName()+" <"+DecToHex(ref.GetFormID())+">")
+		if isEnemy 
+			Debug.Trace("[CHIM] [SPAWN_AGENT] mustPatrol "+finalActor.GetDisplayName()+" at "+ref.getName()+" <"+DecToHex(ref.GetFormID())+">")
 			PO3_SKSEFunctions.SetLinkedRef(finalActor,ref)
-			Package forcedPatrol = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
+			Package forcedPatrol = Game.GetFormFromFile(0x031ab1, "AIAgent.esp") as Package 
 			ActorUtil.AddPackageOverride(finalActor,forcedPatrol,99);
+			finalActor.EvaluatePackage()
 		endif
 		
 		Faction[] akFactions=finalActor.GetFactions(-128,127)
 		int j = 0
 		while j < akFactions.length
-			Debug.Trace("[CHIM] "+finalActor.GetDisplayName()+" in faction "+akFactions[j].GetName())
+			Debug.Trace("[CHIM] [SPAWN_AGENT] "+finalActor.GetDisplayName()+" in faction "+akFactions[j].GetName())
 			j = j +1
 		endwhile
 		AIAgentFunctions.logMessage("spawned@"+finalActor.GetDisplayName()+"@"+finalActor.GetFormId(),"status_msg")
@@ -1705,7 +1707,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		if (finalActor.GetCurrentLocation())
 			locationStr = finalActor.GetCurrentLocation().GetName()
 		endif
-		Debug.Trace("[CHIM] Spawned "+finalActor.GetDisplayName()+" at "+locationStr)
+		Debug.Trace("[CHIM] [SPAWN_AGENT] Spawned "+finalActor.GetDisplayName()+" at "+locationStr)
 		return 0
 	EndIf
 
@@ -1725,7 +1727,7 @@ EndFunction
 
 int Function SpawnItem(string itemname,int itembase,int locationMarker ,String taskid) global
 
-	Debug.Trace("[CHIM] spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
+	Debug.Trace("[CHIM] [SPAWN_ITEM] spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
 	
 	Form itemToSpawnBase = None
 	ObjectReference ref
@@ -1736,15 +1738,15 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 	if (locationReference.getType()==60)
 		; Cell refenrece
 		Cell localCell = Game.GetFormEx(locationMarker) as Cell
-		Debug.Trace("[CHIM] Found DOOR destination insideCell "+DecToHex(localCell.GetFormId()));
+		Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell "+DecToHex(localCell.GetFormId()));
 		int containers = localCell.getNumRefs(28); Get containers
 		int j = 0
 		while j < containers
-			Debug.Trace("[CHIM] Found DOOR destination insideCell container check "+j);
+			Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container check "+j);
 			ObjectReference localContainer = localCell.GetNthRef(j,28);
 			if (localContainer)
 				ref = localContainer
-				Debug.Trace("[CHIM] Found DOOR destination insideCell container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
+				Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
 				j = containers
 			endif
 			j = j +1 
@@ -1755,14 +1757,14 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			; lets try to spawn inside that cell
 			int doors= localCell.getNumRefs(29); Get doors
 			int i = 0
-			Debug.Trace("[CHIM] No container in cell, maybe because cell is unloaded, will spawn at door , number of doors:"+doors);
+			Debug.Trace("[CHIM] [SPAWN_ITEM] No container in cell, maybe because cell is unloaded, will spawn at door , number of doors:"+doors);
 			while i < doors
 				ObjectReference doorRef = localCell.GetNthRef(i,29);
 				ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
 				if (doorDest)
 					if (doorDest.isEnabled())
 						i = doors
-						Debug.Trace("[CHIM] Will spawn at door  0x"+DecToHex(doorDest.GetFormId()));
+						Debug.Trace("[CHIM] [SPAWN_ITEM] Will spawn at door  0x"+DecToHex(doorDest.GetFormId()));
 						ref = doorDest
 					endIf
 				endif
@@ -1778,12 +1780,12 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			int containers = contArray.length
 			int j = 0
 			while j < containers
-				Debug.Trace("[CHIM] container check "+j);
+				Debug.Trace("[CHIM] [SPAWN_ITEM] container check "+j);
 				ObjectReference localContainer = contArray[j]
 				if (localContainer)
 					if (!localContainer.isDisabled() && !localContainer.isDeleted())
 						ref = localContainer
-						Debug.Trace("[CHIM] Found container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
+						Debug.Trace("[CHIM] [SPAWN_ITEM] Found container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
 						j = containers
 					endif
 				endif
@@ -1791,11 +1793,11 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			endwhile
 			if (!ref)
 				ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,true)
-				Debug.Trace("[CHIM] spawned_item nearby, no containers around. <"+itemname+"> , selected "+ref.GetName()+" <"+DecToHex(ref.GetFormId())+">");
+				Debug.Trace("[CHIM] [SPAWN_ITEM] spawned_item nearby, no containers around. <"+itemname+"> , selected "+ref.GetName()+" <"+DecToHex(ref.GetFormId())+">");
 			endif
 			;ref=AIAgentFunctions.findLocationsToSafeSpawn(6000)
 			;if (!ref)
-			;	Debug.Trace("[CHIM] UNRESTRICTED spawned_item "+itemname);
+			;	Debug.Trace("[CHIM] [SPAWN_ITEM] UNRESTRICTED spawned_item "+itemname);
 			;	ref=AIAgentFunctions.findLocationsToSafeSpawn(6000,false)
 			;endif
 		else 
@@ -1804,7 +1806,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			KeyWord isDungeon = Game.GetForm(0x000130db) as Keyword
 			; Check is we must spawn inside a cave
 			if (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon))
-				Debug.Trace("[CHIM] dest location has cave/dungeon  flag");
+				Debug.Trace("[CHIM] [SPAWN_ITEM] dest location has cave/dungeon  flag");
 				ObjectReference localRef=AIAgentFunctions.getWorldLocationMarkerFor(loc);
 				Cell localCell = localRef.getParentCell();
 				int doors= localCell.getNumRefs(29); Get doors
@@ -1812,20 +1814,20 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 					int i = 0
 					while i < doors
 						ObjectReference doorRef = localCell.GetNthRef(i,29);
-						Debug.Trace("[CHIM] Found DOOR ref "+DecToHex(doorRef.GetFormId()));
+						Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR ref "+DecToHex(doorRef.GetFormId()));
 						ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
-						Debug.Trace("[CHIM] Found DOOR destination "+DecToHex(doorDest.GetFormId()));
+						Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination "+DecToHex(doorDest.GetFormId()));
 						if (doorDest)
 							Cell insideCell = doorDest.getParentCell();
-							Debug.Trace("[CHIM] Found DOOR destination insideCell "+DecToHex(insideCell.GetFormId()));
+							Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell "+DecToHex(insideCell.GetFormId()));
 							int containers = insideCell.getNumRefs(28); Get doors
 							int j = 0
 							while j < containers
-								Debug.Trace("[CHIM] Found DOOR destination insideCell container check "+j);
+								Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container check "+j);
 								ObjectReference localContainer = insideCell.GetNthRef(j,28);
 								if (localContainer)
 									ref = localContainer
-									Debug.Trace("[CHIM] Found DOOR destination insideCell container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
+									Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
 									j = containers
 								endif
 								j = j +1 
@@ -1839,13 +1841,13 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 						; No container in door destination, maybe because cell is unloaded
 						; lets try to spawn inside that cell
 						i = 0
-						Debug.Trace("[CHIM] No container in door destination, maybe because cell is unloaded, will spawn at door ");
+						Debug.Trace("[CHIM] [SPAWN_ITEM] No container in door destination, maybe because cell is unloaded, will spawn at door ");
 						while i < doors
 							ObjectReference doorRef = localCell.GetNthRef(i,29);
 							ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
 							if (doorDest)
 								i = doors
-								Debug.Trace("[CHIM] Will spawn at door  "+DecToHex(doorDest.GetFormId()));
+								Debug.Trace("[CHIM] [SPAWN_ITEM] Will spawn at door  "+DecToHex(doorDest.GetFormId()));
 								ref = doorDest
 							endif
 							i = i +1
@@ -1853,12 +1855,12 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 					
 					endif
 				else
-					Debug.Trace("[CHIM] Not doors found at location:"+DecToHex(loc.GetFormId()))
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Not doors found at location:"+DecToHex(loc.GetFormId()))
 				endif
 				;Fallback
 				if (!ref)
 					ref=AIAgentFunctions.getWorldLocationMarkerFor(loc);		
-					Debug.Trace("[CHIM] Spawning on fallback:"+DecToHex(ref.GetFormId()))
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning on fallback:"+DecToHex(ref.GetFormId()))
 				endif
 			else
 				ObjectReference containerRef = Game.GetFormEx(locationMarker) as ObjectReference
@@ -1873,12 +1875,12 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 						int doors = localCell.getNumRefs(29); Get doors
 						int j = 0
 						while j < doors
-							Debug.Trace("[CHIM] Found DOOR destination insideCell container check "+j);
+							Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container check "+j);
 							ObjectReference localDoor = localCell.GetNthRef(j,29);
 							if (localDoor)
 								ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(localDoor)
 								ref = doorDest
-								Debug.Trace("[CHIM] Found DOOR destination insideCell at doorDest "+DecToHex(doorDest.GetFormId())+" "+doorDest.GetType());
+								Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell at doorDest "+DecToHex(doorDest.GetFormId())+" "+doorDest.GetType());
 								j = doors
 							endif
 							j = j +1 
@@ -1890,13 +1892,13 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			
 			if (!ref)
 				;Pocket
-				Debug.Trace("[CHIM] NO location, checking if reference is an actor for "+itemname);
+				Debug.Trace("[CHIM] [SPAWN_ITEM] NO location, checking if reference is an actor for "+itemname);
 				Actor act = Game.GetFormEx(locationMarker) as Actor
 				if (act)
-					Debug.Trace("[CHIM] Reference is an actor "+itemname+", actor: "+act.GetDisplayName());
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is an actor "+itemname+", actor: "+act.GetDisplayName());
 					ref = act as ObjectReference
 				else
-					Debug.Trace("[CHIM] Refernmce is NOT an actor "+locationMarker);
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Refernmce is NOT an actor "+locationMarker);
 				endif
 			endif
 		endif
@@ -1931,7 +1933,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		
 		if (ref.GetBaseObject().getType()==43 || ref.GetBaseObject().getType()==28)	; if locationMarker is a NPC, item will go into its inventory
 			;; PLace into invenotry
-			Debug.Trace("[CHIM] Spawning on inventory/chest "+ref.GetDisplayName());
+			Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning on inventory/chest "+ref.GetDisplayName());
 			finalItem=ref.PlaceAtMe(itemToSpawnBase,1,true,true) 
 			finalItem.SetDisplayName(itemname,true)
 			finalItem.SetName(itemname)
@@ -1939,7 +1941,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			StorageUtil.SetIntValue(finalItem, "chim_placed_at_container",1);
 
 		else 
-			Debug.Trace("[CHIM] Spawning on location "+DecToHex(ref.GetFormId()));
+			Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning on location "+DecToHex(ref.GetFormId()));
 			finalItem=ref.PlaceAtMe(itemToSpawnBase,1,true,true) 
 			finalItem.SetDisplayName(itemname,true)
 			finalItem.SetName(itemname)
@@ -1964,13 +1966,13 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		finalItem.Enable()
 		
 		AIAgentFunctions.logMessage("spawned_item@"+itemname+"@success@"+referencename+"@"+finalItem.GetFormId(),"status_msg")
-		Debug.Trace("[CHIM] spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID "+DecToHex(finalItem.GetFormId()) + " at "+DecToHex(ref.GetFormID()));
-		Debug.Trace("[CHIM] spawned_item "+finalItem.GetDisplayName()+" at "+finalItem.GetCurrentLocation().GetName());
+		Debug.Trace("[CHIM] [SPAWN_ITEM] spawned_item "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker+ "/ FormID "+DecToHex(finalItem.GetFormId()) + " at "+DecToHex(ref.GetFormID()));
+		Debug.Trace("[CHIM] [SPAWN_ITEM] spawned_item "+finalItem.GetDisplayName()+" at "+finalItem.GetCurrentLocation().GetName());
 		
 		
 		
 		if (locationMarker==0)
-			Debug.Notification("[CHIM] Something is hidding near "+referencename);	
+			Debug.Notification("[CHIM] [SPAWN_ITEM] Something is hidding near "+referencename);	
 			;AIAgentTrackerQuestScript Tracker = Game.GetFormFromFile(0x029E82, "AIAgent.esp") as AIAgentTrackerQuestScript ; Tracking Quest
 			;Tracker.SetTrackedReference(finalItem)
 		endif;
@@ -1978,13 +1980,13 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		
 		;AIAgentTrackerQuestScript Tracker = Game.GetFormFromFile(0x029E82, "AIAgent.esp") as AIAgentTrackerQuestScript ; Tracking Quest
 		;Tracker.SetTrackedReference(finalItem)
-
+		StorageUtil.SetIntValue(finalItem, "chim_track_enabled",1);	
 
 		;RecipeManagerCreateSimple(finalItem.GetFormID(),None,None,None);
 		
 		Utility.wait(1)
 		if (finalItem.Is3DLoaded())
-			Debug.Trace("[CHIM] Playing hint sound  "+hintSound.GetFormId()+ " on "+finalItem.GetDisplayName());
+			Debug.Trace("[CHIM] [SPAWN_ITEM] Playing hint sound  "+hintSound.GetFormId()+ " on "+finalItem.GetDisplayName());
 			veff.Play(finalItem);
 			hintSound.Play(finalItem)
 		endif
@@ -1993,7 +1995,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		return 0
 	else
 		AIAgentFunctions.logMessage("spawned_item@"+itemname+"@error","status_msg")
-		Debug.Trace("[CHIM] ERROR spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
+		Debug.Trace("[CHIM] [SPAWN_ITEM] ERROR spawning "+itemname+" / itembase "+itembase+ " / location Marker:"+locationMarker);
 	EndIf
 
 	return -1
@@ -2169,26 +2171,26 @@ Function AddDelayedHint(ObjectReference finalItem) global
 	
 	int alreadyplaced = StorageUtil.GetIntValue(finalItem, "chim_placed_at_container",0);
 	if (alreadyplaced == 1)
-		Debug.Trace("[CHIM] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> already placed at <"+finalItem.GetCurrentLocation().GetName()+">");
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> already placed at <"+finalItem.GetCurrentLocation().GetName()+">");
 		return
 	endif
 	
 	int trackingEnabled = StorageUtil.GetIntValue(finalItem, "chim_track_enabled",0);
 	if (trackingEnabled == 0)
-		Debug.Trace("[CHIM] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> not being tracked <"+finalItem.GetCurrentLocation().GetName()+">");
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> not being tracked <"+finalItem.GetCurrentLocation().GetName()+">");
 		return
 	endif
 
-	Debug.Trace("[CHIM] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> at "+finalItem.GetCurrentLocation().GetName());
+	Debug.Trace("[CHIM] [SPAWN_ITEM_D] spawned_item_activating "+finalItem.GetDisplayName()+" <"+DecToHex(finalItem.GetFormId())+"> at "+finalItem.GetCurrentLocation().GetName());
 	Cell localCell = finalItem.GetParentCell()
 	
 	Bool notAtCurrentLocation = false; 
 	Location itemLocation = finalItem.GetCurrentLocation()
 	if (itemLocation.IsSameLocation(Game.getPlayer().GetCurrentLocation()))
-		Debug.Trace("[CHIM] spawned_item_activating : Using item CELL");
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] spawned_item_activating : Using item CELL");
 		;
 	else 
-		Debug.Trace("[CHIM] spawned_item_activating : Using Player CELL");
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] spawned_item_activating : Using Player CELL");
 		localCell = Game.getPlayer().GetParentCell()
 		notAtCurrentLocation = true;
 	endif 
@@ -2198,29 +2200,29 @@ Function AddDelayedHint(ObjectReference finalItem) global
 	WorldSpace akWorldpace = finalItem.GetWorldSpace()
 	
 	if (!localCell.isInterior() && akWorldpace.GetFormID() == 0x0000003C); If exterior and worldspace is Skyrim, look for doors.
-		Debug.Trace("[CHIM] Searching for  DOOR refs at "+DecToHex(localCell.GetFormId()));
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] Searching for  DOOR refs at "+DecToHex(localCell.GetFormId()));
 		int doors= localCell.getNumRefs(29); Get doors
-		Debug.Trace("[CHIM] Found "+doors+" doors");
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] Found "+doors+" doors");
 		if (doors > 0 )
 			int i = 0
 			while i < doors
 				ObjectReference doorRef = localCell.GetNthRef(i,29);
-				Debug.Trace("[CHIM] Found DOOR ref "+DecToHex(doorRef.GetFormId()));
+				Debug.Trace("[CHIM] [SPAWN_ITEM_D] Found DOOR ref "+DecToHex(doorRef.GetFormId()));
 				ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
-				Debug.Trace("[CHIM] Found DOOR destination "+DecToHex(doorDest.GetFormId()));
+				Debug.Trace("[CHIM] [SPAWN_ITEM_D] Found DOOR destination "+DecToHex(doorDest.GetFormId()));
 				if (doorDest)
 					chest = doorDest; Fallback, if no container, reference will point destination door and we will move from there.
 					Cell insideCell = doorDest.getParentCell();
-					Debug.Trace("[CHIM] Found DOOR destination insideCell "+DecToHex(insideCell.GetFormId()));
+					Debug.Trace("[CHIM] [SPAWN_ITEM_D] Found DOOR destination insideCell "+DecToHex(insideCell.GetFormId()));
 					int containers = insideCell.getNumRefs(28); 
 					int j = 0
 					while j < containers
-						Debug.Trace("[CHIM] insideCell container check "+j);
+						Debug.Trace("[CHIM] [SPAWN_ITEM_D] insideCell container check "+j);
 						ObjectReference localContainer = insideCell.GetNthRef(j,28);
 						if (localContainer)
 							if (!localContainer.isDisabled() && !localContainer.isDeleted())
 								chest = localContainer
-								Debug.Trace("[CHIM] insideCell container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
+								Debug.Trace("[CHIM] [SPAWN_ITEM_D] insideCell container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
 							endif
 							j = containers
 						endif
@@ -2236,12 +2238,13 @@ Function AddDelayedHint(ObjectReference finalItem) global
 	
 	if (!chest)
 		; NO chest inside nearest door or no nearest door or interior
-		int containers = localCell.getNumRefs(28); 
+		ObjectReference[] aContainers=PO3_SKSEFunctions.FindAllReferencesOfFormType(finalItem,28,0)
+		int containers = aContainers.length
 		int j = 0
-		Debug.Trace("[CHIM] Searching for containers: "+containers);
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] Searching for containers: "+containers+" at "+DecToHex(localCell.GetFormId()));
 		while j < containers
-			Debug.Trace("[CHIM] Found CHEST suitable for container, check n "+j);
-			ObjectReference localContainer = localCell.GetNthRef(j,28);
+			Debug.Trace("[CHIM] [SPAWN_ITEM_D] Found CHEST suitable for container, check n "+j);
+			ObjectReference localContainer = aContainers[j]
 			if (localContainer)
 				if (!localContainer.isDisabled())
 					chest = localContainer
@@ -2256,16 +2259,16 @@ Function AddDelayedHint(ObjectReference finalItem) global
 		
 	if (chest)
 		if (chest.GetBaseObject().getType()==43 || chest.GetBaseObject().getType()==28)	; if locationMarker is a NPC, item will go into its inventory
-			Debug.Trace("[CHIM] Moving "+finalItem.GetDisplayName()+" inside container "+chest.GetDisplayName()+" "+DecToHex(chest.GetFormId()))
+			Debug.Trace("[CHIM] [SPAWN_ITEM_D] Moving "+finalItem.GetDisplayName()+" inside container "+chest.GetDisplayName()+" "+DecToHex(chest.GetFormId()))
 			chest.Additem(finalItem,1,true)
 			StorageUtil.SetIntValue(finalItem, "chim_placed_at_container",1);
 		else
-			Debug.Trace("[CHIM] Moving "+finalItem.GetDisplayName()+" near door "+chest.GetDisplayName()+" "+DecToHex(chest.GetFormId()))
+			Debug.Trace("[CHIM] [SPAWN_ITEM_D] Moving "+finalItem.GetDisplayName()+" near door "+chest.GetDisplayName()+" "+DecToHex(chest.GetFormId()))
 			finalItem.MoveTo(chest,1)
 		endif
 	else
 		ObjectReference newRef=AIAgentFunctions.findLocationsToSafeSpawn(4096,true);
-		Debug.Trace("[CHIM] Moving "+finalItem.GetDisplayName()+" near  "+DecToHex(newRef.GetFormId()))
+		Debug.Trace("[CHIM] [SPAWN_ITEM_D] Moving "+finalItem.GetDisplayName()+" near  "+DecToHex(newRef.GetFormId()))
 		finalItem.MoveTo(newRef)
 	endif
 				
@@ -2276,8 +2279,8 @@ Function AddDelayedHint(ObjectReference finalItem) global
 		
 	;AIAgentTrackerQuestScript Tracker = Game.GetFormFromFile(0x029E82, "AIAgent.esp") as AIAgentTrackerQuestScript ; Tracking Quest
 	;Tracker.SetTrackedReference(finalItem)
-		
-	Debug.Trace("[CHIM] spawned_item_activated: "+finalItem.GetDisplayName()+" at "+finalItem.GetCurrentLocation().GetName());
+	
+	Debug.Trace("[CHIM] [SPAWN_ITEM_D] spawned_item_activated: "+finalItem.GetDisplayName()+" at "+finalItem.GetCurrentLocation().GetName());
 
 
 EndFunction
@@ -2291,22 +2294,22 @@ EndFunction
 
 Function AddDelayedNPC(Actor akActor) global
 
-	Debug.Trace("[CHIM] AddDelayedNPC checking "+akActor.GetDisplayName())
+	Debug.Trace("[CHIM] [SPAWN_AGENT_D] AddDelayedNPC checking "+akActor.GetDisplayName())
 
 	if (StorageUtil.HasFormValue(akActor,"CustomHairColor"))
 		ColorForm HairColor=StorageUtil.GetFormValue(akActor, "CustomHairColor") as ColorForm
 		PO3_SKSEFunctions.SetHairColor(akActor,HairColor )	
-		Debug.Trace("[CHIM] AddDelayedNPC: "+akActor.GetDisplayName()+" , hair color "+DecToHex(HairColor.getFormid()));
+		Debug.Trace("[CHIM] [SPAWN_AGENT_D] AddDelayedNPC: "+akActor.GetDisplayName()+" , hair color "+DecToHex(HairColor.getFormid()));
 	endif
 	ActorBase SourceActor =StorageUtil.GetFormValue(akActor, "OriginalNPC",none) as ActorBase;
 
 	if SourceActor
 		Actor finalSourceActor=Game.GetPlayer().PlaceAtMe(SourceActor,1,false,true) as Actor; Spawn source actor instance
-		Debug.Trace("[CHIM] AddDelayedNPC Source actorbase is "+DecToHex(SourceActor.GetFormID()))
+		Debug.Trace("[CHIM] [SPAWN_AGENT_D] AddDelayedNPC Source actorbase is "+DecToHex(SourceActor.GetFormID()))
 		CopyApearanceFromToComplex(finalSourceActor,akActor); Copy appearance from source to dest
 		finalSourceActor.Disable(); Remove source actor as is not needed anymore.
 	else
-		Debug.Trace("[CHIM] AddDelayedNPC: No OriginalNPC");
+		Debug.Trace("[CHIM] [SPAWN_AGENT_D] AddDelayedNPC: No OriginalNPC");
 	endif
 	
 EndFunction
@@ -2568,7 +2571,7 @@ Function addRenamedKeyword(ObjectReference akTarget,string newName) global
 	Form  AIAgentNoRenameMarker = Game.GetFormFromFile(0x02481f,"AIAgent.esp") as Form 	; Check this form
 	akTarget.AddItem(AIAgentNoRenameMarker,1,true)
 	Actor akTargetActor=akTarget as Actor
-	StorageUtil.SetStringValue(akTarget,"forcedName",newName)
+	StorageUtil.SetStringValue(akTarget,"forced_name",newName)
 	Debug.Trace("[CHIM] Added avoid renaming item to "+akTargetActor.GetDisplayName()); 
 
 endFunction
