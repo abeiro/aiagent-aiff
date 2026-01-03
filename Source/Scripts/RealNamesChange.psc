@@ -76,9 +76,9 @@ Function ChangeName(Actor akTarget, String newFirstName, String newLastName)
 		;Debug.Trace("[REALNAMES - CHIM] Allowing to rename (not AIAgent.esp):  "+akTarget.getDisplayName())
 	EndIf
 	
-	if (StorageUtil.GetStringValue(akTarget,"forcedName","") != "" )
+	if (StorageUtil.GetStringValue(akTarget,"forced_name","") != "" )
 		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename (StorageUtil): "+akTarget.getDisplayName())
-		Debug.Trace("[REALNAMES - CHIM] Avoiding to rename (StorageUtil): <"+newFirstName+ "> <"+newLastName+">")
+		;Debug.Trace("[REALNAMES - CHIM] Avoiding to rename (StorageUtil): <"+newFirstName+ "> <"+newLastName+">")
 		ShouldRename=false
 	endif
 	

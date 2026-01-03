@@ -30,3 +30,16 @@ Event OnObjectUnequipped(Form akBaseObject, ObjectReference akReference)
 		AIAgentFunctions.logMessage("player_naked@0", "setconf")
 	endIf
 endEvent
+
+Event OnLocationChange(Location oldLoc,Location newLoc)
+	Location currParentLvl1=PO3_SKSEFunctions.GetParentLocation(newLoc)
+	Location currParentLvl2=PO3_SKSEFunctions.GetParentLocation(currParentLvl1)
+	
+	if (currParentLvl2 && currParentLvl2.getName() != "Tamriel" )
+		AIAgentFunctions.logMessage(currParentLvl2.getName(), "region")
+	elseif (currParentLvl1)
+		AIAgentFunctions.logMessage(currParentLvl1.getName(), "region")
+	elseif newLoc
+		AIAgentFunctions.logMessage(newLoc.getName(), "region")
+	endif;
+endEvent
