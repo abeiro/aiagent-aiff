@@ -279,72 +279,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 	EndIf
 	
 	 If(keyCode == _currentGodmodeKey)
-	
-	String[] _modes = new String[8]
-	_modes[0] = "STANDARD"
-	_modes[1] = "WHISPER"
-	_modes[2] = "DIRECTOR"
-	_modes[3] = "SPAWN"
-	_modes[4] = "CHEATMODE"
-	_modes[5] = "AUTOCHAT"
-	_modes[6] = "INJECTION_LOG"
-	_modes[7] = "INJECTION_CHAT"
-	
-	String[] _label = new String[8]
-
-	_label[0] = "Standard Chat"
-	_label[1] = "Whisper Chat"
-	_label[2] = "Director Mode"
-	_label[3] = "Spawn NPC"
-	_label[4] = "Cheat Mode"
-	_label[5] = "Auto Chat"
-	_label[6] = "Inject Event"
-	_label[7] = "Inject & Chat"
-			
-		If (holdTime < 0.5) 
-			; Quick press - Open wheel menu
-			int j=0
-			UIExtensions.InitMenu("UIWheelMenu")
-			while j < _modes.length
-				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
-				UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
-				UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
-				j = j +1
-			endwhile
-			
-			int ret = UIExtensions.OpenMenu("UIWheelMenu")
-			;Debug.Trace("Option " + ret + " selectioned")
-			String currentMode = _modes[ret]
-			_currentModeIndex = ret
-			; Store mode index for spell system sync
-			StorageUtil.SetIntValue(None, "AIAgent_CurrentModeIndex", _currentModeIndex)
-			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
-		else
-			; Hold down - Cycle mode manually
-			; Get current mode index from storage for consistency with spell system
-			_currentModeIndex = StorageUtil.GetIntValue(None, "AIAgent_CurrentModeIndex", 0)
-			_currentModeIndex += 1
-			if _currentModeIndex >= _modes.Length
-				_currentModeIndex = 0
-			endif
-			; Store updated mode index
-			StorageUtil.SetIntValue(None, "AIAgent_CurrentModeIndex", _currentModeIndex)
-
-			String currentMode = _modes[_currentModeIndex]
-			Debug.Notification("Changed to mode "+currentMode)
-			AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
-		endif
-		
-		if (_currentModeIndex==1)
-			Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
-			AIAgentFunctions.setConf("_max_distance_inside",256,256,256);
-			AIAgentFunctions.setConf("_max_distance_outside",256,256,256);
-		else
-			Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo);
-			AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string);
-			AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string);
-		endif
-	
+		OpenModeToggleWheel(holdTime)
 	EndIf
 EndEvent
 
@@ -622,54 +557,7 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentMasterWheel)
-	If !SafeProcess()
-		Return
-	EndIf
-	
-	String[] _modes = new String[4]
-	_modes[0] = "ROLEPLAY"
-	_modes[1] = "SETTINGS"
-	_modes[2] = "MODE"
-	_modes[3] = "SOULGAZE"
-			
-	String[] _label = new String[4]
-
-	_label[0] = "Roleplay Wheel"
-	_label[1] = "Settings Wheel"
-	_label[2] = "Mode Wheel"
-	_label[3] = "Soulgaze Wheel"
-
-	UIExtensions.InitMenu("UIWheelMenu")
-
-	int j = 0
-	while j < _modes.length
-		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
-		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
-		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
-		j = j +1
-	endwhile
-			
-	int ret = UIExtensions.OpenMenu("UIWheelMenu")
-	String currentMode = _modes[ret]
-
-	if (currentMode == "ROLEPLAY")
-		; Open the roleplay wheel directly
-		OpenRoleplayWheel()
-		return
-	elseif (currentMode == "SETTINGS")
-		; Open the settings wheel directly
-		OpenSettingsWheel()
-		return
-	elseif (currentMode == "MODE")
-		; Open the mode wheel directly
-		OpenModeWheel()
-		return	
-	elseif (currentMode == "SOULGAZE")
-		; Open the soulgaze wheel directly
-		OpenSoulgazeWheel()
-		return	
-	endif
-	
+	OpenMasterWheel()
   EndIf
   
 EndEvent
@@ -1443,6 +1331,174 @@ Function sendAllLocations() global
 		i += 1
 	endwhile
 
+EndFunction
+
+; Global wrapper function for spell access to Master Wheel
+; Allows AIAgent-Spells submod to call Master Wheel without duplicating logic
+Function OpenMasterWheelGlobal() global
+	Quest AIAgentMainQuest = Game.GetFormFromFile(0x00000D62, "AIAgent.esp") as Quest
+	if AIAgentMainQuest
+		AIAgentPapyrusFunctions controlScript = AIAgentMainQuest as AIAgentPapyrusFunctions
+		if controlScript
+			controlScript.OpenMasterWheel()
+		endif
+	endif
+EndFunction
+
+; Single source of truth for Master Wheel logic
+; Called by both hotkey (OnKeyDown) and spell (via OpenMasterWheelGlobal)
+Function OpenMasterWheel()
+	If !SafeProcess()
+		Return
+	EndIf
+	
+	String[] _modes = new String[4]
+	_modes[0] = "ROLEPLAY"
+	_modes[1] = "SETTINGS"
+	_modes[2] = "MODE"
+	_modes[3] = "SOULGAZE"
+			
+	String[] _label = new String[4]
+	_label[0] = "Roleplay Wheel"
+	_label[1] = "Settings Wheel"
+	_label[2] = "Mode Wheel"
+	_label[3] = "Soulgaze Wheel"
+
+	UIExtensions.InitMenu("UIWheelMenu")
+
+	int j = 0
+	while j < _modes.length
+		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+		j = j + 1
+	endwhile
+			
+	int ret = UIExtensions.OpenMenu("UIWheelMenu")
+	String currentMode = _modes[ret]
+
+	if (currentMode == "ROLEPLAY")
+		OpenRoleplayWheel()
+		return
+	elseif (currentMode == "SETTINGS")
+		OpenSettingsWheel()
+		return
+	elseif (currentMode == "MODE")
+		OpenModeWheel()
+		return	
+	elseif (currentMode == "SOULGAZE")
+		OpenSoulgazeWheel()
+		return	
+	endif
+EndFunction
+
+; Global wrapper for spell access to mode toggle
+; Allows AIAgent-Spells submod to call mode toggle without duplicating logic
+Function OpenModeToggleWheelGlobal() global
+	Quest AIAgentMainQuest = Game.GetFormFromFile(0x00000D62, "AIAgent.esp") as Quest
+	if AIAgentMainQuest
+		AIAgentPapyrusFunctions controlScript = AIAgentMainQuest as AIAgentPapyrusFunctions
+		if controlScript
+			controlScript.OpenModeToggleWheel(0.0)
+		endif
+	endif
+EndFunction
+
+; Single source of truth for mode toggle wheel logic
+; Called by both hotkey (OnKeyDown with holdTime) and spell (via OpenModeToggleWheelGlobal)
+Function OpenModeToggleWheel(float holdTime)
+	If !SafeProcess()
+		Return
+	EndIf
+	
+	String[] _modes = new String[8]
+	_modes[0] = "STANDARD"
+	_modes[1] = "WHISPER"
+	_modes[2] = "DIRECTOR"
+	_modes[3] = "SPAWN"
+	_modes[4] = "CHEATMODE"
+	_modes[5] = "AUTOCHAT"
+	_modes[6] = "INJECTION_LOG"
+	_modes[7] = "INJECTION_CHAT"
+	
+	String[] _label = new String[8]
+	_label[0] = "Standard Chat"
+	_label[1] = "Whisper Chat"
+	_label[2] = "Director Mode"
+	_label[3] = "Spawn NPC"
+	_label[4] = "Cheat Mode"
+	_label[5] = "Auto Chat"
+	_label[6] = "Inject Event"
+	_label[7] = "Inject & Chat"
+	
+	If (holdTime < 0.5) 
+		; Quick press - Open wheel menu
+		int j = 0
+		UIExtensions.InitMenu("UIWheelMenu")
+		while j < _modes.length
+			UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
+			UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
+			UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
+			j = j + 1
+		endwhile
+		
+		int ret = UIExtensions.OpenMenu("UIWheelMenu")
+		String currentMode = _modes[ret]
+		_currentModeIndex = ret
+		; Store mode index for spell system sync
+		StorageUtil.SetIntValue(None, "AIAgent_CurrentModeIndex", _currentModeIndex)
+		AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
+	else
+		; Hold down - Cycle mode manually
+		; Get current mode index from storage for consistency with spell system
+		_currentModeIndex = StorageUtil.GetIntValue(None, "AIAgent_CurrentModeIndex", 0)
+		_currentModeIndex += 1
+		if _currentModeIndex >= _modes.Length
+			_currentModeIndex = 0
+		endif
+		; Store updated mode index
+		StorageUtil.SetIntValue(None, "AIAgent_CurrentModeIndex", _currentModeIndex)
+
+		String currentMode = _modes[_currentModeIndex]
+		Debug.Notification("Changed to mode "+currentMode)
+		AIAgentFunctions.logMessage("chim_mode@"+currentMode,"setconf")
+	endif
+	
+	if (_currentModeIndex == 1)
+		Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo)
+		AIAgentFunctions.setConf("_max_distance_inside",256,256,256)
+		AIAgentFunctions.setConf("_max_distance_outside",256,256,256)
+	else
+		Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo)
+		AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string)
+		AIAgentFunctions.setConf("_max_distance_outside",mdo,mdo as int,mdo as string)
+	endif
+EndFunction
+
+; Global wrapper for spell access to halt all nearby agents
+; Allows AIAgent-Spells submod to call halt without duplicating logic
+Function HaltAllNearbyAgentsGlobal() global
+	Quest AIAgentMainQuest = Game.GetFormFromFile(0x00000D62, "AIAgent.esp") as Quest
+	if AIAgentMainQuest
+		AIAgentPapyrusFunctions controlScript = AIAgentMainQuest as AIAgentPapyrusFunctions
+		if controlScript
+			controlScript.HaltAllNearbyAgents()
+		endif
+	endif
+EndFunction
+
+; Single source of truth for halting all nearby AI agents
+; Called by both hotkey and spell
+Function HaltAllNearbyAgents()
+	Debug.Notification("[CHIM] Stopping AI actions")
+	Actor[] actors = AIAgentFunctions.findAllNearbyAgents()
+	int i = 0
+	while i < actors.Length
+		Actor akActor = actors[i]
+		Debug.Trace("[CHIM] Stopping actor: " + akActor.GetDisplayName())
+		AIAgentAIMind.StopCurrent(akActor)
+		i += 1
+	endWhile
 EndFunction
 
 
