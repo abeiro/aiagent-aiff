@@ -669,6 +669,7 @@ function TravelToTargetEnd(Actor npc) global
 	
 	ObjectReference destination=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as ObjectReference;
 	if (destination)
+		String destinationName=StorageUtil.GetStringValue(npc, "LastTravelToLocationName") as String;
 		Form dest=destination.GetBaseObject()
 		if (dest.GetType()==43) 
 			Actor destinationActor=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as Actor
@@ -683,7 +684,6 @@ function TravelToTargetEnd(Actor npc) global
 			;stayAtPlace(npc,0,"");
 		elseif (dest.GetType()==34) 
 					; TravelToLocation case?
-			String destinationName=StorageUtil.GetStringValue(npc, "LastTravelToLocationName") as String;
 			if (destinationName)
 				Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType())
 				if (!npc.Is3DLoaded())
@@ -704,12 +704,20 @@ function TravelToTargetEnd(Actor npc) global
 				endif
 				StorageUtil.SetFormValue(npc, "LastTravelToLocation",None);
 				StorageUtil.SetStringValue(npc, "LastTravelToLocationName",None);
+				if (destinationName=="a nearby element")
+					string baseFormEditorId = PO3_SKSEFunctions.GetFormEditorID(dest)
+					AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" inspects "+destinationName+","+baseFormEditorId,"chat_nf",npc.GetDisplayName());
+					
+				endif				
 			endif
-
+		elseif (destinationName=="a nearby element")
+			string baseFormEditorId = PO3_SKSEFunctions.GetFormEditorID(dest)
+			AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" inspects "+destinationName+","+baseFormEditorId,"chat_nf",npc.GetDisplayName());
 		endif
+		Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+" <"+destination+"> <"+destinationName+">")
 	else
 		; TravelToLocation case?
-		Debug.Trace("TravelToTargetEnd: "+npc.GetDisplayName())
+		Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+" no destination")
 	endif
 		
 	
@@ -1520,7 +1528,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 				Debug.Trace("[CHIM] [SPAWN_AGENT] Exterior. spawning on safe spawn")
 			endif
 		elseif (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon))
-			Debug.Trace("[CHIM] [SPAWN_AGENT] dest location has cave/dungeon  flag");
+			Debug.Trace("[CHIM] [SPAWN_AGENT] dest location has cave/dungeon flag");
 			ObjectReference localRef=ref
 			Cell localCell = localRef.getParentCell();
 			int doors= localCell.getNumRefs(29); Get doors
@@ -1805,8 +1813,30 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			KeyWord isCave = Game.GetForm(0x000130ef) as Keyword
 			KeyWord isDungeon = Game.GetForm(0x000130db) as Keyword
 			; Check is we must spawn inside a cave
-			if (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon))
-				Debug.Trace("[CHIM] [SPAWN_ITEM] dest location has cave/dungeon  flag");
+			if (loc.IsSameLocation(Game.getPlayer().GetCurrentLocation()))
+				ObjectReference[] contArray = PO3_SKSEFunctions.FindAllReferencesOfFormType(Game.GetPlayer(),28,6000)
+				int containers = contArray.length
+				int j = 0
+				while j < containers
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Same location  container check "+j);
+					ObjectReference localContainer = contArray[j]
+					if (localContainer)
+						if (!localContainer.isDisabled() && !localContainer.isDeleted())
+							ref = localContainer
+							Debug.Trace("[CHIM] [SPAWN_ITEM] Same location Found container "+DecToHex(localContainer.GetFormId())+" "+localContainer.GetType());
+							j = containers
+						endif
+					endif
+					j = j +1 
+				endwhile
+				if (!ref)
+					ref=AIAgentFunctions.findLocationsToSafeSpawn(10000,false)
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Same location spawned_item nearby, no containers around. <"+itemname+"> , selected "+ref.GetName()+" <"+DecToHex(ref.GetFormId())+">");
+				endif
+
+			elseif (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon))
+				; Check if same location as player 
+				Debug.Trace("[CHIM] [SPAWN_ITEM] dest location has cave/dungeon flag");
 				ObjectReference localRef=AIAgentFunctions.getWorldLocationMarkerFor(loc);
 				Cell localCell = localRef.getParentCell();
 				int doors= localCell.getNumRefs(29); Get doors
@@ -1898,7 +1928,18 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is an actor "+itemname+", actor: "+act.GetDisplayName());
 					ref = act as ObjectReference
 				else
-					Debug.Trace("[CHIM] [SPAWN_ITEM] Refernmce is NOT an actor "+locationMarker);
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is NOT an actor "+locationMarker);
+				endif
+			endif
+			if (!ref)
+				;Pocket
+				Debug.Trace("[CHIM] [SPAWN_ITEM] NO location, checking if reference is a ObjectReference for "+itemname);
+				ObjectReference genericRef = Game.GetFormEx(locationMarker) as ObjectReference
+				if (genericRef)
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is a ObjectReference "+itemname+", ref: 0x"+DecToHex(genericRef.GetFormId()));
+					ref = genericRef
+				else
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is NOT a ObjectReference "+locationMarker);
 				endif
 			endif
 		endif
@@ -1931,7 +1972,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 		
 		ObjectReference finalItem;
 		
-		if (ref.GetBaseObject().getType()==43 || ref.GetBaseObject().getType()==28)	; if locationMarker is a NPC, item will go into its inventory
+		if (ref.GetBaseObject().getType()==43 || ref.GetBaseObject().getType()==28 )	; if locationMarker is a NPC, item will go into its inventory
 			;; PLace into invenotry
 			Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning on inventory/chest "+ref.GetDisplayName());
 			finalItem=ref.PlaceAtMe(itemToSpawnBase,1,true,true) 
@@ -1940,7 +1981,13 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			ref.AddItem(finalItem,1,true)
 			StorageUtil.SetIntValue(finalItem, "chim_placed_at_container",1);
 
-		else 
+		elseif (ref.GetBaseObject().getType()==24) ; activator
+			Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning near activator"+DecToHex(ref.GetFormId()));
+			finalItem=ref.PlaceAtMe(itemToSpawnBase,1,true,true) 
+			finalItem.SetDisplayName(itemname,true)
+			finalItem.SetName(itemname)
+			PO3_SKSEFunctions.MoveToNearestNavmeshLocation(finalItem)
+		else
 			Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning on location "+DecToHex(ref.GetFormId()));
 			finalItem=ref.PlaceAtMe(itemToSpawnBase,1,true,true) 
 			finalItem.SetDisplayName(itemname,true)
@@ -2120,30 +2167,38 @@ Function EndQuestNotification(String title,String taskid) global
 	Tracker.SetStage(10)
 	Tracker.SetObjectiveDisplayed(10, false)
 	
-	ObjectReference[] doors = PO3_SKSEFunctions.FindAllReferencesOfFormType(Game.GetPlayer(), 29,10000)
-	int nDoors = doors.length
-	; Send nearby cells, so quest manager can know attached cells
-	if (nDoors > 0 )
-		int i = 0
-		while i < nDoors
-			ObjectReference doorRef = doors[i]
-			Debug.Trace("[CHIM] EndQuestNotification Found DOOR ref "+DecToHex(doorRef.GetFormId()));
-			ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
-			if (doorDest)
-				Cell attachedCell=doordest.GetParentCell();
-				Debug.Trace("[CHIM] EndQuestNotification Found DOOR <"+doorRef.GetDisplayName()+"> <"+ doorRef.GetDisplayName()+"> <"+DecToHex(doorRef.GetFormID())+">");
-				Debug.Trace("[CHIM] EndQuestNotification DEST DOOR <"+doordest.GetDisplayName()+"> <"+ doordest.GetDisplayName()+"> <"+DecToHex(doordest.GetFormID())+">");
-				Debug.Trace("[CHIM] EndQuestNotification DEST CELL<"+ attachedCell.GetName()+"> <"+DecToHex(attachedCell.GetFormID())+">");
-				if (attachedCell.GetName())
-					AIAgentFunctions.logMessage(attachedCell.GetFormID()+"@"+attachedCell.GetName()+"@"+ Game.GetPlayer().GetCurrentLocation().GetFormID(),"named_cell")
+	Cell currCell = Game.GetPlayer().getParentCell()
+	Location currLoc = Game.GetPlayer().getCurrentLocation();
+	Debug.Trace("[CHIM] AIAgentPlayerScript, cell <0x"+DecToHex(currCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
+	
+	AIAgentPlayerScript.sendCellInfo(currCell,currLoc)
+	
+	if (false)
+		ObjectReference[] doors = PO3_SKSEFunctions.FindAllReferencesOfFormType(Game.GetPlayer(), 29,10000)
+		int nDoors = doors.length
+		; Send nearby cells, so quest manager can know attached cells
+		if (nDoors > 0 )
+			int i = 0
+			while i < nDoors
+				ObjectReference doorRef = doors[i]
+				Debug.Trace("[CHIM] EndQuestNotification Found DOOR ref "+DecToHex(doorRef.GetFormId()));
+				ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(doorRef)
+				if (doorDest)
+					Cell attachedCell=doordest.GetParentCell();
+					Debug.Trace("[CHIM] EndQuestNotification Found DOOR <"+doorRef.GetDisplayName()+"> <"+ doorRef.GetDisplayName()+"> <"+DecToHex(doorRef.GetFormID())+">");
+					Debug.Trace("[CHIM] EndQuestNotification DEST DOOR <"+doordest.GetDisplayName()+"> <"+ doordest.GetDisplayName()+"> <"+DecToHex(doordest.GetFormID())+">");
+					Debug.Trace("[CHIM] EndQuestNotification DEST CELL<"+ attachedCell.GetName()+"> <"+DecToHex(attachedCell.GetFormID())+">");
+					if (attachedCell.GetName())
+						AIAgentFunctions.logMessage(attachedCell.GetFormID()+"@"+attachedCell.GetName()+"@"+ Game.GetPlayer().GetCurrentLocation().GetFormID(),"named_cell")
+					endif
 				endif
-			endif
-			i = i +1
-		endwhile
-	else
-		Debug.Trace("[CHIM] EndQuestNotification Not doors found")
+				i = i +1
+			endwhile
+		else
+			Debug.Trace("[CHIM] EndQuestNotification Not doors found")
+		endif
 	endif
-			
+	
 EndFunction
 
 Function StartQuestNotification(String title,String taskid) global
@@ -2289,6 +2344,12 @@ Function SetQuestTracker(ObjectReference ref) global
 	Debug.Trace("[CHIM] SetQuestTracker: "+ref.GetDisplayName()+"  <"+DecToHex(ref.GetFormID())+">");
 	StorageUtil.SetIntValue(ref, "chim_track_enabled",1);
 	AIAgentTrackerQuestScript Tracker = Game.GetFormFromFile(0x029E82, "AIAgent.esp") as AIAgentTrackerQuestScript ; Tracking Quest
+	
+	if (ref.GetBaseObject().GetType() == 24 ); activators
+		PO3_SKSEFunctions.SetObjectiveText(Tracker,"Something needs to be activated",20);
+		Debug.Trace("[CHIM] SetQuestTracker: is Activator "+ref.GetDisplayName()+"  <"+DecToHex(ref.GetFormID())+">");
+		ref.enable(true);
+	endif
 	Tracker.SetTrackedReference(ref)
 EndFunction
 
@@ -2693,6 +2754,16 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			else
 				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
 			endif
+		elseif (cmd[0] == "InspectTarget") 
+			Int locrefId=StringToInt(cmd[1])
+			ObjectReference destination = Game.GetFormEx(locrefId) as ObjectReference;
+			if (destination)
+				Debug.Trace("[CHIM] BackgroundCmd, destination: "+destination.GetName()+ ", FormId:"+DecToHex(locrefId))
+				StorageUtil.SetStringValue(aktarget, "LastTravelToLocationName","a nearby element") as String;
+				TravelToTarget(akTarget,destination,"a nearby element")
+			else
+				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
+			endif
 			
 		elseif 	(cmd[0] == "SendNote") 
 			
@@ -2748,13 +2819,18 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			;;useRawCoords = !akTarget.IsInInterior() 
 			Worldspace cws= akTarget.GetWorldSpace()
 			
-			Debug.Trace("[CHIM] "+akTarget.GetDisplayName()+"/"+loc.GetName()+"/"+lvl1s+"/"+lvl2s+" worldspace "+cws.GetName())
+			
 
-			if (cws.GetName() == "Skyrim" || cws.GetName() == "")
-				if !akTarget.IsInInterior() 
-					useRawCoords = true
+			if (cws)
+				Debug.Trace("[CHIM] "+akTarget.GetDisplayName()+"/"+loc.GetName()+"/"+lvl1s+"/"+lvl2s+" worldspace "+cws.GetName())
+				if (cws.GetName() == "Skyrim" || cws.GetName() == "")
+					if !akTarget.IsInInterior() 
+						useRawCoords = true
+					endif
 				endif
-			endif
+			else
+				Debug.Trace("[CHIM] "+akTarget.GetDisplayName()+"/"+loc.GetName()+"/"+lvl1s+"/"+lvl2s+" worldspace null")
+			endif;
 			
 			if (useRawCoords)
 				x=akTarget.GetPositionX();
@@ -2906,4 +2982,78 @@ function CastConstantSpell(Actor caster, int spellFormId, int targetFormId) glob
 	
 	; Log the spell cast event
 	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+endFunction
+
+function ChimTeleportDoorActivated(ObjectReference portal) global
+
+	ObjectReference akTargetRef = portal.GetLinkedRef();
+	if (akTargetRef)
+		Debug.Trace("[CHIM] ChimTeleportDoorActivated, reference is "+DecToHex(akTargetRef.GetFormId()))
+		
+		Actor[] followers=PO3_SKSEFunctions.GetPlayerFollowers();
+		int i = 0
+		while i<followers.length 
+			followers[i].MoveTo(akTargetRef);
+			Debug.Trace("[CHIM] ChimTeleportDoorActivated, teleporting follower "+followers[i].GetDisplayName())
+			i=i+1;
+		endwhile
+		Game.GetPlayer().MoveTo(akTargetRef);
+		portal.delete();
+	else
+		Debug.Trace("[CHIM] ChimTeleportDoorActivated, reference is unknown")
+	endif
+endFunction
+
+function SendCellInfo(Cell loadedCell) global
+	
+	Location currLoc = Game.GetPlayer().getCurrentLocation();
+	Debug.Trace("[CHIM] AIAgentAIMind -> SendCellInfo, cell <0x"+DecToHex(loadedCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
+	AIAgentPlayerScript.sendCellInfo(loadedCell,currLoc,false)
+endFunction
+
+
+function copyStatics()
+
+	Cell copyCell = Game.GetPlayer().GetParentCell().tempClone() as Cell
+	Cell originalCell = Game.GetPlayer().GetParentCell() as Cell
+	Debug.Trace("[CHIM] Original Cell  has "+originalCell.GetNumRefs());
+	ObjectReference dstTarget = None
+	
+	
+	;PO3_SKSEFunctions.SetCellnorthRotation(Game.GetPlayer().GetParentCell(),45)
+	int nrefs = originalCell.GetNumRefs(0)
+	int j = 0
+	while j < nrefs
+		ObjectReference sref = originalCell.GetNthRef(j,0)
+		StorageUtil.FormListAdd(None,"chim_cloned_statics_source",sref)
+		j = j +1
+	EndWHILE
+	
+	Debug.Trace("[CHIM] Copied source references");
+	float minDistance = 999999.0
+
+	ObjectReference enableListItem = StorageUtil.FormListShift(None,"chim_cloned_statics_source") as ObjectReference
+	Actor player = Game.GetPlayer()
+	while enableListItem
+		Form  baseForm = enableListItem.GetBaseObject()
+		ObjectReference srefCopy = enableListItem.placeAtMe(baseForm,1,false,true)
+			
+		srefCopy.SetPosition(enableListItem.GetPositionX()+256000,enableListItem.GetPositionY(),enableListItem.GetPositionZ())
+		Debug.Trace("[CHIM]	CellCloning, cell <0x"+DecToHex(originalCell.GetFormId())+"> ref <0x"+DecToHex(srefCopy.GetFormId())+"> base <0x"+DecToHex(srefCopy.GetBaseObject().GetFormId())+"> type   <"+(srefCopy.GetBaseObject().GetType())+">");
+		if (baseForm.GetType() == 34 && ( baseForm.GetFormId() == 0x03b || baseForm.GetFormId() == 0x01f || baseForm.GetFormId() == 0x034)) ; XMarker,RoomKMarker,XHeadintMakerke
+				float dist = player.GetDistance(enableListItem)
+				if ( dist < minDistance  )
+					minDistance = dist
+					dstTarget = srefCopy
+					
+				endif
+			dstTarget = srefCopy
+		endif
+		srefCopy.enable()
+		enableListItem = StorageUtil.FormListShift(None,"chim_cloned_statics_source") as ObjectReference
+	endwhile
+	
+	
+	
+	Game.GetPlayer().MoveTo(dstTarget)
 endFunction

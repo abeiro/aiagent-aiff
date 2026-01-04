@@ -135,6 +135,30 @@ Scriptname AIAgentScriptProxy
 ; 400 = AddPackageOverride
 
 
+; Helper log
+String Function DecToHex(Int n) global
+    String hexChars = "0123456789ABCDEF"
+    String result = ""
+    Int i = 0
+
+    ; Convert 8 nibbles (32 bits)
+    while i < 8
+        ; Shift down to isolate nibble
+        Int shiftAmount = (7 - i) * 4
+        Int shifted = Math.RightShift(n, shiftAmount)
+
+        ; Mask lowest 4 bits
+        Int nibble = Math.LogicalAnd(shifted, 0xF)
+
+        ; Append hex digit
+        result += StringUtil.GetNthChar(hexChars, nibble)
+
+        i += 1
+    endwhile
+
+    return result
+EndFunction
+
 ; =============================================================================
 ; MASTER DISPATCH FUNCTION
 ; =============================================================================
@@ -1258,6 +1282,95 @@ Function ExecuteCommandActorUtil(int cmdID, string jsonString) global
 		else
 			Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil SetLinkedRef refname: " + asref)
 		endif
+	elseif cmdID == 490 ; Spawn a teleport door
+        
+		Door sourceObject = Game.GetFormFromFile(0x031ab2, "AIAgent.esp") as Door
+
+		; Get player for relative placement context (or use another reference if needed)
+		Actor player = Game.GetPlayer()
+		if !player
+			Debug.Trace("[CHIM] AIProxy: Player not found. Aborting door spawn.")
+			return
+		endif
+
+		ObjectReference[] statics=PO3_SKSEFunctions.FindAllReferencesOfFormType(player,34,0);  Satics to place the door
+		ObjectReference refPlaceAt = player
+		float minDistance = 999999.0
+		float minDistanceThreshold = 256
+		string staticFormEditorIdSelected = ""
+
+		int i = 0
+		Debug.Trace("[CHIM] AIProxy: Statics around:"+statics.length )
+		while i<statics.length 
+			Form baseStatic =statics[i].GetBaseObject();
+			if (baseStatic.GetType() == 34 && ( baseStatic.GetFormId() == 0x03b || baseStatic.GetFormId() == 0x01f || baseStatic.GetFormId() == 0x034)) ; XMarker,RoomKMarker,XHeadintMakerker
+				string staticFormEditorId = PO3_SKSEFunctions.GetFormEditorID(baseStatic)
+				;if (StringUtil.find(staticFormEditorId,"wall")>-1)
+					float dist = player.GetDistance(statics[i])
+					if ( dist < minDistance && dist > minDistanceThreshold )
+						minDistance = dist
+						refPlaceAt = statics[i];
+						staticFormEditorIdSelected = staticFormEditorId
+					endif
+				;endif
+				if (baseStatic.GetFormId() == 0x34) ; XMarkerHeading
+					Debug.Trace("[CHIM] AIProxy: XMarkerHeading for "+DecToHex(baseStatic.GetFormId())+" "+DecToHex(statics[i].GetFormId()))
+				endif
+			endif
+			i = i +1
+		endWhile
+		Debug.Trace("[CHIM] AIProxy: Static selected."+DecToHex(refPlaceAt.GetFormId())+ " "+staticFormEditorIdSelected)
+		; --- 2. Create reference WITHOUT auto-placement (PlaceAtMe places at player—often undesirable)
+		ObjectReference akRef = refPlaceAt.PlaceAtMe(sourceObject, 1, false, true)
+		if !akRef
+			Debug.Trace("[CHIM] AIProxy: Failed to spawn door reference.")
+			return
+		endif
+
+		akRef.MoveTo(refPlaceAt, 0,0,-10);
+		akRef.SetAngle(0.0 , 0.0 , 0.0)
+		; --- 3. Move to calculated position & adjust orientation ---
+		; Face the door toward the target (or keep player-facing if desired)
+		ObjectReference akTargetRef = AIAgentFunctions.jsonGetReference("akTargetRef", jsonString)
+		if !akTargetRef
+			Debug.Trace("[CHIM] AIProxy: SpawnDoor - akTargetRef invalid")
+			akRef.Delete() ; Clean up failed attempt
+			return
+		endif
+
+		akRef.SetScale(0.5);
+		; --- 4. Ensure navmesh compliance ---
+		bool navSuccess = PO3_SKSEFunctions.MoveToNearestNavmeshLocation(akRef)
+		if !navSuccess
+			Debug.Trace("[CHIM] AIProxy: Door not on navmesh after adjustment.")
+			; Optional: try alternative placement or abort
+		endif
+
+		; --- 5. Link and finalize ---
+		if !PO3_SKSEFunctions.SetDoorDestination(akRef, akTargetRef)
+			Debug.Trace("[CHIM] AIProxy: Failed to set door destination: " + DecToHex(akTargetRef.GetFormId()))
+		endif
+
+		if !PO3_SKSEFunctions.SetLinkedRef(akRef, akTargetRef)
+			Debug.Trace("[CHIM] AIProxy: Failed to set linked ref: " + DecToHex(akTargetRef.GetFormId()))
+		endif
+		
+		string asName = AIAgentFunctions.jsonGetString("asName", jsonString)
+		if asName
+			akRef.SetDisplayName(asName)
+		endif
+		
+		
+		akRef.Enable()
+		float[] afRGBA = new float[4]
+		afRGBA[0]= 255.0
+		afRGBA[1]= 0.0
+		afRGBA[2]= 0.0
+		afRGBA[3]= 255.0
+		
+		PO3_SKSEFunctions.PlayDebugShader(akRef,afRGBA)
+		AIAgentFunctions.requestMessage("A new magic door appear:: "+akRef.GetDisplayName()+",this should be commented","suggestion");
+		Debug.Trace("[CHIM] AIProxy: Door spawned and linked. TargetRef: " + DecToHex(akTargetRef.GetFormId()))
 		
     else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil cmdID: " + cmdID)

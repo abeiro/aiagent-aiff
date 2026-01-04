@@ -37,29 +37,26 @@ float Property mdo auto
 
 
 String Function DecToHex(Int n) global
-	String hexChars = "0123456789ABCDEF"
-	String res = ""
-	Int count = 0
+    String hexChars = "0123456789ABCDEF"
+    String result = ""
+    Int i = 0
 
-	; Handle zero explicitly
-	If n == 0
-		res = "0"
-		count = 1
-	Else
-		While n > 0
-			res = StringUtil.GetNthChar(hexChars, n % 16) + res
-			n /= 16
-			count += 1
-		EndWhile
-	EndIf
+    ; Convert 8 nibbles (32 bits)
+    while i < 8
+        ; Shift down to isolate nibble
+        Int shiftAmount = (7 - i) * 4
+        Int shifted = Math.RightShift(n, shiftAmount)
 
-	; Pad with leading zeros if needed
-	While count < 8
-		res = "0" + res
-		count += 1
-	EndWhile
+        ; Mask lowest 4 bits
+        Int nibble = Math.LogicalAnd(shifted, 0xF)
 
-	Return res
+        ; Append hex digit
+        result += StringUtil.GetNthChar(hexChars, nibble)
+
+        i += 1
+    endwhile
+
+    return result
 EndFunction
 
 Event OnInit()
@@ -863,6 +860,11 @@ Function OpenSNQEWheel()
 	String currentMode = _modes[ret]
 
 	if (currentMode == "1")
+		Location currLoc = Game.GetPlayer().getCurrentLocation()
+		Cell loadedCell = Game.GetPlayer().GetParentCell()
+		Debug.Trace("[CHIM] AIAgentAIMind -> SendCellInfo, cell <0x"+DecToHex(loadedCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
+		;Send additional info and create fake activators 
+		AIAgentPlayerScript.sendCellInfo(loadedCell,currLoc,loadedCell.isInterior())
 		AIAgentFunctions.logMessage("start","snqe")
 	elseif (currentMode == "2")
 		AIAgentFunctions.logMessage("end","snqe")
@@ -920,7 +922,10 @@ Function sendAllLocations() global
 
 	int lengthA = allLocations.Length
 	int i = 0
-
+	int result = 0
+	
+	result = AIAgentFunctions.logMessage("__CLEAR_ALL__////","util_location_name"); Clear before insert
+	
 	while i < lengthA
 		Location curr = allLocations[i] as Location
 
@@ -1049,8 +1054,31 @@ Function sendAllLocations() global
 				; --------------------------
 				Location currParent = PO3_SKSEFunctions.GetParentLocation(curr)
 				Location currParent2 = PO3_SKSEFunctions.GetParentLocation(currParent)
-
-				AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + currParent.GetName() + "/" + currParent2.GetName() + "/" + types,"util_location_name")
+				
+				
+				Cell localCell = destMarker.getParentCell()
+				int isInterior = 0 
+				if (localCell)
+					AIAgentPlayerScript.sendCellInfo(localCell,curr)
+					if (localCell.isInterior())
+						isInterior = 1
+					endif
+				endif
+				if destMarker.isInInterior()
+					isInterior = 1
+				endif
+				string parName =""
+				string parName2 =""
+				if (currParent)
+					parName= currParent.GetName()
+				endif
+				if (currParent2)
+					parName2= currParent2.GetName()
+				endif
+				
+				
+					
+				result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior,"util_location_name")
 			endif
 		endif
 
@@ -1095,7 +1123,7 @@ Function OpenMasterWheel()
 	UIExtensions.InitMenu("UIWheelMenu")
 
 	int j = 0
-	while j < _modes.length
+	while j < (_modes.length - 1)
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)

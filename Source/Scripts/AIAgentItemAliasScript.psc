@@ -24,3 +24,19 @@ Event OnDeath(Actor akKiller)
 	(AIAgentTrackerQuest as AIAgentTrackerQuestScript).OnActorDeath()
 
 EndEvent
+
+Event OnActivate (ObjectReference akActionRef)
+	Debug.Trace("[CHIM] OnActivate "+self.GetReference().GetFormId()+" activated by "+akActionRef.GetDisplayName())
+	string formid=AIAgentAIMind.DecToHex(self.GetReference().GetFormId())
+	Debug.Trace("[CHIM] OnActivate "+formid+" activated by "+akActionRef.GetDisplayName())
+	AIAgentFunctions.logMessage("activator@"+formid+" activated","status_msg")
+	(AIAgentTrackerQuest as AIAgentTrackerQuestScript).OnItemActivated()
+EndEvent
+
+Event OnTrigger(ObjectReference akActionRef)
+	
+	string formid=AIAgentAIMind.DecToHex(self.GetReference().GetFormId())
+	Debug.Trace("[CHIM] OnTrigger "+formid+" activated by "+akActionRef.GetDisplayName())
+	AIAgentFunctions.logMessage("activator@"+formid+" activated","status_msg")
+	(AIAgentTrackerQuest as AIAgentTrackerQuestScript).OnItemActivated()
+EndEvent
