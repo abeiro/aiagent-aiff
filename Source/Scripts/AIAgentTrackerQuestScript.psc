@@ -58,3 +58,12 @@ Function OnActorDeath()
 	Reset()
 
 EndFunction
+
+Function OnItemActivated()
+	QuestNotifySound()
+    SetObjectiveDisplayed(20, false)
+	AIAgentTrackerQuestAlias.ForceRefTo(None)
+    
+	Reset()
+
+EndFunction

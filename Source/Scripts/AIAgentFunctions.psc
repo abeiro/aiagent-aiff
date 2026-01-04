@@ -71,3 +71,4 @@ Actor function jsonGetActor(string keyName,string jsonString) global native
 ObjectReference function jsonGetReference(string keyName,string jsonString) global native
 FormList function jsonGetFormList(string keyName,string jsonString) global native
 EffectShader function jsonGetEffectShader(string keyName,string jsonString) global native
+
