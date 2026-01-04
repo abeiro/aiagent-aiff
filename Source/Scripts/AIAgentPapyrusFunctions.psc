@@ -247,65 +247,7 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentMasterWheel)
-<<<<<<< HEAD
-	If !SafeProcess()
-		Return
-	EndIf
-	
-	
-	String[] _modes = new String[5]
-	_modes[0] = "ROLEPLAY"
-	_modes[1] = "SETTINGS"
-	_modes[2] = "MODE"
-	_modes[3] = "SOULGAZE"
-	_modes[4] = "SNQE"
-			
-	String[] _label = new String[5]
-
-	_label[0] = "Roleplay Wheel"
-	_label[1] = "Settings Wheel"
-	_label[2] = "Mode Wheel"
-	_label[3] = "Soulgaze Wheel"
-	_label[4] = "AI Quests"
-
-	UIExtensions.InitMenu("UIWheelMenu")
-
-	int j = 0
-	while j < (_modes.length - 1 ) ; SNQE Disabled
-		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
-		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
-		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
-		j = j +1
-	endwhile
-			
-	int ret = UIExtensions.OpenMenu("UIWheelMenu")
-	String currentMode = _modes[ret]
-
-	if (currentMode == "ROLEPLAY")
-		; Open the roleplay wheel directly
-		OpenRoleplayWheel()
-		return
-	elseif (currentMode == "SETTINGS")
-		; Open the settings wheel directly
-		OpenSettingsWheel()
-		return
-	elseif (currentMode == "MODE")
-		; Open the mode wheel directly
-		OpenModeWheel()
-		return	
-	elseif (currentMode == "SOULGAZE")
-		; Open the soulgaze wheel directly
-		OpenSoulgazeWheel()
-		return	
-	elseif (currentMode == "SNQE")
-		; Open the soulgaze wheel directly
-		OpenSNQEWheel()
-		return	
-	endif
-	
-=======
 	OpenMasterWheel()
->>>>>>> f3513b57bace8ed8180b6d7dbb7d4888b5bc48b5
   EndIf
   
 EndEvent
