@@ -1391,15 +1391,18 @@ function EquipSpellOnPlayer(int spellFormId) global
 endFunction
 
 function FillLogJournal(int FormId) global
-	Quest feedIdle=Game.GetForm(FormId) as Quest
-	if (feedIdle.GetID())
-	
-		ConsoleUtil.PrintMessage("-")
-		ConsoleUtil.ExecuteCommand("ShowFullQuestLog "+feedIdle.GetID()) 
-		String log=ConsoleUtil.ReadMessage() 
-		if (log !="-")
-			AIAgentFunctions.logMessage(feedIdle.GetID()+"@"+log,"_questdata")
-		EndIf
+	if FormId
+		Quest feedIdle=Game.GetForm(FormId) as Quest
+		if feedIdle
+			if (feedIdle.GetID())
+				ConsoleUtil.PrintMessage("-")
+				ConsoleUtil.ExecuteCommand("ShowFullQuestLog "+feedIdle.GetID()) 
+				String log=ConsoleUtil.ReadMessage() 
+				if (log != "-")
+					AIAgentFunctions.logMessage(feedIdle.GetID()+"@"+log,"_questdata")
+				EndIf
+			endif
+		endif
 	endif
 endFunction
 
