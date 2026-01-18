@@ -72,3 +72,4 @@ ObjectReference function jsonGetReference(string keyName,string jsonString) glob
 FormList function jsonGetFormList(string keyName,string jsonString) global native
 EffectShader function jsonGetEffectShader(string keyName,string jsonString) global native
 
+string function GetDoorActivationText(ObjectReference akRef) global native
