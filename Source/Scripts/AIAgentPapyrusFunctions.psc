@@ -1131,7 +1131,8 @@ Function OpenMasterWheel()
 	UIExtensions.InitMenu("UIWheelMenu")
 
 	int j = 0
-	while j < (_modes.length )
+	;while j < (_modes.length ) 
+	while j < (_modes.length - 1 ) ; SNEQ disabled
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
