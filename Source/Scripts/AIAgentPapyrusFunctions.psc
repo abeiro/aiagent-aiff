@@ -857,17 +857,17 @@ Function OpenSoulgazeWheel()
 EndFunction
 
 Function OpenSNQEWheel()
-	String[] _modes = new String[3]
+	String[] _modes = new String[4]
 	_modes[0] = "1"
 	_modes[1] = "2"
 	_modes[2] = "3"
-	
+	_modes[3] = "4"
 			
-	String[] _label = new String[3]
+	String[] _label = new String[4]
 	_label[0] = "Start/Continue"
-	_label[1] = "End"
-	_label[2] = "Clean"
-	
+	_label[1] = "Request End"
+	_label[2] = "Stop & Clean"
+	_label[3] = "Try to restart"
 	UIExtensions.InitMenu("UIWheelMenu")
 
 	int j = 0
@@ -887,11 +887,14 @@ Function OpenSNQEWheel()
 		Debug.Trace("[CHIM] AIAgentAIMind -> SendCellInfo, cell <0x"+DecToHex(loadedCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
 		;Send additional info and create fake activators 
 		AIAgentPlayerScript.sendCellInfo(loadedCell,currLoc,loadedCell.isInterior())
+		Utility.wait(1);
 		AIAgentFunctions.logMessage("start","snqe")
 	elseif (currentMode == "2")
 		AIAgentFunctions.logMessage("end","snqe")
 	elseif (currentMode == "3")
 		AIAgentFunctions.logMessage("clean","snqe")	
+	elseif (currentMode == "4")
+		AIAgentFunctions.logMessage("restart","snqe")		
 	endif
 EndFunction
 
@@ -951,156 +954,161 @@ Function sendAllLocations() global
 	while i < lengthA
 		Location curr = allLocations[i] as Location
 
+		
 		if curr
 			ObjectReference destMarker = AIAgentFunctions.getWorldLocationMarkerFor(curr)
-			
-			if destMarker
-				; -------------------------------
-				;  CLASSIFY THIS LOCATION
-				; -------------------------------
-				String types = ""
-
-				; Start checking all keywords (multiple allowed)
-				if curr.HasKeyword(isCity)
-					types += "City,"
-				endif
-				if curr.HasKeyword(isTown)
-					types += "Town,"
-				endif
-				if curr.HasKeyword(isHold)
-					types += "Hold,"
-				endif
-				if curr.HasKeyword(isInn)
-					types += "Inn,"
-				endif
-				if curr.HasKeyword(isStore)
-					types += "Store,"
-				endif
-				if curr.HasKeyword(isHouse)
-					types += "House,"
-				endif
-				if curr.HasKeyword(isPlayerHouse)
-					types += "Player House,"
-				endif
-				if curr.HasKeyword(isFarm)
-					types += "Farm,"
-				endif
-				if curr.HasKeyword(isMine)
-					types += "Mine,"
-				endif
-				if curr.HasKeyword(isJail)
-					types += "Jail,"
-				endif
-				if curr.HasKeyword(isTemple)
-					types += "Temple,"
-				endif
-				if curr.HasKeyword(isCastle)
-					types += "Castle,"
-				endif
-				if curr.HasKeyword(isGuild)
-					types += "Guild,"
-				endif
-				if curr.HasKeyword(isSettlement)
-					types += "Settlement,"
-				endif
-				if curr.HasKeyword(isHabitation)
-					types += "Habitation,"
-				endif
-				if curr.HasKeyword(isLumberMill)
-					types += "Lumber Mill,"
-				endif
-
-				; --- Dungeons & Wilderness ---
-				if curr.HasKeyword(isDungeon)
-					types += "Dungeon,"
-				endif
-				if curr.HasKeyword(isCave)
-					types += "Cave,"
-				endif
-				if curr.HasKeyword(isNordicRuin)
-					types += "Nordic Ruin,"
-				endif
-				if curr.HasKeyword(isDwarvenRuin)
-					types += "Dwarven Ruin,"
-				endif
-				if curr.HasKeyword(isDraugrCrypt)
-					types += "Draugr Crypt,"
-				endif
-				if curr.HasKeyword(isFalmerHive)
-					types += "Falmer Hive,"
-				endif
-				if curr.HasKeyword(isDragonLair)
-					types += "Dragon Lair,"
-				endif
-				if curr.HasKeyword(isVampireLair)
-					types += "Vampire Lair,"
-				endif
-				if curr.HasKeyword(isWarlockLair)
-					types += "Warlock Lair,"
-				endif
-				if curr.HasKeyword(isWerewolfLair)
-					types += "Werewolf Lair,"
-				endif
-				if curr.HasKeyword(isBanditCamp)
-					types += "Bandit Camp,"
-				endif
-				if curr.HasKeyword(isForswornCamp)
-					types += "Forsworn Camp,"
-				endif
-				if curr.HasKeyword(isGiantCamp)
-					types += "Giant Camp,"
-				endif
-				if curr.HasKeyword(isAnimalDen)
-					types += "Animal Den,"
-				endif
-				if curr.HasKeyword(isMilitaryFort)
-					types += "Military Fort,"
-				endif
-				if curr.HasKeyword(isMilitaryCamp)
-					types += "Military Camp,"
-				endif
-
-				; --- Misc ---
-				if curr.HasKeyword(isShip)
-					types += "Ship,"
-				endif
-				if curr.HasKeyword(isShipwreck)
-					types += "Shipwreck,"
-				endif
-				if curr.HasKeyword(isCemetery)
-					types += "Cemetery,"
-				endif
-
-				; --------------------------
-				; SEND LOG ENTRY
-				; --------------------------
-				Location currParent = PO3_SKSEFunctions.GetParentLocation(curr)
-				Location currParent2 = PO3_SKSEFunctions.GetParentLocation(currParent)
+			if (destMarker.isDisabled())
+				i = i + 1
 				
-				
-				Cell localCell = destMarker.getParentCell()
-				int isInterior = 0 
-				if (localCell)
-					AIAgentPlayerScript.sendCellInfo(localCell,curr)
-					if (localCell.isInterior())
+			else
+				if destMarker
+					; -------------------------------
+					;  CLASSIFY THIS LOCATION
+					; -------------------------------
+					String types = ""
+
+					; Start checking all keywords (multiple allowed)
+					if curr.HasKeyword(isCity)
+						types += "City,"
+					endif
+					if curr.HasKeyword(isTown)
+						types += "Town,"
+					endif
+					if curr.HasKeyword(isHold)
+						types += "Hold,"
+					endif
+					if curr.HasKeyword(isInn)
+						types += "Inn,"
+					endif
+					if curr.HasKeyword(isStore)
+						types += "Store,"
+					endif
+					if curr.HasKeyword(isHouse)
+						types += "House,"
+					endif
+					if curr.HasKeyword(isPlayerHouse)
+						types += "Player House,"
+					endif
+					if curr.HasKeyword(isFarm)
+						types += "Farm,"
+					endif
+					if curr.HasKeyword(isMine)
+						types += "Mine,"
+					endif
+					if curr.HasKeyword(isJail)
+						types += "Jail,"
+					endif
+					if curr.HasKeyword(isTemple)
+						types += "Temple,"
+					endif
+					if curr.HasKeyword(isCastle)
+						types += "Castle,"
+					endif
+					if curr.HasKeyword(isGuild)
+						types += "Guild,"
+					endif
+					if curr.HasKeyword(isSettlement)
+						types += "Settlement,"
+					endif
+					if curr.HasKeyword(isHabitation)
+						types += "Habitation,"
+					endif
+					if curr.HasKeyword(isLumberMill)
+						types += "Lumber Mill,"
+					endif
+
+					; --- Dungeons & Wilderness ---
+					if curr.HasKeyword(isDungeon)
+						types += "Dungeon,"
+					endif
+					if curr.HasKeyword(isCave)
+						types += "Cave,"
+					endif
+					if curr.HasKeyword(isNordicRuin)
+						types += "Nordic Ruin,"
+					endif
+					if curr.HasKeyword(isDwarvenRuin)
+						types += "Dwarven Ruin,"
+					endif
+					if curr.HasKeyword(isDraugrCrypt)
+						types += "Draugr Crypt,"
+					endif
+					if curr.HasKeyword(isFalmerHive)
+						types += "Falmer Hive,"
+					endif
+					if curr.HasKeyword(isDragonLair)
+						types += "Dragon Lair,"
+					endif
+					if curr.HasKeyword(isVampireLair)
+						types += "Vampire Lair,"
+					endif
+					if curr.HasKeyword(isWarlockLair)
+						types += "Warlock Lair,"
+					endif
+					if curr.HasKeyword(isWerewolfLair)
+						types += "Werewolf Lair,"
+					endif
+					if curr.HasKeyword(isBanditCamp)
+						types += "Bandit Camp,"
+					endif
+					if curr.HasKeyword(isForswornCamp)
+						types += "Forsworn Camp,"
+					endif
+					if curr.HasKeyword(isGiantCamp)
+						types += "Giant Camp,"
+					endif
+					if curr.HasKeyword(isAnimalDen)
+						types += "Animal Den,"
+					endif
+					if curr.HasKeyword(isMilitaryFort)
+						types += "Military Fort,"
+					endif
+					if curr.HasKeyword(isMilitaryCamp)
+						types += "Military Camp,"
+					endif
+
+					; --- Misc ---
+					if curr.HasKeyword(isShip)
+						types += "Ship,"
+					endif
+					if curr.HasKeyword(isShipwreck)
+						types += "Shipwreck,"
+					endif
+					if curr.HasKeyword(isCemetery)
+						types += "Cemetery,"
+					endif
+
+					; --------------------------
+					; SEND LOG ENTRY
+					; --------------------------
+					Location currParent = PO3_SKSEFunctions.GetParentLocation(curr)
+					Location currParent2 = PO3_SKSEFunctions.GetParentLocation(currParent)
+					
+					
+					Cell localCell = destMarker.getParentCell()
+					int isInterior = 0 
+					if (localCell)
+						;AIAgentPlayerScript.sendCellInfo(localCell,curr,false)
+						if (localCell.isInterior())
+							isInterior = 1
+						endif
+					endif
+					if destMarker.isInInterior()
 						isInterior = 1
 					endif
-				endif
-				if destMarker.isInInterior()
-					isInterior = 1
-				endif
-				string parName =""
-				string parName2 =""
-				if (currParent)
-					parName= currParent.GetName()
-				endif
-				if (currParent2)
-					parName2= currParent2.GetName()
-				endif
-				
-				
+					string parName =""
+					string parName2 =""
+					if (currParent)
+						parName= currParent.GetName()
+					endif
+					if (currParent2)
+						parName2= currParent2.GetName()
+					endif
 					
-				result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior,"util_location_name")
+					
+						
+					result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior,"util_location_name")
+				endif
 			endif
 		endif
 
@@ -1145,7 +1153,8 @@ Function OpenMasterWheel()
 	UIExtensions.InitMenu("UIWheelMenu")
 
 	int j = 0
-	while j < (_modes.length - 1)
+	;while j < (_modes.length ) 
+	while j < (_modes.length - 1 ) ; SNEQ disabled
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)

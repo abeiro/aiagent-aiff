@@ -248,7 +248,44 @@ function MoveToTargetEnd(Actor npc) global
 					
 					; Clear the pending pickup data
 					StorageUtil.SetStringValue(npc, "PendingPickupItem", "")
+				endIf
+			elseif (intent==11);pickup from container
+				; Get the pending pickup data
+				string itemName
+				itemName = StorageUtil.GetStringValue(npc, "PendingPickupItem", "")
+				ObjectReference itemNativeRef = StorageUtil.GetFormValue(npc, "PendingPickupItemRef", None) as ObjectReference
+				
+				if (itemName != "")
+					; Play pickup animation
+					Debug.SendAnimationEvent(npc, "IdlePickup")
+					Utility.Wait(0.5)
+					
+					
+					if (itemNativeRef)
+						npc.AddItem(itemNativeRef,1,false)
+						
+						; Wait a moment for the pickup to process
+						Utility.Wait(0.5)
+						
+						; Refresh the NPC's inventory so they know what they picked up
+						Debug.TraceUser("ChimHTTPSender", "AIAgentRefreshInventory|"+npc.GetFormID())
+						
+						; Notify server of the pickup
+						int currentTime
+						currentTime = Utility.GetCurrentRealTime() as int
+						int gameTime
+						gameTime = Utility.GetCurrentGameTime() as int
+						string logMessage
+						logMessage = "itempickup|"+currentTime+"|"+gameTime+"|"+npc.GetDisplayName()+" picked up "+itemName
+						Debug.TraceUser("ChimHTTPSender", logMessage)
+						AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" picked up "+itemName,"itempickup",npc.GetDisplayName())
+						
+						Debug.Notification(npc.GetDisplayName()+" picked up "+itemName)
+					endif
 				endif
+				; Clear the pending pickup data
+				StorageUtil.SetStringValue(npc, "PendingPickupItem", "")
+				StorageUtil.SetFormValue(npc, "PendingPickupItemRef", None)
 			endif
 		endif
 	endif
@@ -671,7 +708,7 @@ function TravelToTargetEnd(Actor npc) global
 	if (destination)
 		String destinationName=StorageUtil.GetStringValue(npc, "LastTravelToLocationName") as String;
 		Form dest=destination.GetBaseObject()
-		if (dest.GetType()==43) 
+		if (dest.GetType()==43) ; NPC
 			Actor destinationActor=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as Actor
 			if (destinationActor.IsDead()); Inspecting a dead body
 				Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " inspects "+destinationActor.getDisplayName())
@@ -682,7 +719,7 @@ function TravelToTargetEnd(Actor npc) global
 			endif
 			Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
 			;stayAtPlace(npc,0,"");
-		elseif (dest.GetType()==34) 
+		elseif (dest.GetType()==34) ; Static
 					; TravelToLocation case?
 			if (destinationName)
 				Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType())
@@ -710,6 +747,50 @@ function TravelToTargetEnd(Actor npc) global
 					
 				endif				
 			endif
+		elseif (dest.GetType()==32);MiscItem
+			Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType()+ ", npc should pick up")
+			Debug.SendAnimationEvent(npc,"IdleKneeling")
+			Utility.wait(3)
+			Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
+			
+		elseif (dest.GetType()==28);pickup from container
+				; Get the pending pickup data
+			string itemName
+			itemName = StorageUtil.GetStringValue(npc, "PendingPickupItem", "")
+			ObjectReference itemNativeRef = StorageUtil.GetFormValue(npc, "PendingPickupItemRef", None) as ObjectReference
+			
+			if (itemName != "")
+				; Play pickup animation
+				Debug.SendAnimationEvent(npc, "IdlePickup")
+				Utility.Wait(0.5)
+				
+				
+				if (itemNativeRef)
+					npc.AddItem(itemNativeRef,1,false)
+					
+					; Wait a moment for the pickup to process
+					Utility.Wait(0.5)
+					
+					; Refresh the NPC's inventory so they know what they picked up
+					Debug.TraceUser("ChimHTTPSender", "AIAgentRefreshInventory|"+npc.GetFormID())
+					
+					; Notify server of the pickup
+					int currentTime
+					currentTime = Utility.GetCurrentRealTime() as int
+					int gameTime
+					gameTime = Utility.GetCurrentGameTime() as int
+					string logMessage
+					logMessage = "itempickup|"+currentTime+"|"+gameTime+"|"+npc.GetDisplayName()+" picked up "+itemName
+					Debug.TraceUser("ChimHTTPSender", logMessage)
+					AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" picked up "+itemName,"itempickup",npc.GetDisplayName())
+					
+					Debug.Notification(npc.GetDisplayName()+" picked up "+itemName)
+				endif
+			endif
+			; Clear the pending pickup data
+			StorageUtil.SetStringValue(npc, "PendingPickupItem", "")
+			StorageUtil.SetFormValue(npc, "PendingPickupItemRef", None)
+				
 		elseif (destinationName=="a nearby element")
 			string baseFormEditorId = PO3_SKSEFunctions.GetFormEditorID(dest)
 			AIAgentFunctions.requestMessageForActor(npc.GetDisplayName()+" inspects "+destinationName+","+baseFormEditorId,"chat_nf",npc.GetDisplayName());
@@ -1391,15 +1472,18 @@ function EquipSpellOnPlayer(int spellFormId) global
 endFunction
 
 function FillLogJournal(int FormId) global
-	Quest feedIdle=Game.GetForm(FormId) as Quest
-	if (feedIdle.GetID())
-	
-		ConsoleUtil.PrintMessage("-")
-		ConsoleUtil.ExecuteCommand("ShowFullQuestLog "+feedIdle.GetID()) 
-		String log=ConsoleUtil.ReadMessage() 
-		if (log !="-")
-			AIAgentFunctions.logMessage(feedIdle.GetID()+"@"+log,"_questdata")
-		EndIf
+	if FormId
+		Quest feedIdle=Game.GetForm(FormId) as Quest
+		if feedIdle
+			if (feedIdle.GetID())
+				ConsoleUtil.PrintMessage("-")
+				ConsoleUtil.ExecuteCommand("ShowFullQuestLog "+feedIdle.GetID()) 
+				String log=ConsoleUtil.ReadMessage() 
+				if (log != "-")
+					AIAgentFunctions.logMessage(feedIdle.GetID()+"@"+log,"_questdata")
+				EndIf
+			endif
+		endif
 	endif
 endFunction
 
@@ -1483,7 +1567,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 
 		;if Location is the same that current player's location, spawn nearby, review this, at cave's aoutdorrs will spawn outdoors if playr nearby
 		if (loc.IsSameLocation(loc2))
-			Debug.Trace("[CHIM] [SPAWN_AGENT] Will change "+loc.GetName()+"  for nearby ")
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Location check. Will change "+loc.GetName()+" for nearby ")
 			place = 0;
 		endif
 		
@@ -1493,9 +1577,9 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			ref=AIAgentFunctions.getNearestDoor();
 			if (!ref || isMob || isEnemy)
 				ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
-				Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on safe spawn")
+				Debug.Trace("[CHIM] [SPAWN_AGENT] place=0 Interior. spawning on safe spawn")
 			else
-				Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on nearest door")		
+				Debug.Trace("[CHIM] [SPAWN_AGENT] place=0 Interior. spawning on nearest door")		
 			
 				move=false;
 			endif
@@ -1513,14 +1597,14 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		;if same cell is the same that current player's location, spawn nearby
 		if (ref.GetParentCell() ==  Game.GetPlayer().GetParentCell())
 			
-			Debug.Trace("[CHIM] [SPAWN_AGENT] Will change "+ref.GetName()+"  for nearby ")
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Parent cell check. Will change "+ref.GetName()+" for nearby ")
 			if (Game.GetPlayer().IsInInterior())
 				ref=AIAgentFunctions.getNearestDoor();
 				if (!ref || isMob)
 					ref=AIAgentFunctions.findLocationsToSafeSpawn(4096,false);
-					Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on safe spawn")
+					Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on safe spawn. (isMob)")
 				else
-					Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on nearest door")			
+					Debug.Trace("[CHIM] [SPAWN_AGENT] Interior. spawning on nearest door. ")			
 					move=false;
 				endif
 			else
@@ -1643,11 +1727,11 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			Debug.Trace("[CHIM] [SPAWN_AGENT] HeadParts Num : "+hp)
 			int i = 0
 			WHILE i < hp
-				Debug.Trace("[CHIM] [SPAWN_AGENT] Player HeadPart("+i+") : "+instancedActBase.GetNthHeadPart(i).GetName()+" "+instancedActBase.GetNthHeadPart (i).GetType())
+				Debug.Trace("[CHIM] [SPAWN_AGENT] HeadPart("+i+") : "+DecToHex(instancedActBase.GetNthHeadPart(i).GetFormId())+" "+instancedActBase.GetNthHeadPart(i).GetName()+" "+instancedActBase.GetNthHeadPart (i).GetType())
 				int j=0;
 				int ehp=instancedActBase.GetNthHeadPart(i).GetNumExtraParts();
 				WHILE j < ehp
-					Debug.Trace("[CHIM] [SPAWN_AGENT] Player ExtraHeadPart("+j+") : "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetName()+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetType())
+					Debug.Trace("[CHIM] [SPAWN_AGENT] ExtraParts ("+j+") : "+DecToHex(instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetFormId())+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetName()+" "+instancedActBase.GetNthHeadPart(i).GetNthExtraPart(j).GetType())
 					j += 1
 				EndWHILE
 				i += 1
@@ -1980,6 +2064,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			finalItem.SetName(itemname)
 			ref.AddItem(finalItem,1,true)
 			StorageUtil.SetIntValue(finalItem, "chim_placed_at_container",1);
+			StorageUtil.SetFormValue(finalItem, "chim_placed_at_container_ref",ref);
 
 		elseif (ref.GetBaseObject().getType()==24) ; activator
 			Debug.Trace("[CHIM] [SPAWN_ITEM] Spawning near activator"+DecToHex(ref.GetFormId()));
@@ -2344,11 +2429,29 @@ Function SetQuestTracker(ObjectReference ref) global
 	Debug.Trace("[CHIM] SetQuestTracker: "+ref.GetDisplayName()+"  <"+DecToHex(ref.GetFormID())+">");
 	StorageUtil.SetIntValue(ref, "chim_track_enabled",1);
 	AIAgentTrackerQuestScript Tracker = Game.GetFormFromFile(0x029E82, "AIAgent.esp") as AIAgentTrackerQuestScript ; Tracking Quest
-	
+	Actor PlayerRef = Game.GetPlayer()
 	if (ref.GetBaseObject().GetType() == 24 ); activators
 		PO3_SKSEFunctions.SetObjectiveText(Tracker,"Something needs to be activated",20);
 		Debug.Trace("[CHIM] SetQuestTracker: is Activator "+ref.GetDisplayName()+"  <"+DecToHex(ref.GetFormID())+">");
-		ref.enable(true);
+		;move activator
+		;where?
+		
+		if (ref.isDisabled())
+			int nrefs = 0
+			int minDistance = 512
+			int j = 0
+			ObjectReference[] markers=PO3_SKSEFunctions.FindAllReferencesOfFormType(PlayerRef,47,4096);kIdleMarker 
+			nrefs = markers.length
+			while j < nrefs
+				if (PlayerRef.GetDistance(markers[j])>minDistance)
+					ref.MoveTo(markers[j], 120.0 * Math.Sin(markers[j].GetAngleZ()), 120.0 * Math.Cos(markers[j].GetAngleZ()), markers[j].GetHeight() - 35.0)
+				endif
+				j = j +1
+			endwhile	
+
+			bool navSuccess = PO3_SKSEFunctions.MoveToNearestNavmeshLocation(ref)
+			ref.enable(true);
+		endif
 	endif
 	Tracker.SetTrackedReference(ref)
 EndFunction
@@ -2754,13 +2857,22 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			else
 				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
 			endif
-		elseif (cmd[0] == "InspectTarget") 
+		elseif (cmd[0] == "PickUpItem") 
 			Int locrefId=StringToInt(cmd[1])
 			ObjectReference destination = Game.GetFormEx(locrefId) as ObjectReference;
+			
+			ObjectReference onContainer= StorageUtil.GetFormValue(destination, "chim_placed_at_container_ref",None) as ObjectReference;
+
 			if (destination)
 				Debug.Trace("[CHIM] BackgroundCmd, destination: "+destination.GetName()+ ", FormId:"+DecToHex(locrefId))
-				StorageUtil.SetStringValue(aktarget, "LastTravelToLocationName","a nearby element") as String;
-				TravelToTarget(akTarget,destination,"a nearby element")
+				
+				StorageUtil.SetStringValue(aktarget, "PendingPickupItem",destination.GetDisplayName()) ;
+				if (onContainer)
+					StorageUtil.SetFormValue(aktarget, "PendingPickupItemRef",destination) ;
+					TravelToTarget(akTarget,onContainer,destination.GetDisplayName())
+				else
+					MoveToTarget(akTarget,destination,4)
+				endif
 			else
 				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
 			endif
@@ -3008,7 +3120,7 @@ function SendCellInfo(Cell loadedCell) global
 	
 	Location currLoc = Game.GetPlayer().getCurrentLocation();
 	Debug.Trace("[CHIM] AIAgentAIMind -> SendCellInfo, cell <0x"+DecToHex(loadedCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
-	AIAgentPlayerScript.sendCellInfo(loadedCell,currLoc,false)
+	AIAgentPlayerScript.sendCellInfoSingle(loadedCell,currLoc,false)
 endFunction
 
 

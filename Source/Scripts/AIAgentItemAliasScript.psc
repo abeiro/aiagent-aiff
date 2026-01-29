@@ -31,6 +31,7 @@ Event OnActivate (ObjectReference akActionRef)
 	Debug.Trace("[CHIM] OnActivate "+formid+" activated by "+akActionRef.GetDisplayName())
 	AIAgentFunctions.logMessage("activator@"+formid+" activated","status_msg")
 	(AIAgentTrackerQuest as AIAgentTrackerQuestScript).OnItemActivated()
+	akActionRef.Disable(true)
 EndEvent
 
 Event OnTrigger(ObjectReference akActionRef)
@@ -39,4 +40,5 @@ Event OnTrigger(ObjectReference akActionRef)
 	Debug.Trace("[CHIM] OnTrigger "+formid+" activated by "+akActionRef.GetDisplayName())
 	AIAgentFunctions.logMessage("activator@"+formid+" activated","status_msg")
 	(AIAgentTrackerQuest as AIAgentTrackerQuestScript).OnItemActivated()
+	akActionRef.Disable(true)
 EndEvent

@@ -66,6 +66,8 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 			i += 1
 		EndWhile
 
+		Debug.Trace("[CHIM ADV ] Applied "+i+" presets ")
+		
 		int totalMorphs = rcMenu.MAX_MORPHS
 		i = 0
 		While i < totalMorphs
@@ -73,6 +75,8 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 			destBase.SetFaceMorph(morph, i)
 			i += 1
 		EndWhile
+		
+		Debug.Trace("[CHIM ADV ] Applied "+i+" morphs ")
 
 		HeadPart eyes = None
 		HeadPart hair = None
@@ -83,9 +87,16 @@ function CopyApearanceFromToComplex(Actor source, Actor dest) global
 		int totalHeadParts = sourceBase.GetNumHeadParts()
 		i = 0
 		While i < totalHeadParts
+			
 			HeadPart current = sourceBase.GetNthHeadPart(i)
-			dest.ChangeHeadPart(current)
+			if (current.GetType()==1)
+				;
+			else
+				dest.ChangeHeadPart(current)
+				Debug.Trace("[CHIM ADV ] HeadPart("+i+") : "+AIAgentAIMind.DecToHex(current.GetFormId())+" "+current.GetName()+" "+current.GetType())
+			endif
 			i += 1
+				
 		EndWhile
 		
 		destBase.SetSkin(sourceBase.GetSkin())
