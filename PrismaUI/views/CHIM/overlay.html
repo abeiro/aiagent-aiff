@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIM Overlay</title>
+    <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+    <div id="chim-overlay">
+        <div class="overlay-header">
+            <span class="overlay-title">CHIM Status</span>
+            <button class="btn-close" onclick="closeOverlay()" title="Close">&times;</button>
+        </div>
+        
+        <div class="overlay-content">
+            <!-- Crosshair Target -->
+            <div class="info-section target-section">
+                <div class="info-label">Currently Targeting</div>
+                <div class="info-value" id="crosshair-target">
+                    <span class="target-name">No target</span>
+                </div>
+            </div>
+            
+            <!-- Current Mode -->
+            <div class="info-section">
+                <div class="info-label">Mode</div>
+                <div class="info-value" id="current-mode">
+                    <span class="mode-badge">STANDARD</span>
+                </div>
+            </div>
+            
+            <!-- Active Model -->
+            <div class="info-section">
+                <div class="info-label">Active Model</div>
+                <div class="info-value" id="active-model">
+                    <span class="model-slot">Slot 1</span>
+                    <span class="model-name">Loading...</span>
+                </div>
+            </div>
+            
+            <!-- Focus Chat -->
+            <div class="info-section">
+                <div class="info-label">Focus Chat</div>
+                <div class="info-value" id="focus-chat">
+                    <span class="toggle-indicator off">OFF</span>
+                </div>
+            </div>
+            
+            <!-- Active AI Agents -->
+            <div class="info-section agents-section">
+                <div class="info-label">Active AI Agents <span class="agent-count">0</span></div>
+                <div class="agents-list" id="agents-list">
+                    <div class="empty-agents">No agents nearby</div>
+                </div>
+            </div>
+            
+            <!-- Profile Slots -->
+            <div class="info-section slots-section">
+                <div class="info-label">Profile Slots</div>
+                <div class="slots-grid" id="slots-grid">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="overlay.js"></script>
+</body>
+</html>
