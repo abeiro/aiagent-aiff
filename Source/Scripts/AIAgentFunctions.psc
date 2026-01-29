@@ -68,6 +68,10 @@ int function toggleDiariesPanel() Global Native
 int function showDiariesPanel() Global Native
 int function hideDiariesPanel() Global Native
 
+int function toggleBrowserPanel() Global Native
+int function showBrowserPanel() Global Native
+int function hideBrowserPanel() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

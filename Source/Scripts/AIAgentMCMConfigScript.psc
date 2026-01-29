@@ -154,6 +154,10 @@ int			_overlay_key					= -1
 int			_keymap_diaries
 int			_diaries_key					= -1
 
+; CHIM Browser (Prisma UI)
+int			_keymap_browser
+int			_browser_key					= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -465,6 +469,7 @@ event OnPageReset(string a_page)
 		_keymap_historypanel = AddKeyMapOption("Conversation History", _historypanel_key)
 		_keymap_overlay = AddKeyMapOption("CHIM Overlay", _overlay_key)
 		_keymap_diaries = AddKeyMapOption("CHIM Diaries", _diaries_key)
+		_keymap_browser = AddKeyMapOption("CHIM Browser", _browser_key)
 	endif
 	
 
@@ -1159,6 +1164,16 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		
+		elseif (a_option == _keymap_browser)
+			controlScript.removeBinding(_browser_key)
+			_browser_key = a_keyCode
+			controlScript.doBinding15(_browser_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1614,6 +1629,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_diaries)
 		SetInfoText("Open the CHIM Diaries. Browse and read NPC diary entries in-game. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_browser)
+		SetInfoText("Open the CHIM Browser. Browse the full HerikaServer web interface in-game. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)

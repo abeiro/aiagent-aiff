@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHIM Browser</title>
+    <link rel="stylesheet" href="browser.css">
+</head>
+<body>
+    <div id="browser-container">
+        <!-- Close button overlay -->
+        <div class="close-overlay">
+            <button class="close-btn" onclick="closeBrowser()">× Close</button>
+        </div>
+        
+        <!-- Fullscreen iframe - URL will be set by C++ -->
+        <iframe id="herika-frame" 
+                src="about:blank"
+                allow="fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+    </div>
+
+    <script>
+        function closeBrowser() {
+            if (window.chimBrowserCommand) {
+                window.chimBrowserCommand('close');
+            }
+        }
+        
+        // Set the browser URL (called by C++)
+        window.setBrowserUrl = function(url) {
+            var iframe = document.getElementById('herika-frame');
+            if (iframe) {
+                iframe.src = url;
+                console.log('[Browser] URL set to:', url);
+            }
+        };
+        
+        // Focus the iframe
+        window.focusIframe = function() {
+            var iframe = document.getElementById('herika-frame');
+            if (iframe) {
+                iframe.focus();
+            }
+        };
+
+        // Notify C++ when DOM is ready
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.chimBrowserCommand) {
+                window.chimBrowserCommand('dom_ready');
+            }
+            
+            // Auto-focus the iframe after a short delay
+            setTimeout(function() {
+                var iframe = document.getElementById('herika-frame');
+                if (iframe) {
+                    iframe.focus();
+                }
+            }, 200);
+        });
+
+        // Placeholder for C++ bridge
+        if (!window.chimBrowserCommand) {
+            window.chimBrowserCommand = function(command) {
+                console.log('[Browser] Command (no C++ bridge):', command);
+            };
+        }
+    </script>
+</body>
+</html>
