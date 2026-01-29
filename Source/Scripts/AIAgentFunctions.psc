@@ -52,6 +52,14 @@ int Function isInContainer(ObjectReference item) global Native
 
 int Function SayTo(Actor source,Actor dest,Form topicToSay) global Native
 
+; Prisma UI History Panel functions
+int function toggleHistoryPanel() Global Native
+int function showHistoryPanel() Global Native
+int function hideHistoryPanel() Global Native
+int function focusHistoryPanel(bool pauseGame = false) Global Native
+int function unfocusHistoryPanel() Global Native
+int function toggleHistoryPanelFocus(bool pauseGame = false) Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

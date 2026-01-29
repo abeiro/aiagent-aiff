@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIM Conversation History</title>
+    <link rel="stylesheet" href="history.css">
+</head>
+<body>
+    <div id="chim-history-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Conversation History</h2>
+            <div class="panel-controls">
+                <button class="btn-refresh" onclick="refreshHistory()" title="Refresh">&#8635;</button>
+                <button class="btn-close" onclick="closePanel()" title="Close">&times;</button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div id="history-list"></div>
+            <div id="loading-indicator" class="hidden">
+                <span class="loading-spinner"></span>
+                <span>Loading...</span>
+            </div>
+            <div id="empty-message" class="hidden">
+                <p>No conversation history yet.</p>
+            </div>
+        </div>
+    </div>
+    <script src="history.js"></script>
+</body>
+</html>

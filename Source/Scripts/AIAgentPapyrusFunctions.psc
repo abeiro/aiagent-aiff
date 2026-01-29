@@ -16,6 +16,7 @@ int 		_currentGodmodeKey
 int 		_currentOpenMicMuteKey
 int 		_currentHaltKey
 int 		_currentMasterWheel
+int 		_currentHistoryPanelKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -250,6 +251,10 @@ Event OnKeyDown(int keyCode)
 	OpenMasterWheel()
   EndIf
   
+  If(keyCode == _currentHistoryPanelKey)
+	AIAgentFunctions.toggleHistoryPanel()
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -325,6 +330,12 @@ EndFunction
 Function doBinding11(int keycode) 
 	
 	_currentMasterWheel=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding12(int keycode) 
+	
+	_currentHistoryPanelKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

@@ -142,6 +142,10 @@ int			_halt_key					= -1
 int			_keymap_masterwheel
 int			_masterwheel_key				= -1
 
+; History Panel (Prisma UI)
+int			_keymap_historypanel
+int			_historypanel_key				= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -208,6 +212,8 @@ float		_combat_barks_periodDefault		= 30.0
 int			_halt_keyDefault				= -1
 
 int			_masterwheel_keyDefault			= -1
+
+int			_historypanel_keyDefault		= -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
@@ -442,6 +448,11 @@ event OnPageReset(string a_page)
 		_toggleAnimation		= AddToggleOption("Enable Animations", _animationstate)
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
 		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
+		
+		; === Prisma UI ===
+		AddEmptyOption()
+		AddHeaderOption("Prisma UI")
+		_keymap_historypanel = AddKeyMapOption("Conversation History", _historypanel_key)
 	endif
 	
 
@@ -1108,6 +1119,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_historypanel)
+			controlScript.removeBinding(_historypanel_key)
+			_historypanel_key = a_keyCode
+			controlScript.doBinding12(_historypanel_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1551,6 +1571,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_masterwheel)
 		SetInfoText("Master Wheel - Quick access menu to open any of the 4 wheels: Roleplay, Settings, Mode, or Soulgaze.")
+	endIf
+	
+	if (a_option == _keymap_historypanel)
+		SetInfoText("Toggle the in-game conversation history panel. Shows recent AI dialogue and events. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)
