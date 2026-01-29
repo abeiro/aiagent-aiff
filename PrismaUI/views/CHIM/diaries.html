@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHIM Diaries</title>
+    <link rel="stylesheet" href="diaries.css">
+</head>
+<body>
+    <div id="diaries-modal" class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="breadcrumb">
+                <span id="breadcrumb-text">CHIM Diaries</span>
+            </div>
+            <button class="close-btn" onclick="closePanel()">×</button>
+        </div>
+
+        <!-- Content Area (switches between views) -->
+        <div class="modal-content">
+            <!-- View 1: People List -->
+            <div id="people-view" class="view-container active">
+                <div id="people-list" class="people-list">
+                    <div class="loading">Loading diaries...</div>
+                </div>
+            </div>
+
+            <!-- View 2: Entry List -->
+            <div id="entries-view" class="view-container">
+                <button class="back-btn" onclick="navigateBack()">← Back to People</button>
+                <div id="entries-list" class="entries-list">
+                    <!-- Entries will be populated here -->
+                </div>
+            </div>
+
+            <!-- View 3: Diary Content -->
+            <div id="diary-view" class="view-container">
+                <button class="back-btn" onclick="navigateBack()">← Back to Entries</button>
+                <div id="diary-content" class="diary-parchment">
+                    <!-- Full diary content will be shown here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="diaries.js"></script>
+</body>
+</html>

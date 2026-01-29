@@ -64,6 +64,10 @@ int function toggleOverlayPanel() Global Native
 int function showOverlayPanel() Global Native
 int function hideOverlayPanel() Global Native
 
+int function toggleDiariesPanel() Global Native
+int function showDiariesPanel() Global Native
+int function hideDiariesPanel() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

@@ -150,6 +150,10 @@ int			_historypanel_key				= -1
 int			_keymap_overlay
 int			_overlay_key					= -1
 
+; CHIM Diaries (Prisma UI)
+int			_keymap_diaries
+int			_diaries_key					= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -460,6 +464,7 @@ event OnPageReset(string a_page)
 		AddHeaderOption("Prisma UI")
 		_keymap_historypanel = AddKeyMapOption("Conversation History", _historypanel_key)
 		_keymap_overlay = AddKeyMapOption("CHIM Overlay", _overlay_key)
+		_keymap_diaries = AddKeyMapOption("CHIM Diaries", _diaries_key)
 	endif
 	
 
@@ -1144,6 +1149,16 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		
+		elseif (a_option == _keymap_diaries)
+			controlScript.removeBinding(_diaries_key)
+			_diaries_key = a_keyCode
+			controlScript.doBinding14(_diaries_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1595,6 +1610,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_overlay)
 		SetInfoText("Toggle the CHIM Overlay. Shows current mode, active model, focus chat status, AI agents, and profile slots. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_diaries)
+		SetInfoText("Open the CHIM Diaries. Browse and read NPC diary entries in-game. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)

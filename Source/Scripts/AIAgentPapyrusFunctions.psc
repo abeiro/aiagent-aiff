@@ -18,6 +18,7 @@ int 		_currentHaltKey
 int 		_currentMasterWheel
 int 		_currentHistoryPanelKey
 int 		_currentOverlayKey
+int 		_currentDiariesKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -260,6 +261,10 @@ Event OnKeyDown(int keyCode)
 	AIAgentFunctions.toggleOverlayPanel()
   EndIf
   
+  If(keyCode == _currentDiariesKey)
+	AIAgentFunctions.toggleDiariesPanel()
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -347,6 +352,12 @@ EndFunction
 Function doBinding13(int keycode) 
 	
 	_currentOverlayKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding14(int keycode) 
+	
+	_currentDiariesKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
