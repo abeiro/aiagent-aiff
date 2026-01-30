@@ -158,6 +158,10 @@ int			_diaries_key					= -1
 int			_keymap_browser
 int			_browser_key					= -1
 
+; CHIM AI View (Prisma UI)
+int			_keymap_aiview
+int			_aiview_key					= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -470,6 +474,7 @@ event OnPageReset(string a_page)
 		_keymap_overlay = AddKeyMapOption("CHIM Overlay", _overlay_key)
 		_keymap_diaries = AddKeyMapOption("CHIM Diaries", _diaries_key)
 		_keymap_browser = AddKeyMapOption("CHIM Browser", _browser_key)
+		_keymap_aiview = AddKeyMapOption("CHIM AI View", _aiview_key)
 	endif
 	
 
@@ -1174,6 +1179,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_aiview)
+			controlScript.removeBinding(_aiview_key)
+			_aiview_key = a_keyCode
+			controlScript.doBinding16(_aiview_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1633,6 +1647,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_browser)
 		SetInfoText("Open the CHIM Browser. Browse the full HerikaServer web interface in-game. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_aiview)
+		SetInfoText("Open the CHIM AI View. Shows detailed profile data for the targeted or nearest AI-enabled NPC. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)

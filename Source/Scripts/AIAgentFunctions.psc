@@ -72,6 +72,10 @@ int function toggleBrowserPanel() Global Native
 int function showBrowserPanel() Global Native
 int function hideBrowserPanel() Global Native
 
+int function toggleAIViewPanel() Global Native
+int function showAIViewPanel() Global Native
+int function hideAIViewPanel() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

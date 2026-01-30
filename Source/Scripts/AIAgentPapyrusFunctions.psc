@@ -20,6 +20,7 @@ int 		_currentHistoryPanelKey
 int 		_currentOverlayKey
 int 		_currentDiariesKey
 int 		_currentBrowserKey
+int 		_currentAIViewKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -270,6 +271,10 @@ Event OnKeyDown(int keyCode)
 	AIAgentFunctions.toggleBrowserPanel()
   EndIf
   
+  If(keyCode == _currentAIViewKey)
+	AIAgentFunctions.toggleAIViewPanel()
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -369,6 +374,12 @@ EndFunction
 Function doBinding15(int keycode) 
 	
 	_currentBrowserKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding16(int keycode) 
+	
+	_currentAIViewKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

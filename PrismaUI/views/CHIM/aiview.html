@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIM AI View</title>
+    <link rel="stylesheet" href="aiview.css">
+</head>
+<body>
+    <div id="chim-aiview-panel">
+        <!-- Top Bar - Target Info -->
+        <div class="target-bar">
+            <div class="target-info-content">
+                <div class="target-name" id="target-name">No NPC Targeted</div>
+                <div class="target-metadata" id="target-metadata"></div>
+            </div>
+            <div class="panel-controls">
+                <button class="btn-close" onclick="closePanel()" title="Close">&times;</button>
+            </div>
+        </div>
+
+        <!-- Left Panel - Identity, Profile & Relationships -->
+        <div class="left-panel" id="left-panel">
+            <div class="panel-section-header">Identity & Relationships</div>
+            <div class="panel-content">
+                <!-- Loading State -->
+                <div id="loading-indicator-left" class="loading-section">
+                    <div class="loading-spinner"></div>
+                    <div>Loading...</div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-message-left" class="hidden">
+                    <p>Target an AI-enabled NPC</p>
+                </div>
+
+                <!-- Content -->
+                <div id="content-left" class="hidden">
+                    <!-- Profile Section -->
+                    <div class="info-section">
+                        <div class="section-header">
+                            <span class="section-title">Profile & LLMs</span>
+                        </div>
+                        <div class="section-content" id="section-profile">
+                            <div class="info-item">
+                                <span class="info-label">Profile:</span>
+                                <span class="info-value" id="profile-label">-</span>
+                            </div>
+                            <div class="connector-list" id="connector-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Identity Section -->
+                    <div class="info-section">
+                        <div class="section-header">
+                            <span class="section-title">Identity</span>
+                        </div>
+                        <div class="section-content" id="section-identity">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Gender:</span>
+                                    <span class="info-value" id="npc-gender">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Race:</span>
+                                    <span class="info-value" id="npc-race">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Base:</span>
+                                    <span class="info-value" id="npc-base">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">RefID:</span>
+                                    <span class="info-value code" id="npc-refid">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Voice ID:</span>
+                                    <span class="info-value" id="npc-voiceid">-</span>
+                                </div>
+                                <div class="info-item span-2">
+                                    <span class="info-label">Oghma Tags:</span>
+                                    <span class="info-value" id="npc-oghma">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Relationships & Affinity Section -->
+                    <div class="info-section">
+                        <div class="section-header">
+                            <span class="section-title">Relationships</span>
+                        </div>
+                        <div class="section-content" id="section-relationships">
+                            <div class="relationship-text" id="relationship-text">-</div>
+                            <div class="affinity-list" id="affinity-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Settings -->
+        <div class="right-panel" id="right-panel">
+            <div class="panel-section-header">Settings</div>
+            <div class="panel-content">
+                <!-- Loading State -->
+                <div id="loading-indicator-right" class="loading-section">
+                    <div class="loading-spinner"></div>
+                    <div>Loading...</div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-message-right" class="hidden">
+                    <p>Target an AI-enabled NPC</p>
+                </div>
+
+                <!-- Content -->
+                <div id="content-right" class="hidden">
+                    <!-- Settings Section -->
+                    <div class="info-section">
+                        <div class="section-content" id="section-settings">
+                            <div class="toggle-list">
+                                <div class="toggle-item">
+                                    <span class="toggle-label">Dynamic Profile:</span>
+                                    <span class="toggle-value" id="setting-dynamic">-</span>
+                                </div>
+                                <div class="toggle-item">
+                                    <span class="toggle-label">Middleterm Memory:</span>
+                                    <span class="toggle-value" id="setting-mtm">-</span>
+                                </div>
+                                <div class="toggle-item">
+                                    <span class="toggle-label">Auto Diary:</span>
+                                    <span class="toggle-value" id="setting-diary">-</span>
+                                </div>
+                                <div class="toggle-item">
+                                    <span class="toggle-label">Auto Diary Wait:</span>
+                                    <span class="toggle-value" id="setting-diary-wait">-</span>
+                                </div>
+                                <div class="toggle-item">
+                                    <span class="toggle-label">Auto Salutations:</span>
+                                    <span class="toggle-value" id="setting-salutations">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Biography Panel - Bottom Right (2-column layout) -->
+        <div class="bio-panel" id="bio-panel">
+            <div class="panel-section-header">Biography</div>
+            <div class="panel-content bio-content">
+                <!-- Loading State -->
+                <div id="loading-indicator-bio" class="loading-section">
+                    <div class="loading-spinner"></div>
+                    <div>Loading...</div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-message-bio" class="hidden">
+                    <p>Target an AI-enabled NPC</p>
+                </div>
+
+                <!-- Content - 2 Column Layout -->
+                <div id="content-bio" class="hidden">
+                    <div class="bio-columns">
+                        <!-- Left Column -->
+                        <div class="bio-column">
+                            <div class="bio-field" id="bio-prompt-head-container">
+                                <div class="bio-label">Prompt Head Override</div>
+                                <div class="bio-text" id="bio-prompt-head">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Core</div>
+                                <div class="bio-text" id="bio-core">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Static Bio</div>
+                                <div class="bio-text" id="bio-static">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Appearance</div>
+                                <div class="bio-text" id="bio-appearance">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Personality</div>
+                                <div class="bio-text" id="bio-personality">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="bio-column">
+                            <div class="bio-field">
+                                <div class="bio-label">Occupation</div>
+                                <div class="bio-text" id="bio-occupation">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Skills</div>
+                                <div class="bio-text" id="bio-skills">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Speech Style</div>
+                                <div class="bio-text" id="bio-speechstyle">-</div>
+                            </div>
+                            <div class="bio-field">
+                                <div class="bio-label">Goals</div>
+                                <div class="bio-text" id="bio-goals">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="aiview.js"></script>
+</body>
+</html>
