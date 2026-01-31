@@ -21,6 +21,7 @@ int 		_currentOverlayKey
 int 		_currentDiariesKey
 int 		_currentBrowserKey
 int 		_currentAIViewKey
+int 		_currentDebuggerKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -275,6 +276,10 @@ Event OnKeyDown(int keyCode)
 	AIAgentFunctions.toggleAIViewPanel()
   EndIf
   
+  If(keyCode == _currentDebuggerKey)
+	AIAgentFunctions.toggleDebuggerPanel()
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -380,6 +385,12 @@ EndFunction
 Function doBinding16(int keycode) 
 	
 	_currentAIViewKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding17(int keycode) 
+	
+	_currentDebuggerKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

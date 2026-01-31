@@ -76,6 +76,10 @@ int function toggleAIViewPanel() Global Native
 int function showAIViewPanel() Global Native
 int function hideAIViewPanel() Global Native
 
+int function toggleDebuggerPanel() Global Native
+int function showDebuggerPanel() Global Native
+int function hideDebuggerPanel() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

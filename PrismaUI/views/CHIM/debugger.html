@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIM Debugger</title>
+    <link rel="stylesheet" href="debugger.css">
+</head>
+<body>
+    <div id="chim-debugger-panel">
+        <!-- Left Panel: Timing Data -->
+        <div class="debug-panel timing-panel">
+            <div class="debugger-header">
+                <h2>Response Times</h2>
+                <div class="header-controls">
+                    <button class="btn-refresh" onclick="window.chimDebuggerCommand('refresh')" title="Refresh">↻</button>
+                    <button class="btn-close" onclick="window.chimDebuggerCommand('close')">×</button>
+                </div>
+            </div>
+            
+            <div class="debugger-content">
+                <div class="loading-indicator" id="timing-loading">
+                    <span>Loading...</span>
+                </div>
+                
+                <div class="error-message" id="timing-error" style="display: none;">
+                    <span id="timing-error-text"></span>
+                </div>
+                
+                <div class="timing-table-wrapper" id="timing-content" style="display: none;">
+                    <table class="timing-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>AI</th>
+                                <th>TTS</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timing-body">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="debugger-footer" id="timing-footer" style="display: none;">
+                <div class="avg-stat">
+                    <span class="stat-label">Avg AI</span>
+                    <span class="stat-value" id="avg-ai">0.0s</span>
+                </div>
+                <div class="avg-stat">
+                    <span class="stat-label">Avg TTS</span>
+                    <span class="stat-value" id="avg-tts">0.0s</span>
+                </div>
+                <div class="avg-stat">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="avg-total">0.0s</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Center Panel: LLM Context/Output (Tabbed) -->
+        <div class="debug-panel llm-panel">
+            <div class="debugger-header">
+                <h2>LLM Logs</h2>
+                <div class="header-controls">
+                    <button class="btn-refresh" onclick="window.refreshLLMLogs()" title="Refresh">↻</button>
+                </div>
+            </div>
+            
+            <div class="tab-header">
+                <button class="tab-button active" onclick="window.switchTab('context')">Context</button>
+                <button class="tab-button" onclick="window.switchTab('output')">Output</button>
+            </div>
+            
+            <div class="tab-content active" id="tab-context">
+                <div class="log-viewer" id="context-log">
+                    <div class="loading-indicator">Loading context log...</div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="tab-output">
+                <div class="log-viewer" id="output-log">
+                    <div class="loading-indicator">Loading output log...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Top Panel: CHIM Log -->
+        <div class="debug-panel chim-log-panel">
+            <div class="debugger-header">
+                <h2>CHIM Log</h2>
+                <div class="header-controls">
+                    <button class="btn-refresh" onclick="window.refreshChimLog()" title="Refresh">↻</button>
+                </div>
+            </div>
+            
+            <div class="log-viewer" id="chim-log">
+                <div class="loading-indicator">Loading CHIM log...</div>
+            </div>
+        </div>
+        
+        <!-- Right Bottom Panel: Apache Error Log -->
+        <div class="debug-panel apache-log-panel">
+            <div class="debugger-header">
+                <h2>Apache Error Log</h2>
+                <div class="header-controls">
+                    <button class="btn-refresh" onclick="window.refreshApacheLog()" title="Refresh">↻</button>
+                </div>
+            </div>
+            
+            <div class="log-viewer" id="apache-log">
+                <div class="loading-indicator">Loading Apache log...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="debugger.js"></script>
+</body>
+</html>
