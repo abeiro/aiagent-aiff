@@ -396,13 +396,18 @@ endEvent
 
 int function GetVersion()
 
-	return 47
+	return 48
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
 
+	if (a_version == 48 && a_version > CurrentVersion)
+		OnConfigInit()
+		
+	endIf
+	
 	if (a_version == 47 && CurrentVersion < 45)
 		OnConfigInit()
 		
