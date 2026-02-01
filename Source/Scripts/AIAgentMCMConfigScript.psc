@@ -1625,7 +1625,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_npc_go_near)
-		SetInfoText("Only works when player is seated. When enabled NPC's will subtly move around the player to make listening to conversations easier.")
+		SetInfoText("When enabled NPC's will subtly move around the player to make listening to conversations easier.")
 	endIf
 	
 	if (a_option == _toggle_autofocus_on_sit)

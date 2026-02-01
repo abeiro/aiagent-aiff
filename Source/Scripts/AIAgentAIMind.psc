@@ -1196,10 +1196,8 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 		return;
 	endif
 	
-	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
+	if (Game.GetPlayer().IsOnMount()) ; Skip if player is on a mount
 		return;
-	else
-		;Debug.Trace("Player is sitting");
 	endif
 	
 	ObjectReference finalReference;
