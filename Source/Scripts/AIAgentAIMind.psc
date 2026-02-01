@@ -1272,6 +1272,27 @@ Function ReleaseFromConversation(Actor npc) global
 	
 EndFunction
 
+Function EndConversation(Actor npc) global
+	; Called when an NPC ends a conversation via server command
+	; This function releases all AI agent packages and timers
+	
+	Debug.Trace("[CHIM] EndConversation called for "+npc.GetDisplayName())
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" ends the conversation")
+	
+	; Clear walk-to-target tracking data
+	StorageUtil.UnsetFloatValue(npc, "WalkToTargetStartTime")
+	StorageUtil.UnsetFormValue(npc, "WalkToTargetListener")
+	
+	; Release from conversation (clears soft follow)
+	ReleaseFromConversation(npc)
+	
+	; Reset all AI agent packages
+	ResetPackages(npc)
+	
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" conversation ended, cooldown started in C++")
+	
+EndFunction
+
 Function CheckAndReleaseWalkToTargetNPCs() global
 	
 	; Called periodically to release NPCs that have been walking for 40+ seconds without talking
