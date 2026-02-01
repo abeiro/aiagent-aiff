@@ -99,6 +99,8 @@ bool  		_rechat_policy_asap = false
 int 		_toggle_npc_go_near
 bool  		_toggle_npc_go_near_state = true
 
+int 		_toggle_npc_walk_to_target
+bool  		_toggle_npc_walk_to_target_state = false
 
 int 		_toggle_autofocus_on_sit
 bool  		_toggle_autofocus_on_sit_state = false
@@ -280,12 +282,13 @@ endEvent
 event OnConfigInit()
 
 	ModName="CHIM"
-	Pages = new string[5]
+	Pages = new string[6]
 	Pages[0] = "Main"
-	Pages[1] = "Behavior"
-	Pages[2] = "Sound"
-	Pages[3] = "AI Agents"
-	Pages[4] = "Tools"
+	Pages[1] = "Auto Activate"
+	Pages[2] = "Behavior"
+	Pages[3] = "Sound"
+	Pages[4] = "AI Agents"
+	Pages[5] = "Tools"
 	
 	Debug.Trace("[AIAGENT] OnConfigInit");
 	
@@ -396,12 +399,22 @@ endEvent
 
 int function GetVersion()
 
-	return 48
+	return 50
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 50 && a_version > CurrentVersion)
+		OnConfigInit()
+		
+	endIf
+
+	if (a_version == 49 && a_version > CurrentVersion)
+		OnConfigInit()
+		
+	endIf
 
 	if (a_version == 48 && a_version > CurrentVersion)
 		OnConfigInit()
@@ -488,31 +501,43 @@ event OnPageReset(string a_page)
 	endif
 	
 
-	if (a_page=="Behavior")
-		_toggleAddAllNPC		= AddToggleOption("Auto Activate", _toggleAddAllNPCState)
-		
-		_slider_bored_period	= AddSliderOption("Bored Event Timer (seconds)",_bored_period,"{0}" )
-		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
-		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
-		
+	if (a_page=="Auto Activate")
+		_toggleAddAllNPC		= AddToggleOption("Enable Auto Activate", _toggleAddAllNPCState)
+		AddEmptyOption()
 		
 		_slider_max_distance_inside	= AddSliderOption("Interior Auto Activate Distance",_max_distance_inside,"{0}" )
 		_slider_max_distance_outside	= AddSliderOption("Exterior Auto Activate Distance",_max_distance_outside,"{0}" )
 		
+		AddEmptyOption()
+		
+		_toggle_autoadd_hostile	= AddToggleOption("Add Hostile NPCs", _toggle_autoadd_hostile_state)
+		AddEmptyOption() 
+		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
+		
+	endif
+
+	if (a_page=="Behavior")
+		_slider_bored_period	= AddSliderOption("Bored Event Timer (seconds)",_bored_period,"{0}" )
+		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
+		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
+		
+		AddEmptyOption()
+		AddHeaderOption("NPC Behavior")
+		AddEmptyOption()
+		
 		_toggle_npc_go_near	= AddToggleOption("NPCs Sandbox Near Player", _toggle_npc_go_near_state)
+		_toggle_npc_walk_to_target	= AddToggleOption("NPCs Walk To Target", _toggle_npc_walk_to_target_state)
 		_toggle_autofocus_on_sit	= AddToggleOption("Seat Conversation Camera", _toggle_autofocus_on_sit_state)
 		
 		_toggle_restrict_onscene	= AddToggleOption("NPC Scene Safety", _toggle_restrict_onscene_state)
-		AddEmptyOption();
-		AddHeaderOption("Auto Activate Options")	
-		AddEmptyOption();
-		_toggle_autoadd_hostile	= AddToggleOption("Add Hostile NPCs", _toggle_autoadd_hostile_state)
-		AddEmptyOption(); 
-		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
-		AddEmptyOption(); 
+		
+		AddEmptyOption()
+		AddHeaderOption("Combat Settings")
+		AddEmptyOption()
+		
 		_toggle_combatdialogue	= AddToggleOption("Allow combat dialogue", _toggle_combatdialogue_state)
 		_toggle_cancel_dialogue_on_combat = AddToggleOption("Clear dialogue entering combat", _toggle_cancel_dialogue_on_combat_state)
-		AddEmptyOption();
+		AddEmptyOption()
 		_toggle_combat_barks = AddToggleOption("Enable Combat Barks", _toggle_combat_barks_state)
 		_slider_combat_barks_period = AddSliderOption("Combat Bark Timer (seconds)", _combat_barks_period, "{0}")
 		
@@ -1314,6 +1339,17 @@ event OnOptionSelect(int a_option)
 
 	endif
 	
+	if (a_option == _toggle_npc_walk_to_target)
+		_toggle_npc_walk_to_target_state = !_toggle_npc_walk_to_target_state
+		if (_toggle_npc_walk_to_target_state)
+			StorageUtil.SetIntValue(None, "AIAgentNpcWalkToTarget",1);
+		else
+			StorageUtil.SetIntValue(None, "AIAgentNpcWalkToTarget",0);
+		endif
+		SetToggleOptionValue(a_option, _toggle_npc_walk_to_target_state)
+
+	endif
+	
 	if (a_option == _toggle_autofocus_on_sit)
 		_toggle_autofocus_on_sit_state = !_toggle_autofocus_on_sit_state
 		if (_toggle_autofocus_on_sit_state)
@@ -1626,6 +1662,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _toggle_npc_go_near)
 		SetInfoText("When enabled NPC's will subtly move around the player to make listening to conversations easier.")
+	endIf
+	
+	if (a_option == _toggle_npc_walk_to_target)
+		SetInfoText("NPCs will walk towards the NPC they are talking to. May break scenes - use Scene Safety with this option.")
 	endIf
 	
 	if (a_option == _toggle_autofocus_on_sit)
