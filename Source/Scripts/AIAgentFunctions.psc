@@ -80,6 +80,10 @@ int function toggleDebuggerPanel() Global Native
 int function showDebuggerPanel() Global Native
 int function hideDebuggerPanel() Global Native
 
+int function toggleStatusHUDPanel() Global Native
+int function showStatusHUDPanel() Global Native
+int function hideStatusHUDPanel() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

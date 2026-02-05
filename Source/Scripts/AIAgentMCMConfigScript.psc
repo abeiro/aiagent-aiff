@@ -168,6 +168,10 @@ int			_aiview_key					= -1
 int			_keymap_debugger
 int			_debugger_key					= -1
 
+; CHIM Status HUD (Prisma UI)
+int			_keymap_statushud
+int			_statushud_key					= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -238,6 +242,8 @@ int			_masterwheel_keyDefault			= -1
 int			_historypanel_keyDefault		= -1
 
 int			_overlay_keyDefault				= -1
+
+int			_statushud_keyDefault			= -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
@@ -489,7 +495,7 @@ event OnPageReset(string a_page)
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
 		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
 		
-		; === Prisma UI ===
+		; === Prisma UI (Beta)===
 		AddEmptyOption()
 		AddHeaderOption("Prisma UI")
 		_keymap_historypanel = AddKeyMapOption("Conversation History", _historypanel_key)
@@ -498,6 +504,7 @@ event OnPageReset(string a_page)
 		_keymap_browser = AddKeyMapOption("CHIM Browser", _browser_key)
 		_keymap_aiview = AddKeyMapOption("CHIM AI View", _aiview_key)
 		_keymap_debugger = AddKeyMapOption("CHIM Debugger", _debugger_key)
+		_keymap_statushud = AddKeyMapOption("CHIM Status HUD", _statushud_key)
 	endif
 	
 
@@ -1232,6 +1239,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_statushud)
+			controlScript.removeBinding(_statushud_key)
+			_statushud_key = a_keyCode
+			controlScript.doBinding18(_statushud_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1714,6 +1730,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_debugger)
 		SetInfoText("Open the CHIM Debugger. Shows recent AI and TTS response times to help diagnose performance issues. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_statushud)
+		SetInfoText("Toggle the CHIM Status HUD. Shows live status icons for STT, Player TTS, LLM, and TTS processing, plus current mode and connector. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)

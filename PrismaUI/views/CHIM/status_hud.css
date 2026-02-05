@@ -1,0 +1,151 @@
+/**
+ * CHIM Status HUD Styles
+ * Slick, minimal overlay with icons
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: transparent;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+}
+
+#chim-status-hud {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 120px;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Status Icons ===== */
+.status-icons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.status-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+    opacity: 0.35;
+}
+
+.status-icon .icon {
+    font-size: 16px;
+    filter: grayscale(100%);
+    transition: all 0.2s ease;
+}
+
+.status-icon.active {
+    opacity: 1;
+    background: rgba(74, 222, 128, 0.15);
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.3);
+    animation: glow 1.5s ease-in-out infinite;
+}
+
+.status-icon.active .icon {
+    filter: grayscale(0%);
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
+    50% { box-shadow: 0 0 16px rgba(74, 222, 128, 0.5); }
+}
+
+/* ===== Badges Row ===== */
+.badges-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+
+/* Mode Badge */
+.mode-badge {
+    background: rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+}
+.mode-badge.whisper { background: rgba(168, 85, 247, 0.25); color: #c4b5fd; }
+.mode-badge.director { background: rgba(249, 115, 22, 0.25); color: #fdba74; }
+.mode-badge.cheatmode { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+.mode-badge.autochat { background: rgba(34, 197, 94, 0.25); color: #86efac; }
+
+/* Model Badge */
+.model-badge {
+    background: rgba(100, 100, 100, 0.3);
+    color: #aaa;
+}
+.model-badge.standard { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+.model-badge.fast { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+.model-badge.powerful { background: rgba(249, 115, 22, 0.2); color: #fdba74; }
+.model-badge.experimental { background: rgba(168, 85, 247, 0.2); color: #c4b5fd; }
+
+/* Focus Badge */
+.focus-badge {
+    background: rgba(100, 100, 100, 0.2);
+    color: #666;
+    opacity: 0.4;
+}
+
+.focus-badge.active {
+    background: rgba(34, 197, 94, 0.25);
+    color: #86efac;
+    opacity: 1;
+}
+
+/* ===== Target Row ===== */
+.target-row {
+    text-align: center;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.target-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.target-row.has-target .target-name {
+    color: #fbbf24;
+}
