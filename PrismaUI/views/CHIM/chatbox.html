@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIM Chatbox</title>
+    <link rel="stylesheet" href="chatbox.css">
+</head>
+<body>
+    <div id="chim-chatbox">
+        <!-- Tab Bar -->
+        <div class="chatbox-tabs">
+            <button class="tab-button active" data-tab="chat" onclick="switchTab('chat')">Chat</button>
+            <button class="tab-button" data-tab="system" onclick="switchTab('system')">System</button>
+            <button class="btn-close" onclick="closeChat()" title="Close">&times;</button>
+        </div>
+        
+        <!-- Chat Messages Area -->
+        <div class="chatbox-content">
+            <!-- Chat Tab -->
+            <div id="tab-chat" class="tab-pane active">
+                <div class="messages-container" id="chat-messages">
+                    <div class="message-welcome">
+                        <span class="message-system">CHIM Chatbox initialized. Press hotkey to toggle.</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Tab -->
+            <div id="tab-system" class="tab-pane">
+                <div class="messages-container" id="system-messages">
+                    <div class="message-welcome">
+                        <span class="message-system">System logs will appear here.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Input Area -->
+        <div class="chatbox-input">
+            <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" spellcheck="false" />
+            <button class="btn-send" onclick="sendMessage()" title="Send">Send</button>
+        </div>
+    </div>
+    <script src="chatbox.js"></script>
+</body>
+</html>

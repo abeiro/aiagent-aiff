@@ -1196,10 +1196,8 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 		return;
 	endif
 	
-	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
+	if (Game.GetPlayer().IsOnMount()) ; Skip if player is on a mount
 		return;
-	else
-		;Debug.Trace("Player is sitting");
 	endif
 	
 	ObjectReference finalReference;
@@ -1274,9 +1272,90 @@ Function ReleaseFromConversation(Actor npc) global
 	
 EndFunction
 
+Function EndConversation(Actor npc) global
+	; Called when an NPC ends a conversation via server command
+	; This function releases all AI agent packages and timers
+	
+	Debug.Trace("[CHIM] EndConversation called for "+npc.GetDisplayName())
+	Debug.Notification("[CHIM] "+npc.GetDisplayName()+" ends the conversation")
+	
+	; Clear walk-to-target tracking data
+	StorageUtil.UnsetFloatValue(npc, "WalkToTargetStartTime")
+	StorageUtil.UnsetFormValue(npc, "WalkToTargetListener")
+	
+	; Release from conversation (clears soft follow)
+	ReleaseFromConversation(npc)
+	
+	; Reset all AI agent packages
+	ResetPackages(npc)
+	
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" conversation ended, cooldown started in C++")
+	
+EndFunction
+
+Function CheckAndReleaseWalkToTargetNPCs() global
+	
+	; Called periodically to release NPCs that have been walking for 40+ seconds without talking
+	Actor[] allAgents = AIAgentFunctions.findAllAgents()
+	
+	if (!allAgents || allAgents.Length == 0)
+		return
+	endif
+	
+	float currentTime = Utility.GetCurrentGameTime()
+	float timeoutThreshold = 40.0 / 86400.0  ; Convert 40 seconds to game days (86400 seconds per day)
+	
+	int i = 0
+	while i < allAgents.Length
+		Actor npc = allAgents[i]
+		
+		if (npc)
+			float startTime = StorageUtil.GetFloatValue(npc, "WalkToTargetStartTime", 0.0)
+			
+			; If NPC has a start time set and 40+ seconds have passed
+			if (startTime > 0.0 && (currentTime - startTime) >= timeoutThreshold)
+				Actor targetListener = StorageUtil.GetFormValue(npc, "WalkToTargetListener", None) as Actor
+				
+				Debug.Trace("[CHIM] NPCs Walk To Target: Timeout - "+npc.GetDisplayName()+" hasn't spoken after 40s, releasing from movement")
+				
+				; Clear the tracking data
+				StorageUtil.UnsetFloatValue(npc, "WalkToTargetStartTime")
+				StorageUtil.UnsetFormValue(npc, "WalkToTargetListener")
+				
+				; Release NPC from soft follow package
+				Package isRunningPackage = StorageUtil.GetFormValue(npc, "PackageSoft", None) as Package
+				if (isRunningPackage)
+					Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
+					ActorUtil.RemovePackageOverride(npc, FollowPackageSoft)
+					Faction FollowFaction = Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+					npc.RemoveFromFaction(FollowFaction)
+					StorageUtil.SetFormValue(npc, "PackageSoft", None)
+					
+					Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword
+					PO3_SKSEFunctions.SetLinkedRef(npc, None, MoveTargetKw)
+					
+					npc.EvaluatePackage()
+					Debug.Trace("[CHIM] NPCs Walk To Target: Released "+npc.GetDisplayName()+" back to original package")
+				endif
+			endif
+		endif
+		
+		i += 1
+	endwhile
+	
+EndFunction
+
 function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) global
 
 	; Should be called after NPC starts speech to listener (every sentence)
+	
+	; Clear walk-to-target timer since NPC is now actually speaking
+	float startTime = StorageUtil.GetFloatValue(npc, "WalkToTargetStartTime", 0.0)
+	if (startTime > 0.0)
+		Debug.Trace("[CHIM] NPCs Walk To Target: "+npc.GetDisplayName()+" spoke, clearing timeout timer")
+		StorageUtil.UnsetFloatValue(npc, "WalkToTargetStartTime")
+		StorageUtil.UnsetFormValue(npc, "WalkToTargetListener")
+	endif
 	
 	int handle = ModEvent.Create("CHIM_SpeechStarted")
 	if (handle)
@@ -1309,6 +1388,27 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 
 		GetIntoConversation(listener,npc as ObjectReference ) ; if listener is too far away, move listener to speaker if speaker close to player, if not close,  move near player
 		GetIntoConversation(npc,listener); if speaker is too far away, Move speaker to listener if listener near to player, if not, move to player 
+		
+		; NPCs Walk To Target feature - makes speaker walk towards listener if enabled and > 400 units apart
+		int walkToTarget = StorageUtil.GetIntValue(None, "AIAgentNpcWalkToTarget", 0)
+		if (walkToTarget == 1)
+			float distance = npc.GetDistance(listener)
+			if (distance > 400)
+				; Only move if speaker is in valid state (not in combat, not in scene, etc)
+				if (!npc.IsInCombat() && !npc.GetCurrentScene() && !npc.IsInKillMove() && !npc.IsUnconscious())
+					Debug.Trace("[CHIM] NPCs Walk To Target: "+npc.GetDisplayName()+" moving towards "+listener.GetDisplayName()+" (distance: "+distance+")")
+					
+					; Track when this NPC started moving
+					float currentTime = Utility.GetCurrentGameTime()
+					StorageUtil.SetFloatValue(npc, "WalkToTargetStartTime", currentTime)
+					StorageUtil.SetFormValue(npc, "WalkToTargetListener", listener)
+					
+					FollowSoft(npc, listener)
+				else
+					Debug.Trace("[CHIM] NPCs Walk To Target: skipped for "+npc.GetDisplayName()+" (in combat/scene/invalid state)")
+				endif
+			endif
+		endif
 
 	endif
 	

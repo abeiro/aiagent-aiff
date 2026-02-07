@@ -99,6 +99,8 @@ bool  		_rechat_policy_asap = false
 int 		_toggle_npc_go_near
 bool  		_toggle_npc_go_near_state = true
 
+int 		_toggle_npc_walk_to_target
+bool  		_toggle_npc_walk_to_target_state = false
 
 int 		_toggle_autofocus_on_sit
 bool  		_toggle_autofocus_on_sit_state = false
@@ -165,6 +167,18 @@ int			_aiview_key					= -1
 ; CHIM Debugger (Prisma UI)
 int			_keymap_debugger
 int			_debugger_key					= -1
+
+; CHIM Status HUD (Prisma UI)
+int			_keymap_statushud
+int			_statushud_key					= -1
+
+; CHIM Chatbox (Prisma UI)
+int			_keymap_chatbox
+int			_chatbox_key					= -1
+
+; CHIM Chatbox Focus Toggle
+int			_keymap_chatbox_focus
+int			_chatbox_focus_key				= -1
 
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
@@ -237,6 +251,8 @@ int			_historypanel_keyDefault		= -1
 
 int			_overlay_keyDefault				= -1
 
+int			_statushud_keyDefault			= -1
+
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
 	
@@ -280,12 +296,13 @@ endEvent
 event OnConfigInit()
 
 	ModName="CHIM"
-	Pages = new string[5]
+	Pages = new string[6]
 	Pages[0] = "Main"
-	Pages[1] = "Behavior"
-	Pages[2] = "Sound"
-	Pages[3] = "AI Agents"
-	Pages[4] = "Tools"
+	Pages[1] = "Auto Activate"
+	Pages[2] = "Behavior"
+	Pages[3] = "Sound"
+	Pages[4] = "AI Agents"
+	Pages[5] = "Tools"
 	
 	Debug.Trace("[AIAGENT] OnConfigInit");
 	
@@ -396,12 +413,34 @@ endEvent
 
 int function GetVersion()
 
-	return 48
+	return 52
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 52 && a_version > CurrentVersion)
+		; Version 52: Added CHIM Chatbox Focus keybinding
+		_chatbox_focus_key = -1
+		OnConfigInit()
+	endIf
+
+	if (a_version == 51 && a_version > CurrentVersion)
+		; Version 51: Added CHIM Chatbox keybinding
+		_chatbox_key = -1
+		OnConfigInit()
+	endIf
+
+	if (a_version == 50 && a_version > CurrentVersion)
+		OnConfigInit()
+		
+	endIf
+
+	if (a_version == 49 && a_version > CurrentVersion)
+		OnConfigInit()
+		
+	endIf
 
 	if (a_version == 48 && a_version > CurrentVersion)
 		OnConfigInit()
@@ -476,7 +515,7 @@ event OnPageReset(string a_page)
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
 		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
 		
-		; === Prisma UI ===
+		; === Prisma UI (Beta)===
 		AddEmptyOption()
 		AddHeaderOption("Prisma UI")
 		_keymap_historypanel = AddKeyMapOption("Conversation History", _historypanel_key)
@@ -485,34 +524,49 @@ event OnPageReset(string a_page)
 		_keymap_browser = AddKeyMapOption("CHIM Browser", _browser_key)
 		_keymap_aiview = AddKeyMapOption("CHIM AI View", _aiview_key)
 		_keymap_debugger = AddKeyMapOption("CHIM Debugger", _debugger_key)
+		_keymap_statushud = AddKeyMapOption("CHIM Status HUD", _statushud_key)
+		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
+		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
 	endif
 	
 
-	if (a_page=="Behavior")
-		_toggleAddAllNPC		= AddToggleOption("Auto Activate", _toggleAddAllNPCState)
-		
-		_slider_bored_period	= AddSliderOption("Bored Event Timer (seconds)",_bored_period,"{0}" )
-		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
-		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
-		
+	if (a_page=="Auto Activate")
+		_toggleAddAllNPC		= AddToggleOption("Enable Auto Activate", _toggleAddAllNPCState)
+		AddEmptyOption()
 		
 		_slider_max_distance_inside	= AddSliderOption("Interior Auto Activate Distance",_max_distance_inside,"{0}" )
 		_slider_max_distance_outside	= AddSliderOption("Exterior Auto Activate Distance",_max_distance_outside,"{0}" )
 		
+		AddEmptyOption()
+		
+		_toggle_autoadd_hostile	= AddToggleOption("Add Hostile NPCs", _toggle_autoadd_hostile_state)
+		AddEmptyOption() 
+		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
+		
+	endif
+
+	if (a_page=="Behavior")
+		_slider_bored_period	= AddSliderOption("Bored Event Timer (seconds)",_bored_period,"{0}" )
+		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
+		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
+		
+		AddEmptyOption()
+		AddHeaderOption("NPC Behavior")
+		AddEmptyOption()
+		
 		_toggle_npc_go_near	= AddToggleOption("NPCs Sandbox Near Player", _toggle_npc_go_near_state)
+		_toggle_npc_walk_to_target	= AddToggleOption("NPCs Walk To Target", _toggle_npc_walk_to_target_state)
 		_toggle_autofocus_on_sit	= AddToggleOption("Seat Conversation Camera", _toggle_autofocus_on_sit_state)
 		
 		_toggle_restrict_onscene	= AddToggleOption("NPC Scene Safety", _toggle_restrict_onscene_state)
-		AddEmptyOption();
-		AddHeaderOption("Auto Activate Options")	
-		AddEmptyOption();
-		_toggle_autoadd_hostile	= AddToggleOption("Add Hostile NPCs", _toggle_autoadd_hostile_state)
-		AddEmptyOption(); 
-		_toggle_autoadd_allraces	= AddToggleOption("Add All races", _toggle_autoadd_allraces_state)
-		AddEmptyOption(); 
+		
+		AddEmptyOption()
+		AddHeaderOption("Combat Settings")
+		AddEmptyOption()
+		
 		_toggle_combatdialogue	= AddToggleOption("Allow combat dialogue", _toggle_combatdialogue_state)
 		_toggle_cancel_dialogue_on_combat = AddToggleOption("Clear dialogue entering combat", _toggle_cancel_dialogue_on_combat_state)
-		AddEmptyOption();
+		AddEmptyOption()
 		_toggle_combat_barks = AddToggleOption("Enable Combat Barks", _toggle_combat_barks_state)
 		_slider_combat_barks_period = AddSliderOption("Combat Bark Timer (seconds)", _combat_barks_period, "{0}")
 		
@@ -1207,6 +1261,33 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_statushud)
+			controlScript.removeBinding(_statushud_key)
+			_statushud_key = a_keyCode
+			controlScript.doBinding18(_statushud_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
+		elseif (a_option == _keymap_chatbox)
+			controlScript.removeBinding(_chatbox_key)
+			_chatbox_key = a_keyCode
+			controlScript.doBinding19(_chatbox_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
+		elseif (a_option == _keymap_chatbox_focus)
+			controlScript.removeBinding(_chatbox_focus_key)
+			_chatbox_focus_key = a_keyCode
+			controlScript.doBinding20(_chatbox_focus_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1311,6 +1392,17 @@ event OnOptionSelect(int a_option)
 			StorageUtil.SetIntValue(None, "AIAgentNpcWalkNear",0);
 		endif
 		SetToggleOptionValue(a_option, _toggle_npc_go_near_state)
+
+	endif
+	
+	if (a_option == _toggle_npc_walk_to_target)
+		_toggle_npc_walk_to_target_state = !_toggle_npc_walk_to_target_state
+		if (_toggle_npc_walk_to_target_state)
+			StorageUtil.SetIntValue(None, "AIAgentNpcWalkToTarget",1);
+		else
+			StorageUtil.SetIntValue(None, "AIAgentNpcWalkToTarget",0);
+		endif
+		SetToggleOptionValue(a_option, _toggle_npc_walk_to_target_state)
 
 	endif
 	
@@ -1625,7 +1717,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggle_npc_go_near)
-		SetInfoText("Only works when player is seated. When enabled NPC's will subtly move around the player to make listening to conversations easier.")
+		SetInfoText("When enabled NPC's will subtly move around the player to make listening to conversations easier.")
+	endIf
+	
+	if (a_option == _toggle_npc_walk_to_target)
+		SetInfoText("NPCs will walk towards the NPC they are talking to. May break scenes - use Scene Safety with this option.")
 	endIf
 	
 	if (a_option == _toggle_autofocus_on_sit)
@@ -1674,6 +1770,18 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_debugger)
 		SetInfoText("Open the CHIM Debugger. Shows recent AI and TTS response times to help diagnose performance issues. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_statushud)
+		SetInfoText("Toggle the CHIM Status HUD. Shows live status icons for STT, Player TTS, LLM, and TTS processing, plus current mode and connector. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_chatbox)
+		SetInfoText("Toggle the CHIM Chatbox. MMO-style chat interface with Chat tab for AI dialogue and System tab for DLL errors. Type messages to communicate with AI agents. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_chatbox_focus)
+		SetInfoText("Focus/Unfocus the CHIM Chatbox. When chatbox is visible but unfocused, press to enable typing. When focused, press to send message and return control to game.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)

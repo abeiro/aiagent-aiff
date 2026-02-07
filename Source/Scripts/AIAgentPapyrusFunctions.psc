@@ -22,6 +22,9 @@ int 		_currentDiariesKey
 int 		_currentBrowserKey
 int 		_currentAIViewKey
 int 		_currentDebuggerKey
+int 		_currentStatusHUDKey
+int 		_currentChatboxKey
+int 		_currentChatboxFocusKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -280,6 +283,28 @@ Event OnKeyDown(int keyCode)
 	AIAgentFunctions.toggleDebuggerPanel()
   EndIf
   
+  If(keyCode == _currentStatusHUDKey)
+	AIAgentFunctions.toggleStatusHUDPanel()
+  EndIf
+  
+  If(keyCode == _currentChatboxKey)
+	AIAgentFunctions.toggleChatboxPanel()
+  EndIf
+  
+  If(keyCode == _currentChatboxFocusKey)
+	; Check if chatbox is visible
+	if (AIAgentFunctions.isChatboxPanelVisible() == 1)
+		; Check if it's focused
+		if (AIAgentFunctions.isChatboxPanelFocused() == 1)
+			; Already focused - unfocus it (send message if any)
+			AIAgentFunctions.unfocusChatboxPanel()
+		else
+			; Not focused - focus it
+			AIAgentFunctions.focusChatboxPanel()
+		endif
+	endif
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -391,6 +416,24 @@ EndFunction
 Function doBinding17(int keycode) 
 	
 	_currentDebuggerKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding18(int keycode) 
+	
+	_currentStatusHUDKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding19(int keycode) 
+	
+	_currentChatboxKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding20(int keycode) 
+	
+	_currentChatboxFocusKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

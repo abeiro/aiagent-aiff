@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIM Status HUD</title>
+    <link rel="stylesheet" href="status_hud.css">
+</head>
+<body>
+    <div id="chim-status-hud">
+        <!-- Status Icons Row -->
+        <div class="status-icons">
+            <div class="status-icon" id="thinking-status" title="AI Thinking">
+                <span class="icon">🧠</span>
+            </div>
+            <div class="status-icon" id="voice-status" title="Voice Playing">
+                <span class="icon">🔊</span>
+            </div>
+        </div>
+        
+        <!-- Info Badges -->
+        <div class="badges-row">
+            <span class="badge mode-badge" id="mode-badge">Standard</span>
+            <span class="badge model-badge" id="model-badge">Standard</span>
+            <span class="badge focus-badge" id="focus-indicator">Focus</span>
+        </div>
+        
+        <!-- Target -->
+        <div class="target-row" id="target-row">
+            <span class="target-name" id="target-name">—</span>
+        </div>
+    </div>
+    <script src="status_hud.js"></script>
+</body>
+</html>
