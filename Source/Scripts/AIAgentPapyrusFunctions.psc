@@ -987,7 +987,7 @@ Function sendAllLocations() global
 
 	; --- Get all locations ---
 	Form[] allLocations = PO3_SKSEFunctions.GetAllForms(104)
-	Debug.Trace("Total " + allLocations.Length)
+	Debug.Trace("[CHIM] Total locations" + allLocations.Length)
 
 	int lengthA = allLocations.Length
 	int i = 0
@@ -1001,9 +1001,13 @@ Function sendAllLocations() global
 		
 		if curr
 			ObjectReference destMarker = AIAgentFunctions.getWorldLocationMarkerFor(curr)
-			if (destMarker.isDisabled())
+			if (!destMarker)
 				i = i + 1
-				
+				Debug.Trace("[CHIM] Byspassing because no getWorldLocationMarkerFor: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+			elseif (destMarker.isDisabled())
+				i = i + 1
+				Debug.Trace("[CHIM] Byspassing because world location marker is disabled: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+
 			else
 				if destMarker
 					; -------------------------------
@@ -1197,8 +1201,8 @@ Function OpenMasterWheel()
 	UIExtensions.InitMenu("UIWheelMenu")
 
 	int j = 0
-	;while j < (_modes.length ) 
-	while j < (_modes.length - 1 ) ; SNEQ disabled
+	while j < (_modes.length ) 
+	;while j < (_modes.length - 1 ) ; SNEQ disabled
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionLabelText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexString("UIWheelMenu","optionText",j,_label[j])
 		UIExtensions.SetMenuPropertyIndexBool("UIWheelMenu","optionEnabled",j,true)
