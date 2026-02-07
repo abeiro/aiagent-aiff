@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHIM Settings</title>
+    <link rel="stylesheet" href="settings_menu.css">
+</head>
+<body>
+    <div id="settings-modal" class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="breadcrumb">
+                <span>CHIM Settings</span>
+            </div>
+            <button class="close-btn" onclick="closeMenu()">×</button>
+        </div>
+
+        <!-- Content Area - All options visible, no collapsing -->
+        <div class="modal-content">
+            <!-- Mode Options -->
+            <div class="settings-group">
+                <h2 class="group-title">Mode</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('mode_standard')" title="Normal conversation mode with roleplay and event injection support">Standard Chat</button>
+                    <button class="setting-btn" onclick="selectOption('mode_whisper')" title="Private conversation mode - only nearby NPCs (4 meters) can hear and respond">Whisper Chat</button>
+                    <button class="setting-btn" onclick="selectOption('mode_director')" title="Give direct instructions to NPCs as game director">Director Mode</button>
+                    <button class="setting-btn" onclick="selectOption('mode_spawn')" title="Spawn new characters by describing them">Spawn NPC</button>
+                    <button class="setting-btn" onclick="selectOption('mode_cheat')" title="All input processed as cheat commands - NPCs will execute any request">Cheat Mode</button>
+                    <button class="setting-btn" onclick="selectOption('mode_autochat')" title="Auto-generates lore-appropriate dialogue from your instructions">Auto Chat</button>
+                    <button class="setting-btn" onclick="selectOption('mode_inject_log')" title="Add events to NPC memory without triggering responses">Inject Event</button>
+                    <button class="setting-btn" onclick="selectOption('mode_inject_chat')" title="Add events to NPC memory and get a response">Inject & Chat</button>
+                </div>
+            </div>
+
+            <!-- LLM Profile Options -->
+            <div class="settings-group">
+                <h2 class="group-title">LLM Profiles</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('llm_standard')" title="Balanced speed and quality for general conversations">Standard LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_fast')" title="Faster responses with lighter model">Fast LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_powerful')" title="Best quality responses with heavier model">Powerful LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_experimental')" title="Experimental features and cutting-edge models">Experimental LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_focus')" title="Limit context to current conversation only">Focus Chat</button>
+                </div>
+            </div>
+
+            <!-- NPC Profile Assignment (shown when targeting NPC) -->
+            <div id="npc-settings" class="settings-group" style="display: none;">
+                <h2 class="group-title">Assign Profile to <span id="npc-name" class="npc-highlight">NPC</span></h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('profile_1')" title="Assign Profile 1 to this NPC permanently">Profile 1</button>
+                    <button class="setting-btn" onclick="selectOption('profile_2')" title="Assign Profile 2 to this NPC permanently">Profile 2</button>
+                    <button class="setting-btn" onclick="selectOption('profile_3')" title="Assign Profile 3 to this NPC permanently">Profile 3</button>
+                    <button class="setting-btn" onclick="selectOption('profile_4')" title="Assign Profile 4 to this NPC permanently">Profile 4</button>
+                </div>
+            </div>
+
+            <!-- Roleplay Options -->
+            <div class="settings-group">
+                <h2 class="group-title">Roleplay - Global</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('rp_gather')" title="Call all nearby AI friends to gather around you">Gather Friends</button>
+                    <button class="setting-btn" onclick="selectOption('rp_halt')" title="Stop all AI actions for nearby NPCs">Stop All AI</button>
+                </div>
+            </div>
+
+            <!-- NPC-Targeted Roleplay (shown when targeting NPC) -->
+            <div id="roleplay-npc-actions" class="settings-group" style="display: none;">
+                <h2 class="group-title">Roleplay - <span id="roleplay-npc-name" class="npc-highlight">NPC</span></h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('rp_write_diary')" title="Ask this NPC to write about recent events">Write Diary</button>
+                    <button class="setting-btn" onclick="selectOption('rp_update_npc')" title="Refresh this NPC's personality and memories">Update NPC Profile</button>
+                    <button class="setting-btn" onclick="selectOption('rp_wait')" title="Command this NPC to wait here">Wait Here</button>
+                    <button class="setting-btn" onclick="selectOption('rp_follow')" title="Command this NPC to follow you">Follow Me</button>
+                    <button class="setting-btn" onclick="selectOption('rp_rename')" title="Rename this NPC or add them to background lore">Rename / Add to BgL</button>
+                </div>
+            </div>
+
+            <!-- Soulgaze Options -->
+            <div class="settings-group">
+                <h2 class="group-title">Soulgaze</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('sg_soulgaze')" title="Perform full soulgaze ritual with visible NPCs">Soulgaze</button>
+                    <button class="setting-btn" onclick="selectOption('sg_photo_zoom')" title="Take close-up photo of NPCs for AI analysis">NPC Photo Zoom</button>
+                    <button class="setting-btn" onclick="selectOption('sg_photo')" title="Take standard photo of NPCs for AI analysis">NPC Photo</button>
+                    <button class="setting-btn" onclick="selectOption('sg_upload')" title="Upload current screen to AI without special modes">Just Upload Screen</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-footer">
+            <span class="hint-text">Press hotkey to close</span>
+        </div>
+    </div>
+    
+    <script src="settings_menu.js"></script>
+</body>
+</html>

@@ -180,6 +180,10 @@ int			_chatbox_key					= -1
 int			_keymap_chatbox_focus
 int			_chatbox_focus_key				= -1
 
+; CHIM Settings Menu (Prisma UI)
+int			_keymap_settingsmenu
+int			_settingsmenu_key				= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -527,6 +531,7 @@ event OnPageReset(string a_page)
 		_keymap_statushud = AddKeyMapOption("CHIM Status HUD", _statushud_key)
 		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
 		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
+		_keymap_settingsmenu = AddKeyMapOption("CHIM Settings Menu", _settingsmenu_key)
 	endif
 	
 
@@ -1283,6 +1288,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			controlScript.removeBinding(_chatbox_focus_key)
 			_chatbox_focus_key = a_keyCode
 			controlScript.doBinding20(_chatbox_focus_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
+		elseif (a_option == _keymap_settingsmenu)
+			controlScript.removeBinding(_settingsmenu_key)
+			_settingsmenu_key = a_keyCode
+			controlScript.doBinding21(_settingsmenu_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else

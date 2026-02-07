@@ -25,6 +25,7 @@ int 		_currentDebuggerKey
 int 		_currentStatusHUDKey
 int 		_currentChatboxKey
 int 		_currentChatboxFocusKey
+int 		_currentSettingsMenuKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -71,7 +72,102 @@ EndFunction
 Event OnInit()
 	doBinding(_currentKey)
 	Debug.Trace("[CHIM] AIAgentPapyrusFunctions quest script OnInit()")
+	
+	; Start polling for pending settings menu actions
+	RegisterForSingleUpdate(0.1)
 EndEvent
+
+; Process pending settings menu action (shared by hotkey and mod event)
+Function ProcessPendingSettingsAction()
+	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
+	
+	if (pendingAction == "")
+		Debug.Trace("[CHIM] No pending action to process")
+		return
+	endif
+	
+	Debug.Trace("[CHIM] Processing pending settings action: " + pendingAction)
+	
+	; Parse action - format: "actionId" or "actionId|npcName"
+	String actionId = pendingAction
+	String npcName = ""
+	
+	int pipeIndex = StringUtil.Find(pendingAction, "|")
+	if (pipeIndex >= 0)
+		actionId = StringUtil.Substring(pendingAction, 0, pipeIndex)
+		npcName = StringUtil.Substring(pendingAction, pipeIndex + 1)
+	endif
+	
+	; Get crosshair ref for NPC-targeted actions
+	ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+	Actor targetActor = None
+	if (crosshairRef)
+		targetActor = crosshairRef as Actor
+	endif
+	
+	; Process Papyrus-only actions
+	if (actionId == "rp_gather")
+		AIAgentAIMind.GatherAround()
+	elseif (actionId == "rp_halt")
+		Debug.Notification("[CHIM] Stopping AI actions")
+		if (targetActor)
+			AIAgentAIMind.StopCurrent(targetActor)
+		else
+			Actor[] actors = AIAgentFunctions.findAllNearbyAgents()
+			int i = 0
+			while i < actors.Length
+				AIAgentAIMind.StopCurrent(actors[i])
+				i += 1
+			endwhile
+		endif
+	elseif (actionId == "rp_write_diary" && targetActor)
+		Debug.Notification("[CHIM] " + targetActor.GetDisplayName() + " is writing diary entry")
+		AIAgentFunctions.requestMessageForActor("Please, update your diary", "diary", targetActor.GetDisplayName())
+	elseif (actionId == "rp_update_npc" && targetActor)
+		Debug.Trace("[CHIM] Updating dynamic profile for " + targetActor.GetDisplayName())
+		AIAgentFunctions.logMessage(targetActor.GetDisplayName(), "updateprofiles_batch_async")
+	elseif (actionId == "rp_wait" && targetActor)
+		AIAgentAIMind.StartWait(targetActor)
+	elseif (actionId == "rp_follow" && targetActor)
+		AIAgentAIMind.Follow(targetActor, Game.GetPlayer())
+	elseif (actionId == "rp_rename" && targetActor)
+		String originalname = targetActor.GetDisplayName()
+		UIMenuBase menus = UIExtensions.GetMenu("UITextEntryMenu")
+		String savedName = StorageUtil.GetStringValue(targetActor, "RenamedBuffer", targetActor.GetDisplayName())
+		if savedName != "None"
+			UIExtensions.SetMenuPropertyString("UITextEntryMenu", "text", savedName)
+		else
+			UIExtensions.SetMenuPropertyString("UITextEntryMenu", "text", originalname)
+		endif
+		UIExtensions.OpenMenu("UITextEntryMenu")
+		String messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
+		StorageUtil.SetStringValue(targetActor, "RenamedBuffer", None)
+		UIExtensions.SetMenuPropertyString("UITextEntryMenu", "text", "")
+		if (messageText != "")
+			AIAgentFunctions.logMessage("chim_renamenpc@" + originalname + "@" + messageText + "@" + targetActor.GetFormId(), "setconf")
+			StorageUtil.SetStringValue(targetActor, "forcedName", messageText)
+		endif
+	elseif (StringUtil.Find(actionId, "sg_") == 0)
+		; Soulgaze actions (check if starts with "sg_")
+		int mode = AIAgentFunctions.get_conf_i("_sgmode")
+		if (actionId == "sg_soulgaze")
+			AIAgentSoulGazeEffect.Soulgaze(mode)
+		elseif (actionId == "sg_photo_zoom")
+			AIAgentSoulGazeEffect.SendProfilePicture(mode, true)
+		elseif (actionId == "sg_photo")
+			AIAgentSoulGazeEffect.SendProfilePicture(mode, false)
+		elseif (actionId == "sg_upload")
+			; Use JustUpload like the original wheel menu
+			AIAgentSoulGazeEffect.JustUpload(mode)
+		endif
+	endif
+	
+	; Clear the pending action
+	AIAgentFunctions.clearSettingsMenuPendingAction()
+	
+	; Menu was already closed by C++ when trigger_papyrus_check was sent
+	Debug.Trace("[CHIM] Pending action processed successfully")
+EndFunction
 
 Event OnKeyUp(int keyCode, float holdTime)
 	If(keyCode == _currentKeyVoice)
@@ -305,12 +401,30 @@ Event OnKeyDown(int keyCode)
 	endif
   EndIf
   
+  If(keyCode == _currentSettingsMenuKey)
+	If !SafeProcess()
+		Return
+	EndIf
+	
+	; Simply toggle the menu - pending actions are handled via mod event
+	AIAgentFunctions.toggleSettingsMenu()
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
     ;Debug.Notification("Updating...")
 	
-
+	; Check for pending settings menu actions
+	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
+	if (pendingAction != "")
+		Debug.Trace("[CHIM Settings] Detected pending action via polling: " + pendingAction)
+		Debug.Notification("[CHIM] Processing: " + pendingAction)
+		ProcessPendingSettingsAction()
+	endif
+	
+	; Continue polling
+	RegisterForSingleUpdate(0.1)
 Endevent
 
 Function removeBinding(int keycode) 
@@ -434,6 +548,12 @@ EndFunction
 Function doBinding20(int keycode) 
 	
 	_currentChatboxFocusKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding21(int keycode) 
+	
+	_currentSettingsMenuKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
