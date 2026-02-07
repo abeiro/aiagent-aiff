@@ -1,6 +1,7 @@
 // CHIM Settings Menu JavaScript
 
 let currentNPCTarget = '';
+let profilesData = [];
 
 // Initialize when DOM is ready
 function initSettingsMenu() {
@@ -11,8 +12,90 @@ function initSettingsMenu() {
         window.chimSettingsMenuCommand('dom_ready');
     }
     
+    // Fetch profile information
+    fetchProfilesInfo();
+    
     // Remove ESC key handler - only hotkey closes now
     // No ESC handling here
+}
+
+// Fetch profiles and connector information from server
+async function fetchProfilesInfo() {
+    try {
+        // Get server URL from C++ or use default
+        const serverUrl = window.chimServerUrl || 'http://127.0.0.1:8081';
+        const response = await fetch(`${serverUrl}/HerikaServer/ui/api/chim_profiles.php`);
+        
+        if (!response.ok) {
+            console.error('[CHIM Settings] Failed to fetch profiles:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.profiles) {
+            profilesData = data.profiles;
+            updateProfileButtons();
+            console.log('[CHIM Settings] Loaded profile data:', profilesData);
+        }
+    } catch (error) {
+        console.error('[CHIM Settings] Error fetching profiles:', error);
+    }
+}
+
+// Update profile buttons with detailed information
+function updateProfileButtons() {
+    for (let slot = 1; slot <= 4; slot++) {
+        const nameDiv = document.querySelector(`#profile-${slot}-connectors`);
+        if (!nameDiv) continue;
+        
+        const profile = profilesData.find(p => p.slot === slot);
+        if (!profile) {
+            nameDiv.innerHTML = '<span style="color: #888;">Loading...</span>';
+            continue;
+        }
+        
+        // Find the parent button to update the profile name
+        const button = nameDiv.closest('.profile-btn');
+        if (button) {
+            const nameElement = button.querySelector('.profile-name');
+            if (nameElement) {
+                nameElement.textContent = `${profile.profile_name}`;
+            }
+        }
+        
+        // Build connector list
+        if (profile.connectors && profile.connectors.length > 0) {
+            let connectorsHTML = '';
+            profile.connectors.forEach((conn, idx) => {
+                if (idx > 0) connectorsHTML += '<br>';
+                connectorsHTML += `<span style="color: #aaa;">•</span> ${conn.slot_name.replace(' LLM', '')}: ${conn.label}`;
+            });
+            nameDiv.innerHTML = connectorsHTML;
+        } else {
+            nameDiv.innerHTML = '<span style="color: #888;">No connectors configured</span>';
+        }
+        
+        // Build detailed tooltip
+        let tooltipText = `Assign "${profile.profile_name}" to this NPC permanently.\n\n`;
+        
+        if (profile.connectors && profile.connectors.length > 0) {
+            tooltipText += 'Configured LLMs:\n';
+            profile.connectors.forEach(conn => {
+                tooltipText += `• ${conn.slot_name}: ${conn.label}`;
+                if (conn.model) {
+                    tooltipText += ` (${conn.model})`;
+                }
+                tooltipText += '\n';
+            });
+        } else {
+            tooltipText += 'No LLM connectors configured for this profile.';
+        }
+        
+        if (button) {
+            button.setAttribute('title', tooltipText);
+        }
+    }
 }
 
 // Called by C++ to signal that the JavaScript environment is ready

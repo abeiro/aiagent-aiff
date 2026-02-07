@@ -61,6 +61,8 @@ int function unfocusHistoryPanel() Global Native
 int function toggleHistoryPanelFocus(bool pauseGame = false) Global Native
 
 int function toggleOverlayPanel() Global Native
+int function cycleOverlayStatusPanels() Global Native
+int function cycleHistoryDiariesPanels() Global Native
 int function showOverlayPanel() Global Native
 int function hideOverlayPanel() Global Native
 

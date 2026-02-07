@@ -144,33 +144,13 @@ int			_halt_key					= -1
 int			_keymap_masterwheel
 int			_masterwheel_key				= -1
 
-; History Panel (Prisma UI)
-int			_keymap_historypanel
-int			_historypanel_key				= -1
-
-; CHIM Overlay (Prisma UI)
-int			_keymap_overlay
-int			_overlay_key					= -1
-
-; CHIM Diaries (Prisma UI)
-int			_keymap_diaries
-int			_diaries_key					= -1
-
 ; CHIM Browser Beta (Prisma UI)
 int			_keymap_browser
 int			_browser_key					= -1
 
-; CHIM AI View (Prisma UI)
-int			_keymap_aiview
-int			_aiview_key					= -1
-
 ; CHIM Debugger (Prisma UI)
 int			_keymap_debugger
 int			_debugger_key					= -1
-
-; CHIM Status HUD (Prisma UI)
-int			_keymap_statushud
-int			_statushud_key					= -1
 
 ; CHIM Chatbox (Prisma UI)
 int			_keymap_chatbox
@@ -183,6 +163,14 @@ int			_chatbox_focus_key				= -1
 ; CHIM Settings Menu (Prisma UI)
 int			_keymap_settingsmenu
 int			_settingsmenu_key				= -1
+
+; CHIM Overlay/Status Cycle (Single hotkey)
+int			_keymap_overlaystatus_cycle
+int			_overlaystatus_cycle_key		= -1
+
+; CHIM History/Diaries Cycle (Single hotkey)
+int			_keymap_historydiaries_cycle
+int			_historydiaries_cycle_key		= -1
 
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
@@ -251,11 +239,9 @@ int			_halt_keyDefault				= -1
 
 int			_masterwheel_keyDefault			= -1
 
-int			_historypanel_keyDefault		= -1
+int			_overlaystatus_cycle_keyDefault	= -1
 
-int			_overlay_keyDefault				= -1
-
-int			_statushud_keyDefault			= -1
+int			_historydiaries_cycle_keyDefault = -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
@@ -522,13 +508,11 @@ event OnPageReset(string a_page)
 		; === Prisma UI (Beta)===
 		AddEmptyOption()
 		AddHeaderOption("Prisma UI")
-		_keymap_historypanel = AddKeyMapOption("Conversation History", _historypanel_key)
-		_keymap_overlay = AddKeyMapOption("CHIM Overlay", _overlay_key)
-		_keymap_diaries = AddKeyMapOption("CHIM Diaries", _diaries_key)
-		_keymap_browser = AddKeyMapOption("CHIM Browser", _browser_key)
-		_keymap_aiview = AddKeyMapOption("CHIM AI View", _aiview_key)
-		_keymap_debugger = AddKeyMapOption("CHIM Debugger", _debugger_key)
-		_keymap_statushud = AddKeyMapOption("CHIM Status HUD", _statushud_key)
+		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries Cycle", _historydiaries_cycle_key)
+		_keymap_overlaystatus_cycle = AddKeyMapOption("Overlay/Status/AI View Cycle", _overlaystatus_cycle_key)
+		AddEmptyOption()
+		_keymap_browser = AddKeyMapOption("CHIM Browser (Beta)", _browser_key)
+		_keymap_debugger = AddKeyMapOption("CHIM Logs View (Beta)", _debugger_key)
 		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
 		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
 		_keymap_settingsmenu = AddKeyMapOption("CHIM Settings Menu", _settingsmenu_key)
@@ -1210,48 +1194,28 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
-		elseif (a_option == _keymap_historypanel)
-			controlScript.removeBinding(_historypanel_key)
-			_historypanel_key = a_keyCode
-			controlScript.doBinding12(_historypanel_key)
+		elseif (a_option == _keymap_overlaystatus_cycle)
+			controlScript.removeBinding(_overlaystatus_cycle_key)
+			_overlaystatus_cycle_key = a_keyCode
+			controlScript.doBinding12(_overlaystatus_cycle_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
-		elseif (a_option == _keymap_overlay)
-			controlScript.removeBinding(_overlay_key)
-			_overlay_key = a_keyCode
-			controlScript.doBinding13(_overlay_key)
+		elseif (a_option == _keymap_historydiaries_cycle)
+			controlScript.removeBinding(_historydiaries_cycle_key)
+			_historydiaries_cycle_key = a_keyCode
+			controlScript.doBinding13(_historydiaries_cycle_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
-		
-		elseif (a_option == _keymap_diaries)
-			controlScript.removeBinding(_diaries_key)
-			_diaries_key = a_keyCode
-			controlScript.doBinding14(_diaries_key)
-			if (a_keyCode == -1)
-				ForcePageReset()
-			else
-				SetKeymapOptionValue(a_option, a_keyCode)
-			endif
-		
 		elseif (a_option == _keymap_browser)
 			controlScript.removeBinding(_browser_key)
 			_browser_key = a_keyCode
-			controlScript.doBinding15(_browser_key)
-			if (a_keyCode == -1)
-				ForcePageReset()
-			else
-				SetKeymapOptionValue(a_option, a_keyCode)
-			endif
-		elseif (a_option == _keymap_aiview)
-			controlScript.removeBinding(_aiview_key)
-			_aiview_key = a_keyCode
-			controlScript.doBinding16(_aiview_key)
+			controlScript.doBinding14(_browser_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
@@ -1260,16 +1224,7 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 		elseif (a_option == _keymap_debugger)
 			controlScript.removeBinding(_debugger_key)
 			_debugger_key = a_keyCode
-			controlScript.doBinding17(_debugger_key)
-			if (a_keyCode == -1)
-				ForcePageReset()
-			else
-				SetKeymapOptionValue(a_option, a_keyCode)
-			endif
-		elseif (a_option == _keymap_statushud)
-			controlScript.removeBinding(_statushud_key)
-			_statushud_key = a_keyCode
-			controlScript.doBinding18(_statushud_key)
+			controlScript.doBinding15(_debugger_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
@@ -1278,7 +1233,7 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 		elseif (a_option == _keymap_chatbox)
 			controlScript.removeBinding(_chatbox_key)
 			_chatbox_key = a_keyCode
-			controlScript.doBinding19(_chatbox_key)
+			controlScript.doBinding16(_chatbox_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
@@ -1287,7 +1242,7 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 		elseif (a_option == _keymap_chatbox_focus)
 			controlScript.removeBinding(_chatbox_focus_key)
 			_chatbox_focus_key = a_keyCode
-			controlScript.doBinding20(_chatbox_focus_key)
+			controlScript.doBinding17(_chatbox_focus_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
@@ -1296,7 +1251,7 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 		elseif (a_option == _keymap_settingsmenu)
 			controlScript.removeBinding(_settingsmenu_key)
 			_settingsmenu_key = a_keyCode
-			controlScript.doBinding21(_settingsmenu_key)
+			controlScript.doBinding18(_settingsmenu_key)
 			if (a_keyCode == -1)
 				ForcePageReset()
 			else
@@ -1762,32 +1717,20 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Master Wheel - Quick access menu to open any of the 4 wheels: Roleplay, Settings, Mode, or Soulgaze.")
 	endIf
 	
-	if (a_option == _keymap_historypanel)
-		SetInfoText("Toggle the in-game conversation history panel. Shows recent AI dialogue and events. Requires Prisma UI.")
+	if (a_option == _keymap_historydiaries_cycle)
+		SetInfoText("Cycle through reading panels: Press once for Conversation History, press again for Diaries, press again to close both. Both pause the game. Requires Prisma UI.")
 	endIf
 	
-	if (a_option == _keymap_overlay)
-		SetInfoText("Toggle the CHIM Overlay. Shows current mode, active model, focus chat status, AI agents, and profile slots. Requires Prisma UI.")
-	endIf
-	
-	if (a_option == _keymap_diaries)
-		SetInfoText("Open the CHIM Diaries. Browse and read NPC diary entries in-game. Requires Prisma UI.")
+	if (a_option == _keymap_overlaystatus_cycle)
+		SetInfoText("Cycle through CHIM UI states: Press once for Overlay, press again for Status HUD, press again for AI View, press again to close. Convenient single-key access to all info panels. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_browser)
-		SetInfoText("Open the CHIM Browser. Browse the full HerikaServer web interface in-game. Requires Prisma UI.")
-	endIf
-	
-	if (a_option == _keymap_aiview)
-		SetInfoText("Open the CHIM AI View. Shows detailed profile data for the targeted or nearest AI-enabled NPC. Requires Prisma UI.")
+		SetInfoText("Toggle the CHIM Browser (Beta). Browse the full HerikaServer web interface in-game with cursor and typing support. Game pauses when open. Press the hotkey again to close. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_debugger)
-		SetInfoText("Open the CHIM Debugger. Shows recent AI and TTS response times to help diagnose performance issues. Requires Prisma UI.")
-	endIf
-	
-	if (a_option == _keymap_statushud)
-		SetInfoText("Toggle the CHIM Status HUD. Shows live status icons for STT, Player TTS, LLM, and TTS processing, plus current mode and connector. Requires Prisma UI.")
+		SetInfoText("Open the CHIM Logs View (Beta). Access server logs, settings, and diagnostics from the HerikaServer control panel. Press hotkey again to close. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_chatbox)
@@ -1796,6 +1739,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_chatbox_focus)
 		SetInfoText("Focus/Unfocus the CHIM Chatbox. When chatbox is visible but unfocused, press to enable typing. When focused, press to send message and return control to game.")
+	endIf
+	
+	if (a_option == _keymap_settingsmenu)
+		SetInfoText("Open the CHIM Settings Menu. Central interface for all in-game settings from the 4 wheels. Game pauses when open, press hotkey again to close. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)

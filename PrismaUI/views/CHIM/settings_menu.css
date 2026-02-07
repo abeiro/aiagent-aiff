@@ -155,6 +155,29 @@ body {
     position: relative;
 }
 
+/* Profile buttons with multi-line layout */
+.setting-btn.profile-btn {
+    text-align: left;
+    padding: 12px 14px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 1.05em;
+    color: rgb(242, 124, 17);
+}
+
+.profile-connectors {
+    font-size: 0.85em;
+    color: #b8b8b8;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
 .setting-btn:hover {
     background: rgba(242, 124, 17, 0.25);
     border-color: rgba(242, 124, 17, 0.6);
@@ -162,6 +185,14 @@ body {
     color: rgb(242, 124, 17);
     box-shadow: 0 4px 12px rgba(242, 124, 17, 0.3);
     z-index: 10;
+}
+
+.setting-btn.profile-btn:hover .profile-name {
+    color: #fff;
+}
+
+.setting-btn.profile-btn:hover .profile-connectors {
+    color: #e8e8e8;
 }
 
 .setting-btn:active {

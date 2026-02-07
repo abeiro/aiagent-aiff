@@ -48,10 +48,22 @@
             <div id="npc-settings" class="settings-group" style="display: none;">
                 <h2 class="group-title">Assign Profile to <span id="npc-name" class="npc-highlight">NPC</span></h2>
                 <div class="options-grid">
-                    <button class="setting-btn" onclick="selectOption('profile_1')" title="Assign Profile 1 to this NPC permanently">Profile 1</button>
-                    <button class="setting-btn" onclick="selectOption('profile_2')" title="Assign Profile 2 to this NPC permanently">Profile 2</button>
-                    <button class="setting-btn" onclick="selectOption('profile_3')" title="Assign Profile 3 to this NPC permanently">Profile 3</button>
-                    <button class="setting-btn" onclick="selectOption('profile_4')" title="Assign Profile 4 to this NPC permanently">Profile 4</button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_1')" title="Assign Profile 1 to this NPC permanently">
+                        <div class="profile-name">Profile 1</div>
+                        <div class="profile-connectors" id="profile-1-connectors">Loading...</div>
+                    </button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_2')" title="Assign Profile 2 to this NPC permanently">
+                        <div class="profile-name">Profile 2</div>
+                        <div class="profile-connectors" id="profile-2-connectors">Loading...</div>
+                    </button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_3')" title="Assign Profile 3 to this NPC permanently">
+                        <div class="profile-name">Profile 3</div>
+                        <div class="profile-connectors" id="profile-3-connectors">Loading...</div>
+                    </button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_4')" title="Assign Profile 4 to this NPC permanently">
+                        <div class="profile-name">Profile 4</div>
+                        <div class="profile-connectors" id="profile-4-connectors">Loading...</div>
+                    </button>
                 </div>
             </div>
 

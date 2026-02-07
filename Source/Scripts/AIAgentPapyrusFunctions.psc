@@ -16,13 +16,10 @@ int 		_currentGodmodeKey
 int 		_currentOpenMicMuteKey
 int 		_currentHaltKey
 int 		_currentMasterWheel
-int 		_currentHistoryPanelKey
-int 		_currentOverlayKey
-int 		_currentDiariesKey
+int 		_currentOverlayStatusCycleKey  ; Single key to cycle through Overlay -> Status -> AI View -> Closed
+int 		_currentHistoryDiariesCycleKey  ; Single key to cycle through History -> Diaries -> Closed
 int 		_currentBrowserKey
-int 		_currentAIViewKey
 int 		_currentDebuggerKey
-int 		_currentStatusHUDKey
 int 		_currentChatboxKey
 int 		_currentChatboxFocusKey
 int 		_currentSettingsMenuKey
@@ -82,11 +79,8 @@ Function ProcessPendingSettingsAction()
 	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
 	
 	if (pendingAction == "")
-		Debug.Trace("[CHIM] No pending action to process")
 		return
 	endif
-	
-	Debug.Trace("[CHIM] Processing pending settings action: " + pendingAction)
 	
 	; Parse action - format: "actionId" or "actionId|npcName"
 	String actionId = pendingAction
@@ -98,11 +92,27 @@ Function ProcessPendingSettingsAction()
 		npcName = StringUtil.Substring(pendingAction, pipeIndex + 1)
 	endif
 	
-	; Get crosshair ref for NPC-targeted actions
-	ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+	; Get target actor - prefer NPC name from action, fallback to crosshair
 	Actor targetActor = None
-	if (crosshairRef)
-		targetActor = crosshairRef as Actor
+	if (npcName != "")
+		; Find the NPC by name
+		Actor[] nearbyActors = AIAgentFunctions.findAllNearbyAgents()
+		int i = 0
+		while i < nearbyActors.Length
+			if (nearbyActors[i].GetDisplayName() == npcName)
+				targetActor = nearbyActors[i]
+				i = nearbyActors.Length ; break loop
+			endif
+			i += 1
+		endwhile
+	endif
+
+	; Fallback to crosshair if no name was provided
+	if (!targetActor)
+		ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+		if (crosshairRef)
+			targetActor = crosshairRef as Actor
+		endif
 	endif
 	
 	; Process Papyrus-only actions
@@ -355,32 +365,20 @@ Event OnKeyDown(int keyCode)
 	OpenMasterWheel()
   EndIf
   
-  If(keyCode == _currentHistoryPanelKey)
-	AIAgentFunctions.toggleHistoryPanel()
-  EndIf
-  
-  If(keyCode == _currentOverlayKey)
-	AIAgentFunctions.toggleOverlayPanel()
-  EndIf
-  
-  If(keyCode == _currentDiariesKey)
-	AIAgentFunctions.toggleDiariesPanel()
-  EndIf
-  
   If(keyCode == _currentBrowserKey)
 	AIAgentFunctions.toggleBrowserPanel()
-  EndIf
-  
-  If(keyCode == _currentAIViewKey)
-	AIAgentFunctions.toggleAIViewPanel()
   EndIf
   
   If(keyCode == _currentDebuggerKey)
 	AIAgentFunctions.toggleDebuggerPanel()
   EndIf
   
-  If(keyCode == _currentStatusHUDKey)
-	AIAgentFunctions.toggleStatusHUDPanel()
+  If(keyCode == _currentOverlayStatusCycleKey)
+	AIAgentFunctions.cycleOverlayStatusPanels()
+  EndIf
+  
+  If(keyCode == _currentHistoryDiariesCycleKey)
+	AIAgentFunctions.cycleHistoryDiariesPanels()
   EndIf
   
   If(keyCode == _currentChatboxKey)
@@ -406,20 +404,20 @@ Event OnKeyDown(int keyCode)
 		Return
 	EndIf
 	
-	; Simply toggle the menu - pending actions are handled via mod event
+	; Ensure polling is started (in case quest was reloaded without OnInit)
+	RegisterForSingleUpdate(0.1)
+	
+	; Toggle the menu
 	AIAgentFunctions.toggleSettingsMenu()
   EndIf
   
 EndEvent
 
 Event OnUpdate()
-    ;Debug.Notification("Updating...")
-	
 	; Check for pending settings menu actions
 	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
+	
 	if (pendingAction != "")
-		Debug.Trace("[CHIM Settings] Detected pending action via polling: " + pendingAction)
-		Debug.Notification("[CHIM] Processing: " + pendingAction)
 		ProcessPendingSettingsAction()
 	endif
 	
@@ -499,59 +497,41 @@ EndFunction
 
 Function doBinding12(int keycode) 
 	
-	_currentHistoryPanelKey=keycode
+	_currentOverlayStatusCycleKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding13(int keycode) 
 	
-	_currentOverlayKey=keycode
+	_currentHistoryDiariesCycleKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding14(int keycode) 
 	
-	_currentDiariesKey=keycode
+	_currentBrowserKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding15(int keycode) 
 	
-	_currentBrowserKey=keycode
+	_currentDebuggerKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding16(int keycode) 
 	
-	_currentAIViewKey=keycode
+	_currentChatboxKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding17(int keycode) 
 	
-	_currentDebuggerKey=keycode
-	RegisterForKey(keycode)
-EndFunction
-
-Function doBinding18(int keycode) 
-	
-	_currentStatusHUDKey=keycode
-	RegisterForKey(keycode)
-EndFunction
-
-Function doBinding19(int keycode) 
-	
-	_currentChatboxKey=keycode
-	RegisterForKey(keycode)
-EndFunction
-
-Function doBinding20(int keycode) 
-	
 	_currentChatboxFocusKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
-Function doBinding21(int keycode) 
+Function doBinding18(int keycode) 
 	
 	_currentSettingsMenuKey=keycode
 	RegisterForKey(keycode)

@@ -148,7 +148,10 @@
         var message = chatInput.value.trim();
         if (!message) return;
 
-        window.pushChatMessage('Player', message, getCurrentTime(), 'player');
+        // DON'T push to UI here - C++ will push it after sending with actual player name
+        // This prevents double entries (one with "Player", one with actual name like "RANGROO")
+        // window.pushChatMessage('Player', message, getCurrentTime(), 'player');
+        
         if (window.chimChatboxCommand) {
             window.chimChatboxCommand('send|' + message);
         }
