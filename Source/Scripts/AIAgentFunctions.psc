@@ -84,6 +84,14 @@ int function toggleStatusHUDPanel() Global Native
 int function showStatusHUDPanel() Global Native
 int function hideStatusHUDPanel() Global Native
 
+int function toggleChatboxPanel() Global Native
+int function showChatboxPanel() Global Native
+int function hideChatboxPanel() Global Native
+int function focusChatboxPanel() Global Native
+int function unfocusChatboxPanel() Global Native
+int function isChatboxPanelVisible() Global Native
+int function isChatboxPanelFocused() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

@@ -1,0 +1,357 @@
+/**
+ * CHIM Chatbox - MMO Style
+ * Bottom-left positioned chatbox with tabs
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    background: transparent;
+    color: #e8e8e8;
+    overflow: hidden;
+}
+
+/* Main Container */
+#chim-chatbox {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 550px;
+    height: 420px;
+    background: rgba(10, 10, 15, 0.88);
+    border: 1px solid rgba(242, 124, 17, 0.4);
+    border-radius: 6px;
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.7),
+        0 0 15px rgba(242, 124, 17, 0.15);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tab Bar */
+.chatbox-tabs {
+    display: flex;
+    background: linear-gradient(180deg, rgba(242, 124, 17, 0.15), rgba(242, 124, 17, 0.05));
+    border-bottom: 1px solid rgba(242, 124, 17, 0.3);
+    padding: 6px 6px 0 6px;
+    position: relative;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 8px 16px;
+    background: rgba(30, 30, 40, 0.5);
+    border: none;
+    border-radius: 4px 4px 0 0;
+    color: #888;
+    font-size: 1em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 4px;
+    pointer-events: auto;
+}
+
+.tab-button:hover {
+    background: rgba(40, 40, 50, 0.7);
+    color: #aaa;
+}
+
+.tab-button.active {
+    background: rgba(242, 124, 17, 0.2);
+    color: rgb(242, 124, 17);
+    border-bottom: 2px solid rgb(242, 124, 17);
+}
+
+.btn-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    background: rgba(40, 40, 48, 0.8);
+    border: 1px solid rgba(242, 124, 17, 0.3);
+    border-radius: 4px;
+    color: #aaa;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+.btn-close:hover {
+    background: rgba(60, 60, 70, 0.9);
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+}
+
+/* Content Area */
+.chatbox-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.tab-pane {
+    display: none;
+    height: 100%;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.messages-container {
+    height: 100%;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: rgba(20, 20, 25, 0.5);
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: rgba(242, 124, 17, 0.4);
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(242, 124, 17, 0.6);
+}
+
+/* Message Styles */
+.message {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: rgba(20, 20, 30, 0.4);
+    animation: messageIn 0.2s ease;
+}
+
+@keyframes messageIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.message-header {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 2px;
+}
+
+.message-speaker {
+    font-weight: 600;
+    font-size: 1em;
+    margin-right: 6px;
+}
+
+.message-timestamp {
+    font-size: 0.8em;
+    color: #666;
+    margin-left: auto;
+}
+
+.message-text {
+    font-size: 1.05em;
+    line-height: 1.4;
+    color: #ddd;
+    word-wrap: break-word;
+}
+
+/* Speaker Colors */
+.message.player .message-speaker {
+    color: #5dade2;
+}
+
+.message.npc .message-speaker {
+    color: #58d68d;
+}
+
+.message.narrator .message-speaker {
+    color: #f39c12;
+}
+
+.message.system .message-speaker {
+    color: #ec7063;
+}
+
+/* System Messages */
+.message-system {
+    display: block;
+    padding: 6px 8px;
+    font-size: 0.95em;
+    color: #999;
+    text-align: center;
+    font-style: italic;
+}
+
+.message-welcome {
+    margin-bottom: 8px;
+}
+
+/* System Log Entry */
+.log-entry {
+    margin-bottom: 6px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    font-size: 0.95em;
+    line-height: 1.3;
+    border-left: 3px solid #666;
+    background: rgba(20, 20, 30, 0.4);
+}
+
+.log-entry.error {
+    border-left-color: #ff6b6b;
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.log-entry.warn {
+    border-left-color: #f39c12;
+    background: rgba(243, 156, 18, 0.1);
+}
+
+.log-entry.info {
+    border-left-color: #5dade2;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.log-timestamp {
+    color: #666;
+    font-size: 0.95em;
+    margin-right: 6px;
+}
+
+.log-level {
+    font-weight: 600;
+    margin-right: 6px;
+    text-transform: uppercase;
+    font-size: 0.95em;
+}
+
+.log-entry.error .log-level {
+    color: #ff6b6b;
+}
+
+.log-entry.warn .log-level {
+    color: #f39c12;
+}
+
+.log-entry.info .log-level {
+    color: #5dade2;
+}
+
+.log-message {
+    color: #ccc;
+}
+
+/* Input Area */
+.chatbox-input {
+    display: flex;
+    padding: 8px;
+    background: rgba(20, 20, 30, 0.6);
+    border-top: 1px solid rgba(242, 124, 17, 0.3);
+    gap: 6px;
+}
+
+#chat-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(30, 30, 40, 0.8);
+    border: 1px solid rgba(80, 80, 90, 0.5);
+    border-radius: 4px;
+    color: #e8e8e8;
+    font-size: 1em;
+    outline: none;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
+
+#chat-input:focus,
+#chat-input.focused {
+    border-color: rgba(242, 124, 17, 0.6);
+    background: rgba(35, 35, 45, 0.9);
+    box-shadow: 0 0 8px rgba(242, 124, 17, 0.2);
+}
+
+#chat-input::placeholder {
+    color: #666;
+}
+
+.btn-send {
+    padding: 8px 16px;
+    background: rgba(242, 124, 17, 0.3);
+    border: 1px solid rgba(242, 124, 17, 0.5);
+    border-radius: 4px;
+    color: rgb(242, 124, 17);
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+}
+
+.btn-send:hover {
+    background: rgba(242, 124, 17, 0.5);
+    border-color: rgb(242, 124, 17);
+    color: #fff;
+}
+
+.btn-send:active {
+    transform: scale(0.95);
+}
+
+/* Loading Indicator */
+.loading-indicator {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-size: 0.85em;
+}
+
+/* Empty State */
+.empty-messages {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 0.85em;
+    font-style: italic;
+}

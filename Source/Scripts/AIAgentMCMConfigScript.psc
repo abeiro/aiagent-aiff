@@ -172,6 +172,14 @@ int			_debugger_key					= -1
 int			_keymap_statushud
 int			_statushud_key					= -1
 
+; CHIM Chatbox (Prisma UI)
+int			_keymap_chatbox
+int			_chatbox_key					= -1
+
+; CHIM Chatbox Focus Toggle
+int			_keymap_chatbox_focus
+int			_chatbox_focus_key				= -1
+
 int			_actionSendLocations
 bool		_actionSendLocationsState		= false
 int			_actionSendVoices
@@ -405,12 +413,24 @@ endEvent
 
 int function GetVersion()
 
-	return 50
+	return 52
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 52 && a_version > CurrentVersion)
+		; Version 52: Added CHIM Chatbox Focus keybinding
+		_chatbox_focus_key = -1
+		OnConfigInit()
+	endIf
+
+	if (a_version == 51 && a_version > CurrentVersion)
+		; Version 51: Added CHIM Chatbox keybinding
+		_chatbox_key = -1
+		OnConfigInit()
+	endIf
 
 	if (a_version == 50 && a_version > CurrentVersion)
 		OnConfigInit()
@@ -505,6 +525,8 @@ event OnPageReset(string a_page)
 		_keymap_aiview = AddKeyMapOption("CHIM AI View", _aiview_key)
 		_keymap_debugger = AddKeyMapOption("CHIM Debugger", _debugger_key)
 		_keymap_statushud = AddKeyMapOption("CHIM Status HUD", _statushud_key)
+		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
+		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
 	endif
 	
 
@@ -1248,6 +1270,24 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_chatbox)
+			controlScript.removeBinding(_chatbox_key)
+			_chatbox_key = a_keyCode
+			controlScript.doBinding19(_chatbox_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
+		elseif (a_option == _keymap_chatbox_focus)
+			controlScript.removeBinding(_chatbox_focus_key)
+			_chatbox_focus_key = a_keyCode
+			controlScript.doBinding20(_chatbox_focus_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1734,6 +1774,14 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_statushud)
 		SetInfoText("Toggle the CHIM Status HUD. Shows live status icons for STT, Player TTS, LLM, and TTS processing, plus current mode and connector. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_chatbox)
+		SetInfoText("Toggle the CHIM Chatbox. MMO-style chat interface with Chat tab for AI dialogue and System tab for DLL errors. Type messages to communicate with AI agents. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_chatbox_focus)
+		SetInfoText("Focus/Unfocus the CHIM Chatbox. When chatbox is visible but unfocused, press to enable typing. When focused, press to send message and return control to game.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)
