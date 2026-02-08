@@ -134,13 +134,13 @@ body {
 }
 
 /* =========================
-   RIGHT PANEL - Settings Only (Smaller)
+   RIGHT PANEL - Settings Only (Wider)
    ========================= */
 .right-panel {
     position: fixed;
     top: 70px;
     right: 20px;
-    width: 260px;
+    width: 320px;
     max-height: 400px;
     background: rgba(10, 10, 15, 0.93);
     border: 1px solid rgba(242, 124, 17, 0.5);
@@ -155,13 +155,13 @@ body {
 }
 
 /* =========================
-   BIOGRAPHY PANEL - Bottom Right (2-column, MUCH WIDER)
+   BIOGRAPHY PANEL - Bottom Right (2-column, WIDER with Relationships)
    ========================= */
 .bio-panel {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 1000px;
+    width: 1200px;
     max-height: calc(60vh - 40px);
     background: rgba(10, 10, 15, 0.93);
     border: 1px solid rgba(242, 124, 17, 0.5);
@@ -191,6 +191,16 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+/* Relationships Section in Biography (Full Width) */
+.bio-relationships {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.bio-relationships .bio-field {
+    padding: 12px;
 }
 
 /* Panel Headers */
@@ -383,11 +393,13 @@ body {
     padding: 8px 10px;
     background: rgba(30, 30, 40, 0.5);
     border-radius: 4px;
+    min-height: 38px;
 }
 
 .toggle-label {
     font-size: 0.85em;
     color: #bbb;
+    flex: 1;
 }
 
 .toggle-value {
@@ -397,6 +409,8 @@ body {
     border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    min-width: 60px;
+    text-align: center;
 }
 
 .toggle-value.on {

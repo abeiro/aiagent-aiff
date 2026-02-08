@@ -64,6 +64,17 @@
         try {
             const entry = JSON.parse(jsonString);
             
+            // Skip context history entries
+            const speakerText = entry.speaker || '';
+            const textContent = entry.text || '';
+            if (speakerText.startsWith('Context History') || 
+                speakerText.startsWith('Context location') ||
+                textContent.startsWith('Context History') ||
+                textContent.startsWith('Context location') ||
+                textContent.includes('(Context location:')) {
+                return; // Skip this entry
+            }
+            
             hideEmpty();
             
             const entryEl = createEntryElement({
@@ -90,7 +101,17 @@
         historyList.innerHTML = '';
         
         // Entries are already in DESC order (newest first)
+        // Filter out "Context History" entries
         entries.forEach(entry => {
+            const eventData = stripHtml(entry['Events'] || '');
+            
+            // Skip entries that start with "Context History" or "Context location"
+            if (eventData.startsWith('Context History') || 
+                eventData.startsWith('Context location') ||
+                eventData.includes('(Context location:')) {
+                return; // Skip this entry
+            }
+            
             const entryEl = createEntryElement(entry);
             historyList.appendChild(entryEl);
         });

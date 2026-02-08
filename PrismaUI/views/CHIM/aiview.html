@@ -19,9 +19,9 @@
             </div>
         </div>
 
-        <!-- Left Panel - Identity, Profile & Relationships -->
+        <!-- Left Panel - Identity & Profile -->
         <div class="left-panel" id="left-panel">
-            <div class="panel-section-header">Identity & Relationships</div>
+            <div class="panel-section-header">Identity & Profile</div>
             <div class="panel-content">
                 <!-- Loading State -->
                 <div id="loading-indicator-left" class="loading-section">
@@ -84,17 +84,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Relationships & Affinity Section -->
-                    <div class="info-section">
-                        <div class="section-header">
-                            <span class="section-title">Relationships</span>
-                        </div>
-                        <div class="section-content" id="section-relationships">
-                            <div class="relationship-text" id="relationship-text">-</div>
-                            <div class="affinity-list" id="affinity-list"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -147,9 +136,9 @@
             </div>
         </div>
 
-        <!-- Biography Panel - Bottom Right (2-column layout) -->
+        <!-- Biography Panel - Bottom Right (includes Relationships) -->
         <div class="bio-panel" id="bio-panel">
-            <div class="panel-section-header">Biography</div>
+            <div class="panel-section-header">Biography & Relationships</div>
             <div class="panel-content bio-content">
                 <!-- Loading State -->
                 <div id="loading-indicator-bio" class="loading-section">
@@ -164,6 +153,15 @@
 
                 <!-- Content - 2 Column Layout -->
                 <div id="content-bio" class="hidden">
+                    <!-- Relationships Section (Full Width at Top) -->
+                    <div class="bio-relationships">
+                        <div class="bio-field">
+                            <div class="bio-label">Relationships</div>
+                            <div class="relationship-text" id="relationship-text">-</div>
+                            <div class="affinity-list" id="affinity-list"></div>
+                        </div>
+                    </div>
+                    
                     <div class="bio-columns">
                         <!-- Left Column -->
                         <div class="bio-column">
