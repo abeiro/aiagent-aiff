@@ -2,7 +2,6 @@
 
 let currentNPCTarget = '';
 let profileSlots = {};
-let focusChatEnabled = false;
 
 // Show description in footer
 window.showDescription = function(text) {
@@ -33,11 +32,6 @@ function initSettingsMenu() {
     
     // Fetch profile information
     fetchProfilesInfo();
-    
-    // Fetch current settings state (focus chat, etc.)
-    // Try immediately and then retry after a delay in case server URL isn't set yet
-    fetchCurrentSettings();
-    setTimeout(fetchCurrentSettings, 500); // Retry after 500ms
     
     // Add keyboard listener for ESC key to close menu
     document.addEventListener('keydown', handleKeyDown);
@@ -188,38 +182,6 @@ window.setNPCTarget = function(npcName) {
         currentNPCTarget = '';
     }
 };
-
-// Fetch current settings state (copied from status_hud.js approach)
-async function fetchCurrentSettings() {
-    try {
-        const serverUrl = window.chimServerUrl || 'http://127.0.0.1:8081';
-        const apiUrl = `${serverUrl}/ui/api/chim_status.php`;
-        
-        const response = await fetch(apiUrl, { method: 'GET', cache: 'no-cache' });
-        if (!response.ok) {
-            return;
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.data) {
-            focusChatEnabled = !!data.data.focus_chat;
-            updateFocusChatButton();
-        }
-    } catch (error) {
-        console.error('[CHIM Settings] Error fetching status:', error);
-    }
-}
-
-// Update the Focus Chat button to show current state
-function updateFocusChatButton() {
-    const focusBtn = document.getElementById('focus-chat-btn');
-    if (focusBtn) {
-        const statusText = focusChatEnabled ? 'ON' : 'OFF';
-        const statusColor = focusChatEnabled ? '#58d68d' : '#e74c3c';
-        focusBtn.innerHTML = `Focus Chat <span style="color: ${statusColor}; font-weight: 700;">[${statusText}]</span>`;
-    }
-}
 
 // Initialize on load
 if (document.readyState === 'loading') {
