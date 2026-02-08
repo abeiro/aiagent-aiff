@@ -144,8 +144,8 @@ body {
 }
 
 .history-entry.action {
-    border-left-color: #2ecc71;
-    background: rgba(30, 45, 40, 0.7);
+    border-left-color: #95a5a6;
+    background: rgba(40, 45, 50, 0.6);
 }
 
 /* Entry Header */
@@ -174,7 +174,8 @@ body {
 }
 
 .history-entry.action .entry-speaker {
-    color: #2ecc71;
+    color: #95a5a6;
+    font-style: italic;
 }
 
 .entry-timestamp {
