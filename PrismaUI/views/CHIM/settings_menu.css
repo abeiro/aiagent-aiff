@@ -51,6 +51,8 @@ body {
     padding: 16px 24px;
     border-bottom: 2px solid rgba(242, 124, 17, 0.3);
     background: rgba(20, 20, 24, 0.8);
+    position: relative;
+    z-index: 5;
 }
 
 .breadcrumb {
@@ -86,7 +88,10 @@ body {
 .modal-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible; /* Allow tooltips to overflow horizontally */
     padding: 24px;
+    position: relative;
+    z-index: 1; /* Lower than header */
 }
 
 /* Custom scrollbar */
@@ -110,6 +115,8 @@ body {
 /* Settings Group */
 .settings-group {
     margin-bottom: 24px;
+    position: relative; /* Create positioning context for tooltips */
+    z-index: auto; /* Don't create new stacking context */
 }
 
 .settings-group:last-child {
@@ -137,6 +144,8 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 10px;
+    position: relative; /* For tooltip positioning */
+    z-index: auto; /* Don't create new stacking context */
 }
 
 /* Setting Buttons - compact for grid */
@@ -155,14 +164,10 @@ body {
     position: relative;
 }
 
-/* Profile buttons with multi-line layout */
+/* Profile buttons - simpler single-line layout */
 .setting-btn.profile-btn {
-    text-align: left;
-    padding: 12px 14px;
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    text-align: center;
+    padding: 14px 18px;
 }
 
 .profile-name {
@@ -171,11 +176,8 @@ body {
     color: rgb(242, 124, 17);
 }
 
-.profile-connectors {
-    font-size: 0.85em;
-    color: #b8b8b8;
-    line-height: 1.4;
-    font-weight: 400;
+.setting-btn.profile-btn:hover .profile-name {
+    color: #fff;
 }
 
 .setting-btn:hover {
@@ -184,66 +186,10 @@ body {
     transform: scale(1.05);
     color: rgb(242, 124, 17);
     box-shadow: 0 4px 12px rgba(242, 124, 17, 0.3);
-    z-index: 10;
-}
-
-.setting-btn.profile-btn:hover .profile-name {
-    color: #fff;
-}
-
-.setting-btn.profile-btn:hover .profile-connectors {
-    color: #e8e8e8;
 }
 
 .setting-btn:active {
     transform: scale(0.98);
-}
-
-/* Tooltip on hover - using title attribute styling */
-.setting-btn[title]:hover::after {
-    content: attr(title);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background: rgba(20, 20, 24, 0.98);
-    border: 1px solid rgba(242, 124, 17, 0.5);
-    border-radius: 4px;
-    color: #e8e8e8;
-    font-size: 0.85em;
-    white-space: normal;
-    max-width: 250px;
-    text-align: center;
-    z-index: 100;
-    pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
-    animation: tooltipFadeIn 0.2s ease;
-}
-
-.setting-btn[title]:hover::before {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 2px;
-    border: 6px solid transparent;
-    border-top-color: rgba(242, 124, 17, 0.5);
-    z-index: 99;
-    pointer-events: none;
-}
-
-@keyframes tooltipFadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
 }
 
 /* Footer */
@@ -252,12 +198,17 @@ body {
     border-top: 2px solid rgba(242, 124, 17, 0.3);
     background: rgba(20, 20, 24, 0.8);
     text-align: center;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .hint-text {
     font-size: 0.95em;
     color: #999;
     font-style: italic;
+    transition: color 0.2s;
 }
 
 /* Loading State */

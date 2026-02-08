@@ -1,7 +1,26 @@
 // CHIM Settings Menu JavaScript
 
 let currentNPCTarget = '';
-let profilesData = [];
+let profileSlots = {};
+let focusChatEnabled = false;
+
+// Show description in footer
+window.showDescription = function(text) {
+    const descElement = document.getElementById('hover-description');
+    if (descElement) {
+        descElement.textContent = text;
+        descElement.style.color = '#e8e8e8';
+    }
+};
+
+// Clear description in footer
+window.clearDescription = function() {
+    const descElement = document.getElementById('hover-description');
+    if (descElement) {
+        descElement.textContent = 'Hover over any option to see details';
+        descElement.style.color = '#999';
+    }
+};
 
 // Initialize when DOM is ready
 function initSettingsMenu() {
@@ -15,8 +34,23 @@ function initSettingsMenu() {
     // Fetch profile information
     fetchProfilesInfo();
     
-    // Remove ESC key handler - only hotkey closes now
-    // No ESC handling here
+    // Fetch current settings state (focus chat, etc.)
+    // Try immediately and then retry after a delay in case server URL isn't set yet
+    fetchCurrentSettings();
+    setTimeout(fetchCurrentSettings, 500); // Retry after 500ms
+    
+    // Add keyboard listener for ESC key to close menu
+    document.addEventListener('keydown', handleKeyDown);
+}
+
+// Handle keyboard events
+function handleKeyDown(event) {
+    // ESC key closes the menu
+    if (event.key === 'Escape' || event.keyCode === 27) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeMenu();
+    }
 }
 
 // Fetch profiles and connector information from server
@@ -24,76 +58,68 @@ async function fetchProfilesInfo() {
     try {
         // Get server URL from C++ or use default
         const serverUrl = window.chimServerUrl || 'http://127.0.0.1:8081';
-        const response = await fetch(`${serverUrl}/HerikaServer/ui/api/chim_profiles.php`);
+        const apiUrl = `${serverUrl}/ui/api/chim_profiles.php`;
+        console.log('[CHIM Settings] Fetching profiles from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
-            console.error('[CHIM Settings] Failed to fetch profiles:', response.status);
+            console.error('[CHIM Settings] Failed to fetch profiles:', response.status, response.statusText);
+            setFallbackProfiles();
             return;
         }
         
         const data = await response.json();
+        console.log('[CHIM Settings] Received profile data:', data);
         
-        if (data.success && data.profiles) {
-            profilesData = data.profiles;
+        if (data.success && data.profile_slots) {
+            profileSlots = data.profile_slots;
             updateProfileButtons();
-            console.log('[CHIM Settings] Loaded profile data:', profilesData);
+        } else {
+            console.error('[CHIM Settings] Invalid data structure:', data);
+            setFallbackProfiles();
         }
     } catch (error) {
         console.error('[CHIM Settings] Error fetching profiles:', error);
+        setFallbackProfiles();
     }
 }
 
-// Update profile buttons with detailed information
+// Set fallback profile data when API fails
+function setFallbackProfiles() {
+    console.log('[CHIM Settings] Using fallback profile data');
+    profileSlots = {
+        1: { profile_name: 'Profile 1' },
+        2: { profile_name: 'Profile 2' },
+        3: { profile_name: 'Profile 3' },
+        4: { profile_name: 'Profile 4' }
+    };
+    updateProfileButtons();
+}
+
+// Update profile buttons with profile names (simplified)
 function updateProfileButtons() {
+    console.log('[CHIM Settings] Updating profile buttons');
+    
     for (let slot = 1; slot <= 4; slot++) {
-        const nameDiv = document.querySelector(`#profile-${slot}-connectors`);
-        if (!nameDiv) continue;
-        
-        const profile = profilesData.find(p => p.slot === slot);
-        if (!profile) {
-            nameDiv.innerHTML = '<span style="color: #888;">Loading...</span>';
+        const nameElement = document.getElementById(`profile-${slot}-name`);
+        if (!nameElement) {
+            console.error(`[CHIM Settings] Could not find #profile-${slot}-name`);
             continue;
         }
         
-        // Find the parent button to update the profile name
-        const button = nameDiv.closest('.profile-btn');
-        if (button) {
-            const nameElement = button.querySelector('.profile-name');
-            if (nameElement) {
-                nameElement.textContent = `${profile.profile_name}`;
+        const profile = profileSlots[slot];
+        if (profile && profile.profile_name) {
+            nameElement.textContent = profile.profile_name;
+            console.log(`[CHIM Settings] Set slot ${slot} name: ${profile.profile_name}`);
+            
+            // Update the button's hover description
+            const button = nameElement.closest('.profile-btn');
+            if (button) {
+                button.setAttribute('onmouseenter', `showDescription('Assign "${profile.profile_name}" to this NPC permanently')`);
             }
-        }
-        
-        // Build connector list
-        if (profile.connectors && profile.connectors.length > 0) {
-            let connectorsHTML = '';
-            profile.connectors.forEach((conn, idx) => {
-                if (idx > 0) connectorsHTML += '<br>';
-                connectorsHTML += `<span style="color: #aaa;">•</span> ${conn.slot_name.replace(' LLM', '')}: ${conn.label}`;
-            });
-            nameDiv.innerHTML = connectorsHTML;
         } else {
-            nameDiv.innerHTML = '<span style="color: #888;">No connectors configured</span>';
-        }
-        
-        // Build detailed tooltip
-        let tooltipText = `Assign "${profile.profile_name}" to this NPC permanently.\n\n`;
-        
-        if (profile.connectors && profile.connectors.length > 0) {
-            tooltipText += 'Configured LLMs:\n';
-            profile.connectors.forEach(conn => {
-                tooltipText += `• ${conn.slot_name}: ${conn.label}`;
-                if (conn.model) {
-                    tooltipText += ` (${conn.model})`;
-                }
-                tooltipText += '\n';
-            });
-        } else {
-            tooltipText += 'No LLM connectors configured for this profile.';
-        }
-        
-        if (button) {
-            button.setAttribute('title', tooltipText);
+            nameElement.textContent = `Profile ${slot}`;
         }
     }
 }
@@ -162,6 +188,38 @@ window.setNPCTarget = function(npcName) {
         currentNPCTarget = '';
     }
 };
+
+// Fetch current settings state (copied from status_hud.js approach)
+async function fetchCurrentSettings() {
+    try {
+        const serverUrl = window.chimServerUrl || 'http://127.0.0.1:8081';
+        const apiUrl = `${serverUrl}/ui/api/chim_status.php`;
+        
+        const response = await fetch(apiUrl, { method: 'GET', cache: 'no-cache' });
+        if (!response.ok) {
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            focusChatEnabled = !!data.data.focus_chat;
+            updateFocusChatButton();
+        }
+    } catch (error) {
+        console.error('[CHIM Settings] Error fetching status:', error);
+    }
+}
+
+// Update the Focus Chat button to show current state
+function updateFocusChatButton() {
+    const focusBtn = document.getElementById('focus-chat-btn');
+    if (focusBtn) {
+        const statusText = focusChatEnabled ? 'ON' : 'OFF';
+        const statusColor = focusChatEnabled ? '#58d68d' : '#e74c3c';
+        focusBtn.innerHTML = `Focus Chat <span style="color: ${statusColor}; font-weight: 700;">[${statusText}]</span>`;
+    }
+}
 
 // Initialize on load
 if (document.readyState === 'loading') {

@@ -400,15 +400,17 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentSettingsMenuKey)
-	If !SafeProcess()
-		Return
+	; Allow in menu mode since the settings menu itself pauses the game
+	; This allows the hotkey to close the menu when it's open
+	If (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		; Ensure polling is started (in case quest was reloaded without OnInit)
+		RegisterForSingleUpdate(0.1)
+		
+		; Toggle the menu
+		AIAgentFunctions.toggleSettingsMenu()
 	EndIf
-	
-	; Ensure polling is started (in case quest was reloaded without OnInit)
-	RegisterForSingleUpdate(0.1)
-	
-	; Toggle the menu
-	AIAgentFunctions.toggleSettingsMenu()
   EndIf
   
 EndEvent
