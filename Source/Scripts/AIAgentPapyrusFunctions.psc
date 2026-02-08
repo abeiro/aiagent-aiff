@@ -23,6 +23,7 @@ int 		_currentDebuggerKey
 int 		_currentChatboxKey
 int 		_currentChatboxFocusKey
 int 		_currentSettingsMenuKey
+int 		_currentMasterMenuKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -413,6 +414,17 @@ Event OnKeyDown(int keyCode)
 	EndIf
   EndIf
   
+  If(keyCode == _currentMasterMenuKey)
+	; Allow in menu mode since the master menu itself pauses the game
+	; This allows the hotkey to close the menu when it's open
+	If (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		; Toggle the menu
+		AIAgentFunctions.toggleMasterMenu()
+	EndIf
+  EndIf
+  
 EndEvent
 
 Event OnUpdate()
@@ -536,6 +548,12 @@ EndFunction
 Function doBinding18(int keycode) 
 	
 	_currentSettingsMenuKey=keycode
+	RegisterForKey(keycode)
+EndFunction
+
+Function doBinding19(int keycode) 
+	
+	_currentMasterMenuKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 

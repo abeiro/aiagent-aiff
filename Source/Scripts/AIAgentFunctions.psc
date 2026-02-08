@@ -98,6 +98,8 @@ int function toggleSettingsMenu() Global Native
 String function getSettingsMenuPendingAction() Global Native
 int function clearSettingsMenuPendingAction() Global Native
 
+int function toggleMasterMenu() Global Native
+
 ; Test functions
 int function sendAllVoices() Global Native
 int function  testAddAllNPCAround() Global Native

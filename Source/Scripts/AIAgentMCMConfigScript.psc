@@ -164,6 +164,10 @@ int			_chatbox_focus_key				= -1
 int			_keymap_settingsmenu
 int			_settingsmenu_key				= -1
 
+; CHIM Master Menu (Prisma UI)
+int			_keymap_mastermenu
+int			_mastermenu_key					= -1
+
 ; CHIM Overlay/Status Cycle (Single hotkey)
 int			_keymap_overlaystatus_cycle
 int			_overlaystatus_cycle_key		= -1
@@ -404,12 +408,17 @@ endEvent
 
 int function GetVersion()
 
-	return 53
+	return 54
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 54 && a_version > CurrentVersion)
+		; Version 54: Added CHIM Master Menu to Prisma UI page
+		OnConfigInit()
+	endIf
 
 	if (a_version == 53 && a_version > CurrentVersion)
 		; Version 53: Added new Prisma UI page to MCM menu
@@ -590,6 +599,7 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		AddHeaderOption("Panel Hotkeys")
+		_keymap_mastermenu = AddKeyMapOption("CHIM Master Menu", _mastermenu_key)
 		_keymap_browser = AddKeyMapOption("CHIM Browser (Beta)", _browser_key)
 		_keymap_debugger = AddKeyMapOption("CHIM Logs View (Beta)", _debugger_key)
 		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
@@ -1265,6 +1275,15 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 			else
 				SetKeymapOptionValue(a_option, a_keyCode)
 			endif
+		elseif (a_option == _keymap_mastermenu)
+			controlScript.removeBinding(_mastermenu_key)
+			_mastermenu_key = a_keyCode
+			controlScript.doBinding19(_mastermenu_key)
+			if (a_keyCode == -1)
+				ForcePageReset()
+			else
+				SetKeymapOptionValue(a_option, a_keyCode)
+			endif
 		endIf
 		
 	endIf
@@ -1751,6 +1770,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_settingsmenu)
 		SetInfoText("Open the CHIM Settings Menu. Central interface for all in-game settings from the 4 wheels. Game pauses when open, press hotkey again to close. Requires Prisma UI.")
+	endIf
+	
+	if (a_option == _keymap_mastermenu)
+		SetInfoText("Open the CHIM Master Menu. Quick launcher for all Prisma UI panels. Game pauses when open. Select a panel to toggle it. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _toggle_autoadd_hostile)
