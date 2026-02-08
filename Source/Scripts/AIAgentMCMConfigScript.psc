@@ -286,13 +286,14 @@ endEvent
 event OnConfigInit()
 
 	ModName="CHIM"
-	Pages = new string[6]
+	Pages = new string[7]
 	Pages[0] = "Main"
 	Pages[1] = "Auto Activate"
 	Pages[2] = "Behavior"
 	Pages[3] = "Sound"
-	Pages[4] = "AI Agents"
-	Pages[5] = "Tools"
+	Pages[4] = "Prisma UI"
+	Pages[5] = "AI Agents"
+	Pages[6] = "Tools"
 	
 	Debug.Trace("[AIAGENT] OnConfigInit");
 	
@@ -403,12 +404,17 @@ endEvent
 
 int function GetVersion()
 
-	return 52
+	return 53
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 53 && a_version > CurrentVersion)
+		; Version 53: Added new Prisma UI page to MCM menu
+		OnConfigInit()
+	endIf
 
 	if (a_version == 52 && a_version > CurrentVersion)
 		; Version 52: Added CHIM Chatbox Focus keybinding
@@ -504,18 +510,6 @@ event OnPageReset(string a_page)
 		_toggleAnimation		= AddToggleOption("Enable Animations", _animationstate)
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
 		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
-		
-		; === Prisma UI (Beta)===
-		AddEmptyOption()
-		AddHeaderOption("Prisma UI")
-		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries Cycle", _historydiaries_cycle_key)
-		_keymap_overlaystatus_cycle = AddKeyMapOption("Overlay/Status/AI View Cycle", _overlaystatus_cycle_key)
-		AddEmptyOption()
-		_keymap_browser = AddKeyMapOption("CHIM Browser (Beta)", _browser_key)
-		_keymap_debugger = AddKeyMapOption("CHIM Logs View (Beta)", _debugger_key)
-		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
-		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
-		_keymap_settingsmenu = AddKeyMapOption("CHIM Settings Menu", _settingsmenu_key)
 	endif
 	
 
@@ -587,6 +581,20 @@ event OnPageReset(string a_page)
 		_keymap_openmic_mute = AddKeyMapOption("Mute Open Mic", _openmic_mute_key)
 
 	
+	endif
+	
+	if (a_page=="Prisma UI")
+		AddHeaderOption("View Cycling Hotkeys")
+		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries Cycle", _historydiaries_cycle_key)
+		_keymap_overlaystatus_cycle = AddKeyMapOption("Overlay/Status/AI View Cycle", _overlaystatus_cycle_key)
+		
+		AddEmptyOption()
+		AddHeaderOption("Panel Hotkeys")
+		_keymap_browser = AddKeyMapOption("CHIM Browser (Beta)", _browser_key)
+		_keymap_debugger = AddKeyMapOption("CHIM Logs View (Beta)", _debugger_key)
+		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
+		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
+		_keymap_settingsmenu = AddKeyMapOption("CHIM Settings Menu", _settingsmenu_key)
 	endif
 	
 	if (a_page=="AI Agents")
