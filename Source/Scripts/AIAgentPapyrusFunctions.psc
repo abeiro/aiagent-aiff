@@ -131,6 +131,9 @@ Function ProcessPendingSettingsAction()
 				i += 1
 			endwhile
 		endif
+	elseif (actionId == "rp_diary_all")
+		Debug.Notification("[CHIM] Diary: Nearby NPCs are writing diary entries")
+		AIAgentFunctions.sendMessage("Please, update your diary", "diary_nearby")
 	elseif (actionId == "rp_write_diary" && targetActor)
 		Debug.Notification("[CHIM] " + targetActor.GetDisplayName() + " is writing diary entry")
 		AIAgentFunctions.requestMessageForActor("Please, update your diary", "diary", targetActor.GetDisplayName())
@@ -805,6 +808,10 @@ Function OpenRoleplayWheel()
 			Else
 				Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
 			EndIf
+		Else
+			; No target - check if looking up for Narrator diary
+			Debug.Trace("[CHIM] Diary with no target - routing to handler for camera pitch detection")
+			AIAgentFunctions.requestMessageForActor("Please, update your diary","diary","")
 		EndIf
 	ElseIf ( currentMode ==  "GATHER")
 		AIAgentAIMind.GatherAround()
