@@ -177,6 +177,9 @@
     window.onKeyChar = function(ch) {
         if (!isChatFocused) return;
         chatInput.value += ch;
+        // Scroll input to show the end of text (programmatic value changes don't auto-scroll)
+        chatInput.scrollLeft = chatInput.scrollWidth;
+        chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
     };
 
     /**
@@ -210,11 +213,15 @@
         if (key === 'backspace') {
             if (chatInput.value.length > 0) {
                 chatInput.value = chatInput.value.slice(0, -1);
+                chatInput.scrollLeft = chatInput.scrollWidth;
+                chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
             }
         } else if (key === 'delete') {
             // For simplicity, same as backspace (no cursor tracking needed)
             if (chatInput.value.length > 0) {
                 chatInput.value = chatInput.value.slice(0, -1);
+                chatInput.scrollLeft = chatInput.scrollWidth;
+                chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
             }
         }
         // left, right, home, end - not needed for simple text input

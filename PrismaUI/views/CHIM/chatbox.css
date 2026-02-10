@@ -289,6 +289,7 @@ body {
 
 #chat-input {
     flex: 1;
+    min-width: 0;
     padding: 8px 12px;
     background: rgba(30, 30, 40, 0.8);
     border: 1px solid rgba(80, 80, 90, 0.5);
