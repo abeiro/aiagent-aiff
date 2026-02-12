@@ -170,26 +170,15 @@
         }
     };
 
-    // ===== Keyboard input from C++ =====
-    // PrismaUI/CEF doesn't forward keyboard events to JS document listeners.
-    // Instead, C++ polls GetAsyncKeyState and calls these functions directly.
-
+    // ===== Native keyboard input via CEF =====
+    // PrismaUI Focus() enables CEF keyboard input, so we use native DOM events
+    
     /**
-     * Called from C++ when a printable character key is pressed
+     * Native keydown event listener for Enter and Escape
      */
-    window.onKeyChar = function(ch) {
-        if (!isChatFocused) return;
-        chatInput.value += ch;
-        // Scroll input to show the end of text (programmatic value changes don't auto-scroll)
-        chatInput.scrollLeft = chatInput.scrollWidth;
-        chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
-    };
-
-    /**
-     * Called from C++ when a special key is pressed
-     */
-    window.onKeySpecial = function(key) {
-        if (key === 'enter') {
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
             if (chatInput.value.trim()) {
                 window.sendMessage();
                 if (quickChatMode) {
@@ -205,11 +194,8 @@
                     }
                 }
             }
-            return;
-        }
-
-        if (key === 'escape') {
-            // Clear input and close/unfocus based on mode
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
             chatInput.value = '';
             if (quickChatMode) {
                 window.closeChat();  // quick-chat: close entirely
@@ -218,27 +204,8 @@
                     window.chimChatboxCommand('unfocus');  // normal: just unfocus
                 }
             }
-            return;
         }
-
-        if (!isChatFocused) return;
-
-        if (key === 'backspace') {
-            if (chatInput.value.length > 0) {
-                chatInput.value = chatInput.value.slice(0, -1);
-                chatInput.scrollLeft = chatInput.scrollWidth;
-                chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
-            }
-        } else if (key === 'delete') {
-            // For simplicity, same as backspace (no cursor tracking needed)
-            if (chatInput.value.length > 0) {
-                chatInput.value = chatInput.value.slice(0, -1);
-                chatInput.scrollLeft = chatInput.scrollWidth;
-                chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
-            }
-        }
-        // left, right, home, end - not needed for simple text input
-    };
+    });
 
     /**
      * Called when chatbox gains focus from C++
@@ -248,6 +215,7 @@
         quickChatMode = !!quickChat;
         chatInput.classList.add('focused');
         chatInput.placeholder = 'Type a message... (Enter to send, Esc to cancel)';
+        chatInput.focus(); // Ensure input element has DOM focus for CEF keyboard input
     };
 
     /**
@@ -258,6 +226,7 @@
         quickChatMode = false;
         chatInput.classList.remove('focused');
         chatInput.placeholder = 'Type a message...';
+        chatInput.blur(); // Remove DOM focus from input
     };
 
     /**
@@ -287,5 +256,5 @@
         }
     });
 
-    console.log('[Chatbox] Initialized - keyboard input handled via C++ forwarding');
+    console.log('[Chatbox] Initialized - keyboard input handled via native CEF events');
 })();
