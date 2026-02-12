@@ -156,7 +156,7 @@ int			_debugger_key					= -1
 int			_keymap_chatbox
 int			_chatbox_key					= -1
 
-; CHIM Chatbox Focus Toggle
+; CHIM Chatbox Type Message
 int			_keymap_chatbox_focus
 int			_chatbox_focus_key				= -1
 
@@ -426,7 +426,7 @@ event OnVersionUpdate(int a_version)
 	endIf
 
 	if (a_version == 52 && a_version > CurrentVersion)
-		; Version 52: Added CHIM Chatbox Focus keybinding
+		; Version 52: Added Chatbox Type Message keybinding
 		_chatbox_focus_key = -1
 		OnConfigInit()
 	endIf
@@ -599,12 +599,12 @@ event OnPageReset(string a_page)
 		
 		AddEmptyOption()
 		AddHeaderOption("Panel Hotkeys")
-		_keymap_mastermenu = AddKeyMapOption("CHIM Master Menu", _mastermenu_key)
-		_keymap_browser = AddKeyMapOption("CHIM Browser (Beta)", _browser_key)
-		_keymap_debugger = AddKeyMapOption("CHIM Logs View (Beta)", _debugger_key)
-		_keymap_chatbox = AddKeyMapOption("CHIM Chatbox", _chatbox_key)
-		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chatbox Focus", _chatbox_focus_key)
-		_keymap_settingsmenu = AddKeyMapOption("CHIM Settings Menu", _settingsmenu_key)
+		_keymap_mastermenu = AddKeyMapOption("Master Menu", _mastermenu_key)
+		_keymap_browser = AddKeyMapOption("Browser (Beta)", _browser_key)
+		_keymap_debugger = AddKeyMapOption("Logs View (Beta)", _debugger_key)
+		_keymap_chatbox = AddKeyMapOption("Chatbox", _chatbox_key)
+		_keymap_chatbox_focus = AddKeyMapOption("Chatbox Type Message", _chatbox_focus_key)
+		_keymap_settingsmenu = AddKeyMapOption("Settings Menu", _settingsmenu_key)
 	endif
 	
 	if (a_page=="AI Agents")

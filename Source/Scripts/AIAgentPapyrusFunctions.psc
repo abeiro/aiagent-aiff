@@ -390,16 +390,13 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentChatboxFocusKey)
-	; Check if chatbox is visible
-	if (AIAgentFunctions.isChatboxPanelVisible() == 1)
-		; Check if it's focused
-		if (AIAgentFunctions.isChatboxPanelFocused() == 1)
-			; Already focused - unfocus it (send message if any)
-			AIAgentFunctions.unfocusChatboxPanel()
-		else
-			; Not focused - focus it
-			AIAgentFunctions.focusChatboxPanel()
-		endif
+	; Simple toggle: if focused, unfocus; otherwise focus (C++ handles creation/visibility)
+	if (AIAgentFunctions.isChatboxPanelFocused() == 1)
+		; Already focused - unfocus it (send message if any)
+		AIAgentFunctions.unfocusChatboxPanel()
+	else
+		; Not focused - focus it (C++ handles creation, show, and focus)
+		AIAgentFunctions.focusChatboxPanel()
 	endif
   EndIf
   

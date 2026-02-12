@@ -19,6 +19,7 @@
     let maxMessages = 100;
     let systemLogRefreshInterval = null;
     let isChatFocused = false;
+    let quickChatMode = false;
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
@@ -162,6 +163,8 @@
      * Close chatbox
      */
     window.closeChat = function() {
+        // Reset quick-chat mode when closing
+        quickChatMode = false;
         if (window.chimChatboxCommand) {
             window.chimChatboxCommand('close');
         }
@@ -188,22 +191,32 @@
     window.onKeySpecial = function(key) {
         if (key === 'enter') {
             if (chatInput.value.trim()) {
-                // Has text - send message but stay focused for more typing
                 window.sendMessage();
+                if (quickChatMode) {
+                    window.closeChat();  // send + close
+                }
+                // else: stay focused for more typing (original behavior)
             } else {
-                // Empty input - unfocus and resume game
-                if (window.chimChatboxCommand) {
-                    window.chimChatboxCommand('unfocus');
+                if (quickChatMode) {
+                    window.closeChat();  // empty + close
+                } else {
+                    if (window.chimChatboxCommand) {
+                        window.chimChatboxCommand('unfocus');  // empty + unfocus (original)
+                    }
                 }
             }
             return;
         }
 
         if (key === 'escape') {
-            // Just unfocus without sending
+            // Clear input and close/unfocus based on mode
             chatInput.value = '';
-            if (window.chimChatboxCommand) {
-                window.chimChatboxCommand('unfocus');
+            if (quickChatMode) {
+                window.closeChat();  // quick-chat: close entirely
+            } else {
+                if (window.chimChatboxCommand) {
+                    window.chimChatboxCommand('unfocus');  // normal: just unfocus
+                }
             }
             return;
         }
@@ -230,8 +243,9 @@
     /**
      * Called when chatbox gains focus from C++
      */
-    window.onChatboxFocused = function() {
+    window.onChatboxFocused = function(quickChat) {
         isChatFocused = true;
+        quickChatMode = !!quickChat;
         chatInput.classList.add('focused');
         chatInput.placeholder = 'Type a message... (Enter to send, Esc to cancel)';
     };
@@ -241,6 +255,7 @@
      */
     window.onChatboxUnfocused = function() {
         isChatFocused = false;
+        quickChatMode = false;
         chatInput.classList.remove('focused');
         chatInput.placeholder = 'Type a message...';
     };
