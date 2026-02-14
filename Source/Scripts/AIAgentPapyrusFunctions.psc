@@ -680,7 +680,7 @@ Function OpenRoleplayWheel()
 		If (targetName != "")
 			Actor targetActor = crosshairRef as Actor
 			If (targetActor)
-				Debug.Notification("[CHIM] " + targetName + " is writing diary entry")
+				Debug.Notification("[CHIM] " + targetActor.GetDisplayName() + " is writing diary entry")
 				AIAgentFunctions.requestMessageForActor("Please, update your diary","diary", targetActor.GetDisplayName())
 			Else
 				Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")

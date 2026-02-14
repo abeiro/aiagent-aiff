@@ -1193,11 +1193,15 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 
 	int isActive=StorageUtil.GetIntValue(None, "AIAgentNpcWalkNear",1);
 	if (isActive==0)
+		Debug.Trace("[CHIM] GetIntoConversation for "+npc.GetDisplayName()+" not active")
 		return;
 	endif
 	
-	if (Game.GetPlayer().IsOnMount()) ; Skip if player is on a mount
+	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
+		Debug.Trace("[CHIM] GetIntoConversation  "+npc.GetDisplayName()+" player conditions not met")
 		return;
+	else
+		Debug.Trace("[CHIM] GetIntoConversation  "+npc.GetDisplayName()+" player conditions met")
 	endif
 	
 	ObjectReference finalReference;
@@ -1205,9 +1209,12 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 	if (reference.GetDistance(Game.GetPlayer())<256)
 		; Use reference as is close to player 
 		finalReference=reference
+		Debug.Trace("[CHIM] GetIntoConversation  "+npc.GetDisplayName()+" Use reference as is close to player")
 	else
 		; Use player as reference , npc should aproach player while talking
 		finalReference=Game.GetPlayer()
+		Debug.Trace("[CHIM] GetIntoConversation  "+npc.GetDisplayName()+" Use player as reference")
+
 	endif;
 	
 	if (!npc.IsinCombat() && !npc.IsInKillMove() && !npc.IsRunning() && !npc.IsUnconscious() && !npc.IsHostileToActor(npc) && !npc.GetCurrentScene())
@@ -1219,7 +1226,9 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 				Package FollowPackageSoft = Game.GetFormFromFile(0x0268b0, "AIAgent.esp") as Package 
 				StorageUtil.SetFormValue(npc, "PackageSoft",FollowPackageSoft) as Package;
 				FollowSoft(npc,finalReference);
+				Debug.Trace("[CHIM] "+npc.GetDisplayName()+" FollowSoft started >1024 ")
 			else 
+				Debug.Trace("[CHIM] "+npc.GetDisplayName()+" isRunningPackage PackageSoft >1024 ")
 				; NPC should be aproaching
 			EndIf
 		elseif (npc.GetDistance(finalReference)<300 ) 
@@ -1234,11 +1243,16 @@ Function GetIntoConversation(Actor npc,ObjectReference reference) global
 				; Remove FollowFaction so package FollowPackageSoft won't apply anymore
 				Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
 				npc.RemoveFromFaction(FollowFaction)
-
+				Debug.Trace("[CHIM] "+npc.GetDisplayName()+" StartWaitSoft <300")
 				StartWaitSoft(npc)
-				
+			else
+				Debug.Trace("[CHIM] "+npc.GetDisplayName()+" PackageSoft isRunningPackage <300 ")			
 			EndIf
+		else
+			Debug.Trace("[CHIM] "+npc.GetDisplayName()+" is at middle distance")			
 		endif
+	else
+		Debug.Trace("[CHIM] GetIntoConversation  "+npc.GetDisplayName()+" npc conditions not met")
 	endif
 
 EndFunction

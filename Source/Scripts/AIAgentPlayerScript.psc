@@ -103,6 +103,8 @@ EndFunction
 ; Will scan for doors
 function sendCellInfo(Cell localCell,Location fromLocation,bool detailed = false) global
 
+	
+	
 	Debug.Trace("[CHIM] sendCellInfo START for <0x"+DecToHex(localCell.GetFormId())+">")
 
 	Location curr =  fromLocation
@@ -295,6 +297,8 @@ EndFunction
 
 function sendCellInfoPlayer() 
 
+	
+
 	ObjectReference player = Game.GetPlayer()
 	Cell localCell = player.getParentCell()
 	cellName = "Player Cell"
@@ -328,6 +332,8 @@ EndFunction
 
 function sendCellInfoSingle(Cell localCell,Location fromLocation,bool detailed = false) global
 
+	
+	
 	Debug.Trace("[CHIM] sendCellInfoSingle START for <0x"+DecToHex(localCell.GetFormId())+">")
 
 	Location curr =  fromLocation
