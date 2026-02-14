@@ -1,7 +1,7 @@
 /**
  * CHIM Chatbox JavaScript
  * Handles MMO-style chat interface with tabs and real-time updates
- * Keyboard input is forwarded from C++ via Windows API polling
+ * Focus text composition is handled by a centered modal
  */
 
 (function() {
@@ -10,13 +10,15 @@
     // DOM Elements
     const chatMessages = document.getElementById('chat-messages');
     const systemMessages = document.getElementById('system-messages');
-    const chatInput = document.getElementById('chat-input');
+    const chatboxRoot = document.getElementById('chim-chatbox');
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanes = document.querySelectorAll('.tab-pane');
+    const focusModal = document.getElementById('focus-chatbox-modal');
+    const focusInput = document.getElementById('focus-chatbox-input');
 
     // State
     let currentTab = 'chat';
-    let maxMessages = 100;
+    const maxMessages = 100;
     let systemLogRefreshInterval = null;
     let isChatFocused = false;
     let quickChatMode = false;
@@ -143,69 +145,91 @@
     }
 
     /**
-     * Send user message
+     * Send user message through Prisma bridge
      */
-    window.sendMessage = function() {
-        var message = chatInput.value.trim();
-        if (!message) return;
-
-        // DON'T push to UI here - C++ will push it after sending with actual player name
-        // This prevents double entries (one with "Player", one with actual name like "RANGROO")
-        // window.pushChatMessage('Player', message, getCurrentTime(), 'player');
-        
+    function sendMessageToBridge(message) {
+        if (!message || !message.trim()) return;
         if (window.chimChatboxCommand) {
             window.chimChatboxCommand('send|' + message);
         }
-        chatInput.value = '';
-    };
+    }
 
     /**
      * Close chatbox
      */
     window.closeChat = function() {
-        // Reset quick-chat mode when closing
+        window.closeFocusChatbox(false);
+        isChatFocused = false;
         quickChatMode = false;
         if (window.chimChatboxCommand) {
             window.chimChatboxCommand('close');
         }
     };
 
-    // ===== Native keyboard input via CEF =====
-    // PrismaUI Focus() enables CEF keyboard input, so we use native DOM events
-    
     /**
-     * Native keydown event listener for Enter and Escape
+     * Open centered focus chat modal
      */
-    chatInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (chatInput.value.trim()) {
-                window.sendMessage();
-                if (quickChatMode) {
-                    window.closeChat();  // send + close
-                }
-                // else: stay focused for more typing (original behavior)
-            } else {
-                if (quickChatMode) {
-                    window.closeChat();  // empty + close
-                } else {
-                    if (window.chimChatboxCommand) {
-                        window.chimChatboxCommand('unfocus');  // empty + unfocus (original)
-                    }
-                }
-            }
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            chatInput.value = '';
+    window.openFocusChatbox = function() {
+        if (!focusModal || !focusInput) return;
+        focusModal.classList.remove('hidden');
+        focusModal.setAttribute('aria-hidden', 'false');
+        setTimeout(function() {
+            focusInput.focus();
+            focusInput.selectionStart = focusInput.value.length;
+            focusInput.selectionEnd = focusInput.value.length;
+        }, 0);
+    };
+
+    /**
+     * Close centered focus chat modal
+     */
+    window.closeFocusChatbox = function(notifyBridge) {
+        if (!focusModal || !focusInput) return;
+        const shouldNotifyBridge = notifyBridge !== false;
+        focusModal.classList.add('hidden');
+        focusModal.setAttribute('aria-hidden', 'true');
+        focusInput.blur();
+        if (shouldNotifyBridge && window.chimChatboxCommand) {
             if (quickChatMode) {
-                window.closeChat();  // quick-chat: close entirely
+                window.chimChatboxCommand('close');
             } else {
-                if (window.chimChatboxCommand) {
-                    window.chimChatboxCommand('unfocus');  // normal: just unfocus
-                }
+                window.chimChatboxCommand('unfocus');
             }
         }
-    });
+    };
+
+    /**
+     * Send message from focus chat modal
+     */
+    window.sendFocusMessage = function() {
+        if (!focusInput) return;
+        const message = focusInput.value;
+        if (!message.trim()) return;
+        sendMessageToBridge(message);
+        focusInput.value = '';
+        window.closeFocusChatbox(true);
+    };
+
+    window.clearFocusMessage = function() {
+        if (!focusInput) return;
+        focusInput.value = '';
+        focusInput.focus();
+    };
+
+    if (focusInput) {
+        focusInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                window.closeFocusChatbox(true);
+                return;
+            }
+
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                window.sendFocusMessage();
+            }
+        });
+    }
 
     /**
      * Called when chatbox gains focus from C++
@@ -213,9 +237,8 @@
     window.onChatboxFocused = function(quickChat) {
         isChatFocused = true;
         quickChatMode = !!quickChat;
-        chatInput.classList.add('focused');
-        chatInput.placeholder = 'Type a message... (Enter to send, Esc to cancel)';
-        chatInput.focus(); // Ensure input element has DOM focus for CEF keyboard input
+        setChatboxViewerVisible(!quickChatMode);
+        window.openFocusChatbox();
     };
 
     /**
@@ -224,19 +247,14 @@
     window.onChatboxUnfocused = function() {
         isChatFocused = false;
         quickChatMode = false;
-        chatInput.classList.remove('focused');
-        chatInput.placeholder = 'Type a message...';
-        chatInput.blur(); // Remove DOM focus from input
+        setChatboxViewerVisible(true);
+        window.closeFocusChatbox(false);
     };
 
-    /**
-     * Send message if present, called from C++ before unfocusing
-     */
-    window.sendMessageBeforeUnfocus = function() {
-        if (chatInput && chatInput.value.trim()) {
-            window.sendMessage();
-        }
-    };
+    function setChatboxViewerVisible(isVisible) {
+        if (!chatboxRoot) return;
+        chatboxRoot.classList.toggle('focus-only-hidden', !isVisible);
+    }
 
     function getCurrentTime() {
         return new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -256,5 +274,5 @@
         }
     });
 
-    console.log('[Chatbox] Initialized - keyboard input handled via native CEF events');
+    console.log('[Chatbox] Initialized - display mode + focus modal input');
 })();
