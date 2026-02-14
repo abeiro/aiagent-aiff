@@ -16,15 +16,14 @@ int 		_currentGodmodeKey
 int 		_currentOpenMicMuteKey
 int 		_currentHaltKey
 int 		_currentMasterWheel
-int 		_currentHistoryPanelKey
-int 		_currentOverlayKey
-int 		_currentDiariesKey
+int 		_currentOverlayStatusCycleKey  ; Single key to cycle through Overlay -> Status -> AI View -> Closed
+int 		_currentHistoryDiariesCycleKey  ; Single key to cycle through History -> Diaries -> Closed
 int 		_currentBrowserKey
-int 		_currentAIViewKey
 int 		_currentDebuggerKey
-int 		_currentStatusHUDKey
 int 		_currentChatboxKey
 int 		_currentChatboxFocusKey
+int 		_currentSettingsMenuKey
+int 		_currentMasterMenuKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
@@ -71,7 +70,118 @@ EndFunction
 Event OnInit()
 	doBinding(_currentKey)
 	Debug.Trace("[CHIM] AIAgentPapyrusFunctions quest script OnInit()")
+	
+	; Start polling for pending settings menu actions
+	RegisterForSingleUpdate(0.1)
 EndEvent
+
+; Process pending settings menu action (shared by hotkey and mod event)
+Function ProcessPendingSettingsAction()
+	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
+	
+	if (pendingAction == "")
+		return
+	endif
+	
+	; Parse action - format: "actionId" or "actionId|npcName"
+	String actionId = pendingAction
+	String npcName = ""
+	
+	int pipeIndex = StringUtil.Find(pendingAction, "|")
+	if (pipeIndex >= 0)
+		actionId = StringUtil.Substring(pendingAction, 0, pipeIndex)
+		npcName = StringUtil.Substring(pendingAction, pipeIndex + 1)
+	endif
+	
+	; Get target actor - prefer NPC name from action, fallback to crosshair
+	Actor targetActor = None
+	if (npcName != "")
+		; Find the NPC by name
+		Actor[] nearbyActors = AIAgentFunctions.findAllNearbyAgents()
+		int i = 0
+		while i < nearbyActors.Length
+			if (nearbyActors[i].GetDisplayName() == npcName)
+				targetActor = nearbyActors[i]
+				i = nearbyActors.Length ; break loop
+			endif
+			i += 1
+		endwhile
+	endif
+
+	; Fallback to crosshair if no name was provided
+	if (!targetActor)
+		ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+		if (crosshairRef)
+			targetActor = crosshairRef as Actor
+		endif
+	endif
+	
+	; Process Papyrus-only actions
+	if (actionId == "rp_gather")
+		AIAgentAIMind.GatherAround()
+	elseif (actionId == "rp_halt")
+		Debug.Notification("[CHIM] Stopping AI actions")
+		if (targetActor)
+			AIAgentAIMind.StopCurrent(targetActor)
+		else
+			Actor[] actors = AIAgentFunctions.findAllNearbyAgents()
+			int i = 0
+			while i < actors.Length
+				AIAgentAIMind.StopCurrent(actors[i])
+				i += 1
+			endwhile
+		endif
+	elseif (actionId == "rp_diary_all")
+		Debug.Notification("[CHIM] Diary: Nearby NPCs are writing diary entries")
+		AIAgentFunctions.sendMessage("Please, update your diary", "diary_nearby")
+	elseif (actionId == "rp_write_diary" && targetActor)
+		Debug.Notification("[CHIM] " + targetActor.GetDisplayName() + " is writing diary entry")
+		AIAgentFunctions.requestMessageForActor("Please, update your diary", "diary", targetActor.GetDisplayName())
+	elseif (actionId == "rp_update_npc" && targetActor)
+		Debug.Trace("[CHIM] Updating dynamic profile for " + targetActor.GetDisplayName())
+		AIAgentFunctions.logMessage(targetActor.GetDisplayName(), "updateprofiles_batch_async")
+	elseif (actionId == "rp_wait" && targetActor)
+		AIAgentAIMind.StartWait(targetActor)
+	elseif (actionId == "rp_follow" && targetActor)
+		AIAgentAIMind.Follow(targetActor, Game.GetPlayer())
+	elseif (actionId == "rp_rename" && targetActor)
+		String originalname = targetActor.GetDisplayName()
+		UIMenuBase menus = UIExtensions.GetMenu("UITextEntryMenu")
+		String savedName = StorageUtil.GetStringValue(targetActor, "RenamedBuffer", targetActor.GetDisplayName())
+		if savedName != "None"
+			UIExtensions.SetMenuPropertyString("UITextEntryMenu", "text", savedName)
+		else
+			UIExtensions.SetMenuPropertyString("UITextEntryMenu", "text", originalname)
+		endif
+		UIExtensions.OpenMenu("UITextEntryMenu")
+		String messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
+		StorageUtil.SetStringValue(targetActor, "RenamedBuffer", None)
+		UIExtensions.SetMenuPropertyString("UITextEntryMenu", "text", "")
+		if (messageText != "")
+			AIAgentFunctions.logMessage("chim_renamenpc@" + originalname + "@" + messageText + "@" + targetActor.GetFormId(), "setconf")
+			StorageUtil.SetStringValue(targetActor, "forcedName", messageText)
+		endif
+	elseif (StringUtil.Find(actionId, "sg_") == 0)
+		; Soulgaze actions (check if starts with "sg_")
+		int mode = AIAgentFunctions.get_conf_i("_sgmode")
+		if (actionId == "sg_soulgaze")
+			AIAgentSoulGazeEffect.Soulgaze(mode)
+		elseif (actionId == "sg_photo_zoom")
+			AIAgentSoulGazeEffect.SendProfilePicture(mode, true)
+		elseif (actionId == "sg_photo")
+			AIAgentSoulGazeEffect.SendProfilePicture(mode, false)
+		elseif (actionId == "sg_upload")
+			; Use JustUpload like the original wheel menu
+			AIAgentSoulGazeEffect.JustUpload(mode)
+		endif
+	endif
+	
+	; Clear the pending action
+	AIAgentFunctions.clearSettingsMenuPendingAction()
+	
+	; Menu was already closed by C++ when trigger_papyrus_check was sent
+	Debug.Trace("[CHIM] Pending action processed successfully")
+EndFunction
 
 Event OnKeyUp(int keyCode, float holdTime)
 	If(keyCode == _currentKeyVoice)
@@ -259,32 +369,20 @@ Event OnKeyDown(int keyCode)
 	OpenMasterWheel()
   EndIf
   
-  If(keyCode == _currentHistoryPanelKey)
-	AIAgentFunctions.toggleHistoryPanel()
-  EndIf
-  
-  If(keyCode == _currentOverlayKey)
-	AIAgentFunctions.toggleOverlayPanel()
-  EndIf
-  
-  If(keyCode == _currentDiariesKey)
-	AIAgentFunctions.toggleDiariesPanel()
-  EndIf
-  
   If(keyCode == _currentBrowserKey)
 	AIAgentFunctions.toggleBrowserPanel()
-  EndIf
-  
-  If(keyCode == _currentAIViewKey)
-	AIAgentFunctions.toggleAIViewPanel()
   EndIf
   
   If(keyCode == _currentDebuggerKey)
 	AIAgentFunctions.toggleDebuggerPanel()
   EndIf
   
-  If(keyCode == _currentStatusHUDKey)
-	AIAgentFunctions.toggleStatusHUDPanel()
+  If(keyCode == _currentOverlayStatusCycleKey)
+	AIAgentFunctions.cycleOverlayStatusPanels()
+  EndIf
+  
+  If(keyCode == _currentHistoryDiariesCycleKey)
+	AIAgentFunctions.cycleHistoryDiariesPanels()
   EndIf
   
   If(keyCode == _currentChatboxKey)
@@ -292,25 +390,53 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentChatboxFocusKey)
-	; Check if chatbox is visible
-	if (AIAgentFunctions.isChatboxPanelVisible() == 1)
-		; Check if it's focused
-		if (AIAgentFunctions.isChatboxPanelFocused() == 1)
-			; Already focused - unfocus it (send message if any)
-			AIAgentFunctions.unfocusChatboxPanel()
-		else
-			; Not focused - focus it
-			AIAgentFunctions.focusChatboxPanel()
-		endif
+	; Simple toggle: if focused, unfocus; otherwise focus (C++ handles creation/visibility)
+	if (AIAgentFunctions.isChatboxPanelFocused() == 1)
+		; Already focused - unfocus it (send message if any)
+		AIAgentFunctions.unfocusChatboxPanel()
+	else
+		; Not focused - focus it (C++ handles creation, show, and focus)
+		AIAgentFunctions.focusChatboxPanel()
 	endif
+  EndIf
+  
+  If(keyCode == _currentSettingsMenuKey)
+	; Allow in menu mode since the settings menu itself pauses the game
+	; This allows the hotkey to close the menu when it's open
+	If (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		; Ensure polling is started (in case quest was reloaded without OnInit)
+		RegisterForSingleUpdate(0.1)
+		
+		; Toggle the menu
+		AIAgentFunctions.toggleSettingsMenu()
+	EndIf
+  EndIf
+  
+  If(keyCode == _currentMasterMenuKey)
+	; Allow in menu mode since the master menu itself pauses the game
+	; This allows the hotkey to close the menu when it's open
+	If (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		; Toggle the menu
+		AIAgentFunctions.toggleMasterMenu()
+	EndIf
   EndIf
   
 EndEvent
 
 Event OnUpdate()
-    ;Debug.Notification("Updating...")
+	; Check for pending settings menu actions
+	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
 	
-
+	if (pendingAction != "")
+		ProcessPendingSettingsAction()
+	endif
+	
+	; Continue polling
+	RegisterForSingleUpdate(0.1)
 Endevent
 
 Function removeBinding(int keycode) 
@@ -385,55 +511,49 @@ EndFunction
 
 Function doBinding12(int keycode) 
 	
-	_currentHistoryPanelKey=keycode
+	_currentOverlayStatusCycleKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding13(int keycode) 
 	
-	_currentOverlayKey=keycode
+	_currentHistoryDiariesCycleKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding14(int keycode) 
 	
-	_currentDiariesKey=keycode
+	_currentBrowserKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding15(int keycode) 
 	
-	_currentBrowserKey=keycode
+	_currentDebuggerKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding16(int keycode) 
 	
-	_currentAIViewKey=keycode
+	_currentChatboxKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding17(int keycode) 
 	
-	_currentDebuggerKey=keycode
+	_currentChatboxFocusKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding18(int keycode) 
 	
-	_currentStatusHUDKey=keycode
+	_currentSettingsMenuKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
 Function doBinding19(int keycode) 
 	
-	_currentChatboxKey=keycode
-	RegisterForKey(keycode)
-EndFunction
-
-Function doBinding20(int keycode) 
-	
-	_currentChatboxFocusKey=keycode
+	_currentMasterMenuKey=keycode
 	RegisterForKey(keycode)
 EndFunction
 
@@ -685,6 +805,10 @@ Function OpenRoleplayWheel()
 			Else
 				Debug.Notification("[CHIM] You must look at a target to generate a Diary Entry.")
 			EndIf
+		Else
+			; No target - check if looking up for Narrator diary
+			Debug.Trace("[CHIM] Diary with no target - routing to handler for camera pitch detection")
+			AIAgentFunctions.requestMessageForActor("Please, update your diary","diary","")
 		EndIf
 	ElseIf ( currentMode ==  "GATHER")
 		AIAgentAIMind.GatherAround()

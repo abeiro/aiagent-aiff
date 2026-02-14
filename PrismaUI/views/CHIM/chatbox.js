@@ -19,6 +19,7 @@
     let maxMessages = 100;
     let systemLogRefreshInterval = null;
     let isChatFocused = false;
+    let quickChatMode = false;
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
@@ -148,7 +149,10 @@
         var message = chatInput.value.trim();
         if (!message) return;
 
-        window.pushChatMessage('Player', message, getCurrentTime(), 'player');
+        // DON'T push to UI here - C++ will push it after sending with actual player name
+        // This prevents double entries (one with "Player", one with actual name like "RANGROO")
+        // window.pushChatMessage('Player', message, getCurrentTime(), 'player');
+        
         if (window.chimChatboxCommand) {
             window.chimChatboxCommand('send|' + message);
         }
@@ -159,71 +163,59 @@
      * Close chatbox
      */
     window.closeChat = function() {
+        // Reset quick-chat mode when closing
+        quickChatMode = false;
         if (window.chimChatboxCommand) {
             window.chimChatboxCommand('close');
         }
     };
 
-    // ===== Keyboard input from C++ =====
-    // PrismaUI/CEF doesn't forward keyboard events to JS document listeners.
-    // Instead, C++ polls GetAsyncKeyState and calls these functions directly.
-
+    // ===== Native keyboard input via CEF =====
+    // PrismaUI Focus() enables CEF keyboard input, so we use native DOM events
+    
     /**
-     * Called from C++ when a printable character key is pressed
+     * Native keydown event listener for Enter and Escape
      */
-    window.onKeyChar = function(ch) {
-        if (!isChatFocused) return;
-        chatInput.value += ch;
-    };
-
-    /**
-     * Called from C++ when a special key is pressed
-     */
-    window.onKeySpecial = function(key) {
-        if (key === 'enter') {
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
             if (chatInput.value.trim()) {
-                // Has text - send message but stay focused for more typing
                 window.sendMessage();
+                if (quickChatMode) {
+                    window.closeChat();  // send + close
+                }
+                // else: stay focused for more typing (original behavior)
             } else {
-                // Empty input - unfocus and resume game
-                if (window.chimChatboxCommand) {
-                    window.chimChatboxCommand('unfocus');
+                if (quickChatMode) {
+                    window.closeChat();  // empty + close
+                } else {
+                    if (window.chimChatboxCommand) {
+                        window.chimChatboxCommand('unfocus');  // empty + unfocus (original)
+                    }
                 }
             }
-            return;
-        }
-
-        if (key === 'escape') {
-            // Just unfocus without sending
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
             chatInput.value = '';
-            if (window.chimChatboxCommand) {
-                window.chimChatboxCommand('unfocus');
-            }
-            return;
-        }
-
-        if (!isChatFocused) return;
-
-        if (key === 'backspace') {
-            if (chatInput.value.length > 0) {
-                chatInput.value = chatInput.value.slice(0, -1);
-            }
-        } else if (key === 'delete') {
-            // For simplicity, same as backspace (no cursor tracking needed)
-            if (chatInput.value.length > 0) {
-                chatInput.value = chatInput.value.slice(0, -1);
+            if (quickChatMode) {
+                window.closeChat();  // quick-chat: close entirely
+            } else {
+                if (window.chimChatboxCommand) {
+                    window.chimChatboxCommand('unfocus');  // normal: just unfocus
+                }
             }
         }
-        // left, right, home, end - not needed for simple text input
-    };
+    });
 
     /**
      * Called when chatbox gains focus from C++
      */
-    window.onChatboxFocused = function() {
+    window.onChatboxFocused = function(quickChat) {
         isChatFocused = true;
+        quickChatMode = !!quickChat;
         chatInput.classList.add('focused');
         chatInput.placeholder = 'Type a message... (Enter to send, Esc to cancel)';
+        chatInput.focus(); // Ensure input element has DOM focus for CEF keyboard input
     };
 
     /**
@@ -231,8 +223,10 @@
      */
     window.onChatboxUnfocused = function() {
         isChatFocused = false;
+        quickChatMode = false;
         chatInput.classList.remove('focused');
         chatInput.placeholder = 'Type a message...';
+        chatInput.blur(); // Remove DOM focus from input
     };
 
     /**
@@ -262,5 +256,5 @@
         }
     });
 
-    console.log('[Chatbox] Initialized - keyboard input handled via C++ forwarding');
+    console.log('[Chatbox] Initialized - keyboard input handled via native CEF events');
 })();

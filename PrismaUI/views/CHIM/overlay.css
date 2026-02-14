@@ -92,6 +92,31 @@ body {
     border-bottom: 1px solid rgba(60, 60, 70, 0.4);
 }
 
+/* Horizontal Group - Mode, Active Model, Focus Chat */
+.horizontal-group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.info-block {
+    flex: 1;
+    min-width: 0; /* Allow flex items to shrink below content size */
+}
+
+.info-block .info-label {
+    font-size: 0.7em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.info-block .info-value {
+    font-size: 0.85em;
+    color: #ddd;
+}
+
 /* Crosshair Target Section */
 .target-section {
     border: 1px solid rgba(242, 124, 17, 0.4);
@@ -138,9 +163,9 @@ body {
 /* Mode Badge */
 .mode-badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
-    font-size: 0.85em;
+    font-size: 0.8em;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -176,29 +201,52 @@ body {
     border: 1px solid rgba(46, 204, 113, 0.4);
 }
 
+.mode-badge.fast {
+    background: rgba(46, 204, 113, 0.2);
+    color: #58d68d;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.mode-badge.powerful {
+    background: rgba(231, 76, 60, 0.2);
+    color: #ec7063;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.mode-badge.experimental {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
 /* Model Info */
 .model-slot {
     display: inline-block;
-    padding: 2px 8px;
+    padding: 2px 6px;
     background: rgba(242, 124, 17, 0.2);
     color: rgb(242, 124, 17);
     border-radius: 3px;
-    font-size: 0.8em;
+    font-size: 0.75em;
     font-weight: 600;
-    margin-right: 6px;
+    margin-right: 4px;
 }
 
 .model-name {
     color: #bbb;
-    font-size: 0.85em;
+    font-size: 0.8em;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Toggle Indicator */
 .toggle-indicator {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
-    font-size: 0.85em;
+    font-size: 0.8em;
     font-weight: 600;
 }
 

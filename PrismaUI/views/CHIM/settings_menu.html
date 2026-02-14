@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHIM Settings</title>
+    <link rel="stylesheet" href="settings_menu.css">
+</head>
+<body>
+    <div id="settings-modal" class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="breadcrumb">
+                <span>CHIM Settings</span>
+            </div>
+            <button class="close-btn" onclick="closeMenu()">×</button>
+        </div>
+
+        <!-- Content Area - All options visible, no collapsing -->
+        <div class="modal-content">
+            <!-- Mode Options -->
+            <div class="settings-group">
+                <h2 class="group-title">Mode</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('mode_standard')" 
+                            onmouseenter="showDescription('Normal conversation mode with roleplay and event injection support')"
+                            onmouseleave="clearDescription()">Standard Chat</button>
+                    <button class="setting-btn" onclick="selectOption('mode_whisper')"
+                            onmouseenter="showDescription('Private conversation mode - only nearby NPCs (4 meters) can hear and respond')"
+                            onmouseleave="clearDescription()">Whisper Chat</button>
+                    <button class="setting-btn" onclick="selectOption('mode_director')"
+                            onmouseenter="showDescription('Give direct instructions to NPCs as game director')"
+                            onmouseleave="clearDescription()">Director Mode</button>
+                    <button class="setting-btn" onclick="selectOption('mode_spawn')"
+                            onmouseenter="showDescription('Spawn new characters by describing them')"
+                            onmouseleave="clearDescription()">Spawn NPC</button>
+                    <button class="setting-btn" onclick="selectOption('mode_cheat')"
+                            onmouseenter="showDescription('All input processed as cheat commands - NPCs will execute any request')"
+                            onmouseleave="clearDescription()">Cheat Mode</button>
+                    <button class="setting-btn" onclick="selectOption('mode_autochat')"
+                            onmouseenter="showDescription('Auto-generates lore-appropriate dialogue from your instructions')"
+                            onmouseleave="clearDescription()">Auto Chat</button>
+                    <button class="setting-btn" onclick="selectOption('mode_inject_log')"
+                            onmouseenter="showDescription('Add events to NPC memory without triggering responses')"
+                            onmouseleave="clearDescription()">Inject Event</button>
+                    <button class="setting-btn" onclick="selectOption('mode_inject_chat')"
+                            onmouseenter="showDescription('Add events to NPC memory and get a response')"
+                            onmouseleave="clearDescription()">Inject & Chat</button>
+                </div>
+            </div>
+
+            <!-- LLM Profile Options -->
+            <div class="settings-group">
+                <h2 class="group-title">LLM Profiles</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('llm_standard')"
+                            onmouseenter="showDescription('Balanced speed and quality for general conversations')"
+                            onmouseleave="clearDescription()">Standard LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_fast')"
+                            onmouseenter="showDescription('Faster responses with lighter model')"
+                            onmouseleave="clearDescription()">Fast LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_powerful')"
+                            onmouseenter="showDescription('Best quality responses with heavier model')"
+                            onmouseleave="clearDescription()">Powerful LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_experimental')"
+                            onmouseenter="showDescription('Experimental features and cutting-edge models')"
+                            onmouseleave="clearDescription()">Experimental LLM</button>
+                    <button class="setting-btn" onclick="selectOption('llm_focus')"
+                            onmouseenter="showDescription('Limit context to current conversation only')"
+                            onmouseleave="clearDescription()">Focus Chat</button>
+                </div>
+            </div>
+
+            <!-- NPC Profile Assignment (shown when targeting NPC) -->
+            <div id="npc-settings" class="settings-group" style="display: none;">
+                <h2 class="group-title">Assign Profile to <span id="npc-name" class="npc-highlight">NPC</span></h2>
+                <div class="options-grid">
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_1')" 
+                            onmouseenter="showDescription('Assign Profile 1 to this NPC')"
+                            onmouseleave="clearDescription()">
+                        <div class="profile-name" id="profile-1-name">Profile 1</div>
+                    </button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_2')"
+                            onmouseenter="showDescription('Assign Profile 2 to this NPC')"
+                            onmouseleave="clearDescription()">
+                        <div class="profile-name" id="profile-2-name">Profile 2</div>
+                    </button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_3')"
+                            onmouseenter="showDescription('Assign Profile 3 to this NPC')"
+                            onmouseleave="clearDescription()">
+                        <div class="profile-name" id="profile-3-name">Profile 3</div>
+                    </button>
+                    <button class="setting-btn profile-btn" onclick="selectOption('profile_4')"
+                            onmouseenter="showDescription('Assign Profile 4 to this NPC')"
+                            onmouseleave="clearDescription()">
+                        <div class="profile-name" id="profile-4-name">Profile 4</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Roleplay Options -->
+            <div class="settings-group">
+                <h2 class="group-title">Roleplay - Global</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('rp_gather')"
+                            onmouseenter="showDescription('Call all nearby AI friends to gather around you')"
+                            onmouseleave="clearDescription()">Gather Friends</button>
+                    <button class="setting-btn" onclick="selectOption('rp_halt')"
+                            onmouseenter="showDescription('Stop all AI actions for nearby NPCs')"
+                            onmouseleave="clearDescription()">Stop All AI</button>
+                    <button class="setting-btn" onclick="selectOption('rp_diary_all')"
+                            onmouseenter="showDescription('Request all nearby NPCs to write diary entries')"
+                            onmouseleave="clearDescription()">Write All Diaries</button>
+                </div>
+            </div>
+
+            <!-- NPC-Targeted Roleplay (shown when targeting NPC) -->
+            <div id="roleplay-npc-actions" class="settings-group" style="display: none;">
+                <h2 class="group-title">Roleplay - <span id="roleplay-npc-name" class="npc-highlight">NPC</span></h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('rp_write_diary')"
+                            onmouseenter="showDescription('Ask this NPC to write about recent events')"
+                            onmouseleave="clearDescription()">Write Diary</button>
+                    <button class="setting-btn" onclick="selectOption('rp_update_npc')"
+                            onmouseenter="showDescription('Refresh this NPCs personality and memories')"
+                            onmouseleave="clearDescription()">Update NPC Dynamic Profile</button>
+                    <button class="setting-btn" onclick="selectOption('rp_wait')"
+                            onmouseenter="showDescription('Command this NPC to wait here')"
+                            onmouseleave="clearDescription()">Wait Here</button>
+                    <button class="setting-btn" onclick="selectOption('rp_follow')"
+                            onmouseenter="showDescription('Command this NPC to follow you')"
+                            onmouseleave="clearDescription()">Follow Me</button>
+                    <button class="setting-btn" onclick="selectOption('rp_rename')"
+                            onmouseenter="showDescription('Rename this NPC or add them to background lore')"
+                            onmouseleave="clearDescription()">Rename / Add to BgL</button>
+                </div>
+            </div>
+
+            <!-- Soulgaze Options -->
+            <div class="settings-group">
+                <h2 class="group-title">Soulgaze</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectOption('sg_soulgaze')"
+                            onmouseenter="showDescription('Perform full soulgaze ITT image reading. Requires ITT to be configured!')"
+                            onmouseleave="clearDescription()">Soulgaze</button>
+                    <button class="setting-btn" onclick="selectOption('sg_photo_zoom')"
+                            onmouseenter="showDescription('Take close-up photo of NPCs for CHIM NPC profile picture')"
+                            onmouseleave="clearDescription()">NPC Photo Zoom</button>
+                    <button class="setting-btn" onclick="selectOption('sg_photo')"
+                            onmouseenter="showDescription('Take standard photo of NPCs for CHIM NPC profile picture')"
+                            onmouseleave="clearDescription()">NPC Photo</button>
+                    <button class="setting-btn" onclick="selectOption('sg_upload')"
+                            onmouseenter="showDescription('Upload current scene to CHIM Soulgaze gallery')"
+                            onmouseleave="clearDescription()">Upload Image</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-footer">
+            <div class="hint-text" id="hover-description">Hover over any option to see details</div>
+        </div>
+    </div>
+    
+    <script src="settings_menu.js"></script>
+</body>
+</html>

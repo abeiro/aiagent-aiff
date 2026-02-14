@@ -61,6 +61,8 @@ int function unfocusHistoryPanel() Global Native
 int function toggleHistoryPanelFocus(bool pauseGame = false) Global Native
 
 int function toggleOverlayPanel() Global Native
+int function cycleOverlayStatusPanels() Global Native
+int function cycleHistoryDiariesPanels() Global Native
 int function showOverlayPanel() Global Native
 int function hideOverlayPanel() Global Native
 
@@ -91,6 +93,12 @@ int function focusChatboxPanel() Global Native
 int function unfocusChatboxPanel() Global Native
 int function isChatboxPanelVisible() Global Native
 int function isChatboxPanelFocused() Global Native
+
+int function toggleSettingsMenu() Global Native
+String function getSettingsMenuPendingAction() Global Native
+int function clearSettingsMenuPendingAction() Global Native
+
+int function toggleMasterMenu() Global Native
 
 ; Test functions
 int function sendAllVoices() Global Native

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHIM Master Menu</title>
+    <link rel="stylesheet" href="master_menu.css">
+</head>
+<body>
+    <div id="master-modal" class="modal-container">
+        <!-- Header -->
+        <div class="modal-header">
+            <div class="breadcrumb">
+                <span>CHIM Master Menu</span>
+            </div>
+            <button class="close-btn" onclick="closeMenu()">×</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="modal-content">
+            <!-- Prisma UI Panels -->
+            <div class="settings-group">
+                <h2 class="group-title">Prisma UI Panels</h2>
+                <div class="options-grid">
+                    <button class="setting-btn" onclick="selectPanel('history')" 
+                            onmouseenter="showDescription('View conversation history with AI NPCs - pauses game')"
+                            onmouseleave="clearDescription()">Conversation History</button>
+                    <button class="setting-btn" onclick="selectPanel('diaries')"
+                            onmouseenter="showDescription('Read NPC diaries and memory logs - pauses game')"
+                            onmouseleave="clearDescription()">NPC Diaries</button>
+                    <button class="setting-btn" onclick="selectPanel('overlay')"
+                            onmouseenter="showDescription('Display CHIM status overlay with current mode and settings')"
+                            onmouseleave="clearDescription()">Overlay</button>
+                    <button class="setting-btn" onclick="selectPanel('statushud')"
+                            onmouseenter="showDescription('Show Status HUD with nearby NPCs and their states')"
+                            onmouseleave="clearDescription()">Status HUD</button>
+                    <button class="setting-btn" onclick="selectPanel('aiview')"
+                            onmouseenter="showDescription('View detailed AI profile of targeted NPC')"
+                            onmouseleave="clearDescription()">AI View</button>
+                    <button class="setting-btn" onclick="selectPanel('browser')"
+                            onmouseenter="showDescription('Open CHIM Browser (Beta) - full web interface in-game')"
+                            onmouseleave="clearDescription()">CHIM Browser (Beta)</button>
+                    <button class="setting-btn" onclick="selectPanel('debugger')"
+                            onmouseenter="showDescription('Open CHIM Logs View (Beta) - server logs and diagnostics')"
+                            onmouseleave="clearDescription()">CHIM Logs View (Beta)</button>
+                    <button class="setting-btn" onclick="selectPanel('chatbox')"
+                            onmouseenter="showDescription('Toggle CHIM Chatbox - MMO-style chat interface')"
+                            onmouseleave="clearDescription()">CHIM Chatbox</button>
+                    <button class="setting-btn" onclick="selectPanel('settings')"
+                            onmouseenter="showDescription('Open CHIM Settings Menu - centralized settings interface')"
+                            onmouseleave="clearDescription()">CHIM Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-footer">
+            <div class="hint-text" id="hover-description">Select a panel to toggle</div>
+        </div>
+    </div>
+    
+    <script src="master_menu.js"></script>
+</body>
+</html>

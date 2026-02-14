@@ -79,11 +79,22 @@
      * Update the active model display
      */
     function updateActiveModel(slot, modelLabel, modelName) {
-        // Show just the slot label (Standard/Fast/Powerful/Experimental)
-        activeModelElement.innerHTML = `
-            <span class="model-slot">Slot ${slot}</span>
-            <span class="model-name">${escapeHtml(modelLabel)}</span>
-        `;
+        // Show just the model label with badge styling like mode
+        const labelLower = modelLabel ? modelLabel.toLowerCase().trim() : 'standard';
+        let modelClass = '';
+        
+        // Map model labels to CSS classes
+        if (labelLower.includes('standard')) {
+            modelClass = 'standard';
+        } else if (labelLower.includes('fast')) {
+            modelClass = 'fast';
+        } else if (labelLower.includes('powerful')) {
+            modelClass = 'powerful';
+        } else if (labelLower.includes('experimental')) {
+            modelClass = 'experimental';
+        }
+        
+        activeModelElement.innerHTML = `<span class="mode-badge ${modelClass}">${escapeHtml(modelLabel)}</span>`;
     }
 
     /**

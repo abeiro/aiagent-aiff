@@ -24,8 +24,11 @@
         try {
             const data = JSON.parse(jsonString);
             
+            console.log('[CHIM History] Received data from server, success:', data.success);
+            console.log('[CHIM History] Data array length:', data.data ? data.data.length : 0);
+            
             if (!data.success || !data.data) {
-                console.error('Invalid response format');
+                console.error('[CHIM History] Invalid response format');
                 showEmpty();
                 return;
             }
@@ -33,6 +36,7 @@
             hideLoading();
 
             if (data.data.length === 0) {
+                console.log('[CHIM History] No data returned from server');
                 showEmpty();
                 return;
             }
@@ -42,11 +46,15 @@
             // Keep entries in DESC order (newest first at top, oldest at bottom)
             entries = data.data;
             
+            console.log('[CHIM History] First entry (newest):', entries[0]);
+            console.log('[CHIM History] Last entry (oldest):', entries[entries.length - 1]);
+            
             renderEntries();
             
             // Update last row ID for incremental updates (first entry is most recent)
             if (entries.length > 0 && entries[0].ROWID) {
                 lastRowId = parseInt(entries[0].ROWID);
+                console.log('[CHIM History] Updated lastRowId to:', lastRowId);
             }
             
         } catch (e) {
@@ -64,11 +72,24 @@
         try {
             const entry = JSON.parse(jsonString);
             
+            // Filter out location-related events (infoloc, location) and context entries
+            const eventType = entry.eventType || 'chat';
+            if (eventType === 'infoloc' || eventType === 'location') {
+                return; // Skip location context events
+            }
+            
+            const fullText = (entry.speaker || '') + ': ' + (entry.text || '');
+            
+            // Also filter out entries that start with "(Context location:" or "(Context History"
+            if (fullText.startsWith('(Context location:') || fullText.startsWith('(Context History')) {
+                return; // Skip context entries
+            }
+            
             hideEmpty();
             
             const entryEl = createEntryElement({
-                'Event': entry.eventType || 'chat',
-                'Events': entry.speaker + ': ' + entry.text,
+                'Event': eventType,
+                'Events': fullText,
                 'Tamrielic Time': entry.timestamp || ''
             });
             
@@ -89,11 +110,26 @@
     function renderEntries() {
         historyList.innerHTML = '';
         
+        console.log('[CHIM History] Rendering entries, total count:', entries.length);
+        
+        let rendered = 0;
+        
         // Entries are already in DESC order (newest first)
-        entries.forEach(entry => {
+        // Show all events - no filtering (matches eventlog page behavior)
+        entries.forEach((entry, index) => {
+            const eventData = stripHtml(entry['Events'] || '');
+            
+            // Debug first 5 entries
+            if (index < 5) {
+                console.log('[CHIM History] Entry', index, ':', eventData.substring(0, 100));
+            }
+            
             const entryEl = createEntryElement(entry);
             historyList.appendChild(entryEl);
+            rendered++;
         });
+        
+        console.log('[CHIM History] Rendered:', rendered);
         
         // Scroll to top (newest entries are at top)
         historyList.scrollTop = 0;
@@ -123,7 +159,14 @@
         
         // Parse the event data - strip HTML from all fields
         const eventType = stripHtml(entry['Event'] || 'chat');
-        const eventData = stripHtml(entry['Events'] || '');
+        let eventData = stripHtml(entry['Events'] || '');
+        
+        // Remove "(Context location: ...)" or "(Context new location: ...)" prefix if present
+        // This matches how adventurelog.php processes the data (line 140)
+        const contextMatch = eventData.match(/^\(Context (?:new )?location:[^)]+\)\s*/);
+        if (contextMatch) {
+            eventData = eventData.substring(contextMatch[0].length);
+        }
         
         // Handle timestamp - key might have HTML in older API responses
         let timestamp = '';
@@ -141,11 +184,18 @@
         let speaker = '';
         let text = eventData;
         
-        // Try to extract speaker from "Speaker: text" format
-        const colonIndex = eventData.indexOf(':');
-        if (colonIndex > 0 && colonIndex < 50) {
-            speaker = eventData.substring(0, colonIndex).trim();
-            text = eventData.substring(colonIndex + 1).trim();
+        // Check if this is an infoaction event (e.g., "Sinmir uses Chair")
+        // These typically don't have a colon and describe actions
+        if (eventType.toLowerCase() === 'infoaction') {
+            speaker = 'Action';
+            text = eventData;
+        } else {
+            // Extract speaker from "Speaker: text" format
+            const colonIndex = eventData.indexOf(':');
+            if (colonIndex > 0 && colonIndex < 50) {
+                speaker = eventData.substring(0, colonIndex).trim();
+                text = eventData.substring(colonIndex + 1).trim();
+            }
         }
         
         // Determine entry class based on speaker/type
@@ -154,7 +204,7 @@
             div.classList.add('player');
         } else if (speakerLower === 'the narrator' || speakerLower === 'narrator') {
             div.classList.add('narrator');
-        } else if (eventType === 'infoaction' || eventType === 'action') {
+        } else if (speakerLower === 'action') {
             div.classList.add('action');
         } else {
             div.classList.add('npc');
