@@ -1,8 +1,10 @@
 Scriptname AIAgentPapyrusFunctions extends Quest  
 
+ReferenceAlias Property PlayerRefAlias  Auto  
+
+
 Spell Property IntimacySpell  Auto  
 AIAgentFollowNPCQuestScript Property FollowNPCQuestScript Auto
-
 
 
 int			_currentKey = 0x52
@@ -79,6 +81,8 @@ EndEvent
 Function ProcessPendingSettingsAction()
 	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
 	
+	Debug.Trace("[CHIM] ProcessPendingSettingsAction processing")
+
 	if (pendingAction == "")
 		return
 	endif
@@ -599,7 +603,7 @@ bool Function thirdPartyInit()
 	Debug.Trace("[CHIM] thirdPartyInit")
 	UnRegisterForModEvent("CHIM_CommandReceivedInternal")
 	RegisterForModEvent("CHIM_CommandReceivedInternal", "CommandManager")
-
+	PlayerRefAlias.ForceRefTo(Game.GetPlayer());
 	
 EndFunction
 
@@ -1110,8 +1114,224 @@ Function OpenSNQEWheel()
 EndFunction
 
 
+Function sendLocation(Location curr,string tags,Cell referenceCell=None) global
+
+	if curr
+		; ---------------------------------------------------------------------------------------------
+		ObjectReference destMarker = AIAgentFunctions.getWorldLocationMarkerFor(curr)
+		if (!destMarker)
+			Debug.Trace("[CHIM] Bypassing because no getWorldLocationMarkerFor: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+		elseif (destMarker.isDisabled())
+			Debug.Trace("[CHIM] Bypassing because world location marker is disabled: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+		else
+			if destMarker
+				String types = ""
+				if (tags == "")
+					Debug.Trace("[CHIM] Loading tags from caller: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+					; -------------------------------
+					;  CLASSIFY THIS LOCATION, no tags provided
+					; -------------------------------
+					; Start checking all keywords (multiple allowed)
+					Keyword isCave         = Game.GetForm(0x000130ef) as Keyword
+					Keyword isDungeon      = Game.GetForm(0x000130db) as Keyword
+					Keyword isInn          = Game.GetForm(0x0001cb87) as Keyword
+					Keyword isTown         = Game.GetForm(0x00013166) as Keyword
+					Keyword isCity         = Game.GetForm(0x00013168) as Keyword
+					Keyword isHold         = Game.GetForm(0x00016771) as Keyword
+					Keyword isFarm         = Game.GetForm(0x00018ef0) as Keyword
+					Keyword isMine         = Game.GetForm(0x00018ef1) as Keyword
+					Keyword isJail         = Game.GetForm(0x0001cd59) as Keyword
+					Keyword isShip         = Game.GetForm(0x0001cd5b) as Keyword
+					Keyword isHouse        = Game.GetForm(0x0001cb85) as Keyword
+					Keyword isStore        = Game.GetForm(0x0001cb86) as Keyword
+					Keyword isGuild        = Game.GetForm(0x0001cd5a) as Keyword
+					Keyword isTemple       = Game.GetForm(0x0001cd56) as Keyword
+					Keyword isCastle       = Game.GetForm(0x0001cd57) as Keyword
+					Keyword isNordicRuin   = Game.GetForm(0x000130f2) as Keyword
+					Keyword isDwelling     = Game.GetForm(0x000130dc) as Keyword
+					Keyword isBanditCamp   = Game.GetForm(0x000130df) as Keyword
+					Keyword isDragonLair   = Game.GetForm(0x000130e0) as Keyword
+					Keyword isFalmerHive   = Game.GetForm(0x000130e4) as Keyword
+					Keyword isDwarvenRuin  = Game.GetForm(0x000130f0) as Keyword
+					Keyword isSettlement   = Game.GetForm(0x00013167) as Keyword
+					Keyword isLumberMill   = Game.GetForm(0x00018ef2) as Keyword
+					Keyword isHabitation   = Game.GetForm(0x00039793) as Keyword
+					Keyword isDraugrCrypt  = Game.GetForm(0x000130e2) as Keyword
+					Keyword isVampireLair  = Game.GetForm(0x000130eb) as Keyword
+					Keyword isWarlockLair  = Game.GetForm(0x000130ec) as Keyword
+					Keyword isMilitaryFort = Game.GetForm(0x000130e7) as Keyword
+					Keyword isMilitaryCamp = Game.GetForm(0x000130e8) as Keyword
+					Keyword isWerewolfLair = Game.GetForm(0x000130ed) as Keyword
+					Keyword isForswornCamp = Game.GetForm(0x000130ee) as Keyword
+					Keyword isGiantCamp    = Game.GetForm(0x000130e5) as Keyword
+					Keyword isAnimalDen    = Game.GetForm(0x000130de) as Keyword
+					Keyword isCemetery     = Game.GetForm(0x0001cd58) as Keyword
+					Keyword isShipwreck    = Game.GetForm(0x0001929f) as Keyword
+					Keyword isPlayerHouse  = Game.GetForm(0x000fc1a3) as Keyword
+					
+					if curr.HasKeyword(isCity)
+						types += "City,"
+					endif
+					if curr.HasKeyword(isTown)
+						types += "Town,"
+					endif
+					if curr.HasKeyword(isHold)
+						types += "Hold,"
+					endif
+					if curr.HasKeyword(isInn)
+						types += "Inn,"
+					endif
+					if curr.HasKeyword(isStore)
+						types += "Store,"
+					endif
+					if curr.HasKeyword(isHouse)
+						types += "House,"
+					endif
+					if curr.HasKeyword(isPlayerHouse)
+						types += "Player House,"
+					endif
+					if curr.HasKeyword(isFarm)
+						types += "Farm,"
+					endif
+					if curr.HasKeyword(isMine)
+						types += "Mine,"
+					endif
+					if curr.HasKeyword(isJail)
+						types += "Jail,"
+					endif
+					if curr.HasKeyword(isTemple)
+						types += "Temple,"
+					endif
+					if curr.HasKeyword(isCastle)
+						types += "Castle,"
+					endif
+					if curr.HasKeyword(isGuild)
+						types += "Guild,"
+					endif
+					if curr.HasKeyword(isSettlement)
+						types += "Settlement,"
+					endif
+					if curr.HasKeyword(isHabitation)
+						types += "Habitation,"
+					endif
+					if curr.HasKeyword(isLumberMill)
+						types += "Lumber Mill,"
+					endif
+
+					; --- Dungeons & Wilderness ---
+					if curr.HasKeyword(isDungeon)
+						types += "Dungeon,"
+					endif
+					if curr.HasKeyword(isCave)
+						types += "Cave,"
+					endif
+					if curr.HasKeyword(isNordicRuin)
+						types += "Nordic Ruin,"
+					endif
+					if curr.HasKeyword(isDwarvenRuin)
+						types += "Dwarven Ruin,"
+					endif
+					if curr.HasKeyword(isDraugrCrypt)
+						types += "Draugr Crypt,"
+					endif
+					if curr.HasKeyword(isFalmerHive)
+						types += "Falmer Hive,"
+					endif
+					if curr.HasKeyword(isDragonLair)
+						types += "Dragon Lair,"
+					endif
+					if curr.HasKeyword(isVampireLair)
+						types += "Vampire Lair,"
+					endif
+					if curr.HasKeyword(isWarlockLair)
+						types += "Warlock Lair,"
+					endif
+					if curr.HasKeyword(isWerewolfLair)
+						types += "Werewolf Lair,"
+					endif
+					if curr.HasKeyword(isBanditCamp)
+						types += "Bandit Camp,"
+					endif
+					if curr.HasKeyword(isForswornCamp)
+						types += "Forsworn Camp,"
+					endif
+					if curr.HasKeyword(isGiantCamp)
+						types += "Giant Camp,"
+					endif
+					if curr.HasKeyword(isAnimalDen)
+						types += "Animal Den,"
+					endif
+					if curr.HasKeyword(isMilitaryFort)
+						types += "Military Fort,"
+					endif
+					if curr.HasKeyword(isMilitaryCamp)
+						types += "Military Camp,"
+					endif
+
+					; --- Misc ---
+					if curr.HasKeyword(isShip)
+						types += "Ship,"
+					endif
+					if curr.HasKeyword(isShipwreck)
+						types += "Shipwreck,"
+					endif
+					if curr.HasKeyword(isCemetery)
+						types += "Cemetery,"
+					endif
+				else
+					Debug.Trace("[CHIM] Using tags from caller: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+					types=tags
+				endif
+				; --------------------------
+				; SEND LOG ENTRY
+				; --------------------------
+				Location currParent = PO3_SKSEFunctions.GetParentLocation(curr)
+				Location currParent2 = PO3_SKSEFunctions.GetParentLocation(currParent)
+				Faction factionOwner = None;
+				
+				Cell localCell = destMarker.getParentCell()
+				if (referenceCell)
+					localCell = referenceCell
+					Debug.Trace("[CHIM] SendLocation Using reference cell from caller: "+DecToHex(referenceCell.GetFormID())+","+referenceCell.GetName())
+				endif
+				int isInterior = 0 
+				if (localCell)
+					;AIAgentPlayerScript.sendCellInfo(localCell,curr,false)
+					factionOwner = localCell.GetFactionOwner()
+					if (localCell.isInterior())
+						isInterior = 1
+					endif
+				endif
+				if destMarker.isInInterior()
+					isInterior = 1
+				endif
+				string parName =""
+				string parName2 =""
+				if (currParent)
+					parName= currParent.GetName()
+				endif
+				if (currParent2)
+					parName2= currParent2.GetName()
+				endif
+				
+				Debug.Trace("[CHIM] SendLocation Sending location: "+DecToHex(curr.GetFormID())+","+curr.GetName()+"  Pos:"+destMarker.GetPositionX()+","+destMarker.GetPositionY()+","+destMarker.GetPositionZ())
+				
+				
+				if (factionOwner)
+					Debug.Trace("[CHIM] SendLocation Sending Faction: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+					int result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior+"/"+DecToHex(factionOwner.GetFormId())+"/"+destMarker.GetPositionX()+"/"+destMarker.GetPositionY(),"util_location_name")
+				else
+					int result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior+"//"+destMarker.GetPositionX()+"/"+destMarker.GetPositionY(),"util_location_name")
+				endif
+				
+			endif
+		endif
+	endif
+EndFunction
+
 Function sendAllLocations() global
 
+	sendAllfactions();
 	; --- Load all location keywords we care about ---
 	Keyword isCave         = Game.GetForm(0x000130ef) as Keyword
 	Keyword isDungeon      = Game.GetForm(0x000130db) as Keyword
@@ -1154,7 +1374,7 @@ Function sendAllLocations() global
 
 	; --- Get all locations ---
 	Form[] allLocations = PO3_SKSEFunctions.GetAllForms(104)
-	Debug.Trace("[CHIM] Total locations" + allLocations.Length)
+	Debug.Trace("[CHIM] Total locations: " + allLocations.Length)
 
 	int lengthA = allLocations.Length
 	int i = 0
@@ -1165,15 +1385,14 @@ Function sendAllLocations() global
 	while i < lengthA
 		Location curr = allLocations[i] as Location
 
-		
 		if curr
 			ObjectReference destMarker = AIAgentFunctions.getWorldLocationMarkerFor(curr)
 			if (!destMarker)
 				i = i + 1
-				Debug.Trace("[CHIM] Byspassing because no getWorldLocationMarkerFor: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+				Debug.Trace("[CHIM] Bypassing because no getWorldLocationMarkerFor: "+DecToHex(curr.GetFormID())+","+curr.GetName())
 			elseif (destMarker.isDisabled())
 				i = i + 1
-				Debug.Trace("[CHIM] Byspassing because world location marker is disabled: "+DecToHex(curr.GetFormID())+","+curr.GetName())
+				Debug.Trace("[CHIM] Bypassing because world location marker is disabled: "+DecToHex(curr.GetFormID())+","+curr.GetName())
 
 			else
 				if destMarker
@@ -1293,36 +1512,7 @@ Function sendAllLocations() global
 						types += "Cemetery,"
 					endif
 
-					; --------------------------
-					; SEND LOG ENTRY
-					; --------------------------
-					Location currParent = PO3_SKSEFunctions.GetParentLocation(curr)
-					Location currParent2 = PO3_SKSEFunctions.GetParentLocation(currParent)
-					
-					
-					Cell localCell = destMarker.getParentCell()
-					int isInterior = 0 
-					if (localCell)
-						;AIAgentPlayerScript.sendCellInfo(localCell,curr,false)
-						if (localCell.isInterior())
-							isInterior = 1
-						endif
-					endif
-					if destMarker.isInInterior()
-						isInterior = 1
-					endif
-					string parName =""
-					string parName2 =""
-					if (currParent)
-						parName= currParent.GetName()
-					endif
-					if (currParent2)
-						parName2= currParent2.GetName()
-					endif
-					
-					
-						
-					result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior,"util_location_name")
+					sendLocation(curr,types)
 				endif
 			endif
 		endif
@@ -1507,3 +1697,32 @@ Function HaltAllNearbyAgents()
 EndFunction
 
 
+;Send all factions names
+Function sendAllfactions() global
+
+	Form[] allLocations=PO3_SKSEFunctions.GetAllForms(11);Factinos
+	Debug.Trace("[CHIM] [FACTION] Total "+allLocations.Length);
+	int retFnc = AIAgentFunctions.logMessage("__CLEAR_ALL__/","util_faction_name"); Clear before insert
+	int lengthA=allLocations.Length
+	int i=0;
+	while i < lengthA
+		Faction afFaction=allLocations[i] as Faction
+		
+		if afFaction
+			string name = afFaction.GetName()
+			if (!name)
+				name = PO3_SKSEFunctions.GetFormEditorID(afFaction)
+			endif
+			if (!name)
+				name = PO3_SKSEFunctions.GetDescription(afFaction)
+			endif
+			if (!name)
+				name = DecToHex(afFaction.GetFormId())
+			endif
+			Debug.Trace("[CHIM] [FACTION] Adding faction "+name + " / "+DecToHex(afFaction.GetFormId()));
+			retFnc=AIAgentFunctions.logMessage(DecToHex(afFaction.GetFormId())+"/"+name,"util_faction_name")
+		endif
+		i=i+1
+	endwhile
+	return
+EndFunction

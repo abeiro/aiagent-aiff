@@ -134,6 +134,31 @@ Scriptname AIAgentScriptProxy
 ; === ActorUtil (400–499) ===
 ; 400 = AddPackageOverride
 
+; === Faction (500–599) ===
+; 500 = CanPayCrimeGold
+; 501 = GetCrimeGold
+; 502 = GetCrimeGoldNonViolent
+; 503 = GetCrimeGoldViolent
+; 504 = GetInfamy
+; 505 = GetInfamyNonViolent
+; 506 = GetInfamyViolent
+; 507 = GetReaction
+; 508 = GetStolenItemValueCrime
+; 509 = GetStolenItemValueNoCrime
+; 510 = IsFactionInCrimeGroup
+; 511 = IsPlayerExpelled
+; 512 = ModCrimeGold
+; 513 = ModReaction
+; 514 = PlayerPayCrimeGold
+; 515 = SendAssaultAlarm
+; 516 = SendPlayerToJail
+; 517 = SetAlly
+; 518 = SetCrimeGold
+; 519 = SetCrimeGoldViolent
+; 520 = SetEnemy
+; 521 = SetPlayerEnemy
+; 522 = SetPlayerExpelled
+; 523 = SetReaction
 
 ; Helper log
 String Function DecToHex(Int n) global
@@ -169,10 +194,12 @@ Function ExecuteCommand(int cmdID, string jsonString) global
         ExecuteCommandObjectReference(cmdID, jsonString)
     elseif cmdID >= 200 && cmdID < 300
         ExecuteCommandFormList(cmdID, jsonString)
-	elseif cmdID >= 300 && cmdID < 400
+    elseif cmdID >= 300 && cmdID < 400
         ExecuteCommandEffectShader(cmdID, jsonString)
-	elseif cmdID >= 400 && cmdID < 500
-        ExecuteCommandActorUtil(cmdID, jsonString)	
+    elseif cmdID >= 400 && cmdID < 500
+        ExecuteCommandActorUtil(cmdID, jsonString)
+    elseif cmdID >= 500 && cmdID < 600  ; NEW: Faction handler
+        ExecuteCommandFaction(cmdID, jsonString)
     else
         Debug.Trace("[CHIM] AIProxy: ExecuteCommand - Unsupported cmdID range: " + cmdID)
     endif
@@ -1374,5 +1401,208 @@ Function ExecuteCommandActorUtil(int cmdID, string jsonString) global
 		
     else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil cmdID: " + cmdID)
+    endif
+EndFunction
+
+; =============================================================================
+; FACTION COMMAND HANDLER (cmdID 500–599)
+; =============================================================================
+Function ExecuteCommandFaction(int cmdID, string jsonString) global
+    Debug.Trace("[CHIM] AIProxy: ExecuteCommandFaction(cmdID=" + cmdID + ")")
+    
+    if cmdID <= 0 || !jsonString
+        Debug.Trace("[CHIM] AIProxy: Invalid cmdID or null JSON")
+        return
+    endif
+    
+    ; Get target faction from JSON
+    int factionID = AIAgentFunctions.jsonGetFormId("targetObjectFormId", jsonString)
+    if factionID == 0
+        Debug.Trace("[CHIM] AIProxy: Missing targetObjectFormId for Faction command")
+        return
+    endif
+    
+    Faction akFaction = Game.GetFormEx(factionID) as Faction
+    if !akFaction
+        Debug.Trace("[CHIM] AIProxy: Target is not a valid Faction (FormID: " + DecToHex(factionID) + ")")
+        return
+    endif
+    
+    ; Handle each Faction command
+    if cmdID == 500 ; CanPayCrimeGold
+        bool result = akFaction.CanPayCrimeGold()
+        Debug.Trace("[CHIM] AIProxy: CanPayCrimeGold = " + result)
+        ; Note: Return values require callback mechanism to AI
+        
+    elseif cmdID == 501 ; GetCrimeGold
+        int gold = akFaction.GetCrimeGold()
+        Debug.Trace("[CHIM] AIProxy: GetCrimeGold = " + gold)
+        
+    elseif cmdID == 502 ; GetCrimeGoldNonViolent
+        int gold = akFaction.GetCrimeGoldNonViolent()
+        Debug.Trace("[CHIM] AIProxy: GetCrimeGoldNonViolent = " + gold)
+        
+    elseif cmdID == 503 ; GetCrimeGoldViolent
+        int gold = akFaction.GetCrimeGoldViolent()
+        Debug.Trace("[CHIM] AIProxy: GetCrimeGoldViolent = " + gold)
+        
+    elseif cmdID == 504 ; GetInfamy
+        int infamy = akFaction.GetInfamy()
+        Debug.Trace("[CHIM] AIProxy: GetInfamy = " + infamy)
+        
+    elseif cmdID == 505 ; GetInfamyNonViolent
+        int infamy = akFaction.GetInfamyNonViolent()
+        Debug.Trace("[CHIM] AIProxy: GetInfamyNonViolent = " + infamy)
+        
+    elseif cmdID == 506 ; GetInfamyViolent
+        int infamy = akFaction.GetInfamyViolent()
+        Debug.Trace("[CHIM] AIProxy: GetInfamyViolent = " + infamy)
+        
+    elseif cmdID == 507 ; GetReaction
+        int otherFactionID = AIAgentFunctions.jsonGetFormId("akOther", jsonString)
+        if otherFactionID == 0
+            Debug.Trace("[CHIM] AIProxy: GetReaction - missing akOther")
+            return
+        endif
+        Faction akOther = Game.GetFormEx(otherFactionID) as Faction
+        if !akOther
+            Debug.Trace("[CHIM] AIProxy: GetReaction - invalid akOther Faction")
+            return
+        endif
+        int reaction = akFaction.GetReaction(akOther)
+        Debug.Trace("[CHIM] AIProxy: GetReaction = " + reaction)
+        
+    elseif cmdID == 508 ; GetStolenItemValueCrime
+        int value = akFaction.GetStolenItemValueCrime()
+        Debug.Trace("[CHIM] AIProxy: GetStolenItemValueCrime = " + value)
+        
+    elseif cmdID == 509 ; GetStolenItemValueNoCrime
+        int value = akFaction.GetStolenItemValueNoCrime()
+        Debug.Trace("[CHIM] AIProxy: GetStolenItemValueNoCrime = " + value)
+        
+    elseif cmdID == 510 ; IsFactionInCrimeGroup
+        int otherFactionID = AIAgentFunctions.jsonGetFormId("akOther", jsonString)
+        if otherFactionID == 0
+            Debug.Trace("[CHIM] AIProxy: IsFactionInCrimeGroup - missing akOther")
+            return
+        endif
+        Faction akOther = Game.GetFormEx(otherFactionID) as Faction
+        if !akOther
+            Debug.Trace("[CHIM] AIProxy: IsFactionInCrimeGroup - invalid akOther Faction")
+            return
+        endif
+        bool result = akFaction.IsFactionInCrimeGroup(akOther)
+        Debug.Trace("[CHIM] AIProxy: IsFactionInCrimeGroup = " + result)
+        
+    elseif cmdID == 511 ; IsPlayerExpelled
+        bool expelled = akFaction.IsPlayerExpelled()
+        Debug.Trace("[CHIM] AIProxy: IsPlayerExpelled = " + expelled)
+        
+    elseif cmdID == 512 ; ModCrimeGold
+        int amount = AIAgentFunctions.jsonGetInt("aiAmount", jsonString)
+        int violent = AIAgentFunctions.jsonGetInt("abViolent", jsonString)
+        akFaction.ModCrimeGold(amount, (violent != 0))
+        Debug.Trace("[CHIM] AIProxy: ModCrimeGold SUCCESS (amount=" + amount + ", violent=" + violent + ")")
+        
+    elseif cmdID == 513 ; ModReaction
+        int otherFactionID = AIAgentFunctions.jsonGetFormId("akOther", jsonString)
+        if otherFactionID == 0
+            Debug.Trace("[CHIM] AIProxy: ModReaction - missing akOther")
+            return
+        endif
+        Faction akOther = Game.GetFormEx(otherFactionID) as Faction
+        if !akOther
+            Debug.Trace("[CHIM] AIProxy: ModReaction - invalid akOther Faction")
+            return
+        endif
+        int amount = AIAgentFunctions.jsonGetInt("aiAmount", jsonString)
+        akFaction.ModReaction(akOther, amount)
+        Debug.Trace("[CHIM] AIProxy: ModReaction SUCCESS (amount=" + amount + ")")
+        
+    elseif cmdID == 514 ; PlayerPayCrimeGold
+        int removeItems = AIAgentFunctions.jsonGetInt("abRemoveStolenItems", jsonString)
+        int goToJail = AIAgentFunctions.jsonGetInt("abGoToJail", jsonString)
+        akFaction.PlayerPayCrimeGold((removeItems != 0), (goToJail != 0))
+        Debug.Trace("[CHIM] AIProxy: PlayerPayCrimeGold SUCCESS")
+        
+    elseif cmdID == 515 ; SendAssaultAlarm
+        akFaction.SendAssaultAlarm()
+        Debug.Trace("[CHIM] AIProxy: SendAssaultAlarm SUCCESS")
+        
+    elseif cmdID == 516 ; SendPlayerToJail
+        int removeInventory = AIAgentFunctions.jsonGetInt("abRemoveInventory", jsonString)
+        int realJail = AIAgentFunctions.jsonGetInt("abRealJail", jsonString)
+        akFaction.SendPlayerToJail((removeInventory != 0), (realJail != 0))
+        Debug.Trace("[CHIM] AIProxy: SendPlayerToJail SUCCESS")
+        
+    elseif cmdID == 517 ; SetAlly
+        int otherFactionID = AIAgentFunctions.jsonGetFormId("akOther", jsonString)
+        if otherFactionID == 0
+            Debug.Trace("[CHIM] AIProxy: SetAlly - missing akOther")
+            return
+        endif
+        Faction akOther = Game.GetFormEx(otherFactionID) as Faction
+        if !akOther
+            Debug.Trace("[CHIM] AIProxy: SetAlly - invalid akOther Faction")
+            return
+        endif
+        int selfIsFriend = AIAgentFunctions.jsonGetInt("abSelfIsFriendToOther", jsonString)
+        int otherIsFriend = AIAgentFunctions.jsonGetInt("abOtherIsFriendToSelf", jsonString)
+        akFaction.SetAlly(akOther, (selfIsFriend != 0), (otherIsFriend != 0))
+        Debug.Trace("[CHIM] AIProxy: SetAlly SUCCESS")
+        
+    elseif cmdID == 518 ; SetCrimeGold
+        int gold = AIAgentFunctions.jsonGetInt("aiGold", jsonString)
+        akFaction.SetCrimeGold(gold)
+        Debug.Trace("[CHIM] AIProxy: SetCrimeGold SUCCESS (gold=" + gold + ")")
+        
+    elseif cmdID == 519 ; SetCrimeGoldViolent
+        int gold = AIAgentFunctions.jsonGetInt("aiGold", jsonString)
+        akFaction.SetCrimeGoldViolent(gold)
+        Debug.Trace("[CHIM] AIProxy: SetCrimeGoldViolent SUCCESS (gold=" + gold + ")")
+        
+    elseif cmdID == 520 ; SetEnemy
+        int otherFactionID = AIAgentFunctions.jsonGetFormId("akOther", jsonString)
+        if otherFactionID == 0
+            Debug.Trace("[CHIM] AIProxy: SetEnemy - missing akOther")
+            return
+        endif
+        Faction akOther = Game.GetFormEx(otherFactionID) as Faction
+        if !akOther
+            Debug.Trace("[CHIM] AIProxy: SetEnemy - invalid akOther Faction")
+            return
+        endif
+        int selfIsNeutral = AIAgentFunctions.jsonGetInt("abSelfIsNeutralToOther", jsonString)
+        int otherIsNeutral = AIAgentFunctions.jsonGetInt("abOtherIsNeutralToSelf", jsonString)
+        akFaction.SetEnemy(akOther, (selfIsNeutral != 0), (otherIsNeutral != 0))
+        Debug.Trace("[CHIM] AIProxy: SetEnemy SUCCESS")
+        
+    elseif cmdID == 521 ; SetPlayerEnemy
+        int isEnemy = AIAgentFunctions.jsonGetInt("abIsEnemy", jsonString)
+        akFaction.SetPlayerEnemy((isEnemy != 0))
+        Debug.Trace("[CHIM] AIProxy: SetPlayerEnemy SUCCESS")
+        
+    elseif cmdID == 522 ; SetPlayerExpelled
+        int isExpelled = AIAgentFunctions.jsonGetInt("abIsExpelled", jsonString)
+        akFaction.SetPlayerExpelled((isExpelled != 0))
+        Debug.Trace("[CHIM] AIProxy: SetPlayerExpelled SUCCESS")
+        
+    elseif cmdID == 523 ; SetReaction
+        int otherFactionID = AIAgentFunctions.jsonGetFormId("akOther", jsonString)
+        if otherFactionID == 0
+            Debug.Trace("[CHIM] AIProxy: SetReaction - missing akOther")
+            return
+        endif
+        Faction akOther = Game.GetFormEx(otherFactionID) as Faction
+        if !akOther
+            Debug.Trace("[CHIM] AIProxy: SetReaction - invalid akOther Faction")
+            return
+        endif
+        int newValue = AIAgentFunctions.jsonGetInt("aiNewValue", jsonString)
+        akFaction.SetReaction(akOther, newValue)
+        Debug.Trace("[CHIM] AIProxy: SetReaction SUCCESS (value=" + newValue + ")")
+        
+    else
+        Debug.Trace("[CHIM] AIProxy: UNKNOWN Faction cmdID: " + cmdID)
     endif
 EndFunction

@@ -1310,6 +1310,14 @@ EndFunction
 Function CheckAndReleaseWalkToTargetNPCs() global
 	
 	; Called periodically to release NPCs that have been walking for 40+ seconds without talking
+	if (true)
+		return 
+	endif
+	
+	Debug.Trace("[CHIM] CheckAndReleaseWalkToTargetNPCs")
+	;This is dangerous, probably we should change this method to return an array of formids and load Actors here
+	;This mehotd can return Actors that are not available/loaded
+	
 	Actor[] allAgents = AIAgentFunctions.findAllAgents()
 	
 	if (!allAgents || allAgents.Length == 0)
@@ -1831,10 +1839,9 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			
 			finalSourceActor.Disable(); Remove source actor as is not needed anymore.
 		endif
-		finalActor.Enable(true)
-		AIAgentFunctions.setDrivenByAIA(finalActor,false)
+		
 
-		if !isMob		
+		if !isMob	&& false 	
 			; Info purposes
 			ActorBase instancedActBase=getProperActorBase(finalActor);
 			int hp = getProperActorBase(finalActor).GetNumHeadParts()
@@ -1907,6 +1914,10 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			Debug.Trace("[CHIM] [SPAWN_AGENT] "+finalActor.GetDisplayName()+" in faction "+akFactions[j].GetName())
 			j = j +1
 		endwhile
+		
+		finalActor.Enable(true)
+		AIAgentFunctions.setDrivenByAIA(finalActor,false)
+		
 		AIAgentFunctions.logMessage("spawned@"+finalActor.GetDisplayName()+"@"+finalActor.GetFormId(),"status_msg")
 
 		string locationStr="";
@@ -3233,8 +3244,11 @@ endFunction
 function SendCellInfo(Cell loadedCell) global
 	
 	Location currLoc = Game.GetPlayer().getCurrentLocation();
-	Debug.Trace("[CHIM] AIAgentAIMind -> SendCellInfo, cell <0x"+DecToHex(loadedCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
-	AIAgentPlayerScript.sendCellInfoSingle(loadedCell,currLoc,false)
+	if (currLoc)
+		Debug.Trace("[CHIM] AIAgentAIMind -> SendCellInfo, cell <0x"+DecToHex(loadedCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
+		AIAgentPlayerScript.sendCellInfoSingle(loadedCell,currLoc,false)
+		;;AIAgentPapyrusFunctions.sendLocation(currLoc,"",loadedCell)	;Triggers too much
+	endif
 endFunction
 
 

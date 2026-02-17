@@ -1,5 +1,8 @@
-Scriptname AIAgentPlayerScript extends actor
+Scriptname AIAgentPlayerScript extends ReferenceAlias 
 
+ReferenceAlias Property PlayerRefAlias  Auto  
+
+Location lastLoc
 
 Event OnPlayerFastTravelEnd(float afTravelGameTimeHours)
 
@@ -42,7 +45,9 @@ Event OnLocationChange(Location oldLoc,Location newLoc)
 	elseif newLoc
 		AIAgentFunctions.logMessage(newLoc.getName(), "region")
 	endif;
+	Debug.Trace("[CHIM] AIAgentPlayerScript, OnLocationChange Location <0x"+DecToHex(newLoc.GetFormId())+"> from location <0x"+DecToHex(oldLoc.GetFormId())+">" );
 	sendCellInfo(Game.GetPlayer().getParentCell(),newLoc,false)
+	AIAgentPapyrusFunctions.sendLocation(Game.GetPlayer().GetCurrentLocation() ,"",Game.GetPlayer().getParentCell());
 endEvent
 
 ; DLL TESCellFullyLoadedEvent will take care
@@ -60,20 +65,22 @@ endEvent
 
 	Cell currCell = Game.GetPlayer().getParentCell()
 	Location currLoc = Game.GetPlayer().getCurrentLocation();
-	Debug.Trace("[CHIM] AIAgentPlayerScript, cell <0x"+DecToHex(currCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
+	Debug.Trace("[CHIM] AIAgentPlayerScript, OnPlayerLoadGame cell <0x"+DecToHex(currCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
 	
 	UnregisterForUpdate()
 	RegisterForSingleUpdate(5)
 	sendCellInfo(currCell,currLoc,false)
+	AIAgentPapyrusFunctions.sendLocation(currLoc,"",currCell);
 	
 endEvent
 
 Event OnCellLoad()
 	Cell currCell = Game.GetPlayer().getParentCell()
 	Location currLoc = Game.GetPlayer().getCurrentLocation();
-	Debug.Trace("[CHIM] AIAgentPlayerScript, cell <0x"+DecToHex(currCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
-	
-	sendCellInfo(currCell,currLoc,false)
+	if (currCell && currLoc)
+		Debug.Trace("[CHIM] AIAgentPlayerScript OnCellLoad, cell <0x"+DecToHex(currCell.GetFormId())+"> location <0x"+DecToHex(currLoc.GetFormId())+">" );
+		sendCellInfo(currCell,currLoc,false)
+	endif
 	
 EndEvent 
 ; Utils 
@@ -239,7 +246,7 @@ function sendCellInfo(Cell localCell,Location fromLocation,bool detailed = false
 		isInterior = 1
 	endIf
 	string cellName = localCell.GetName();
-	if (!cellName)
+	if (!cellName && curr)
 		cellName = curr.GetName()+" area"
 	endif
 	if (!cellName)
@@ -247,7 +254,7 @@ function sendCellInfo(Cell localCell,Location fromLocation,bool detailed = false
 	endif
 	ObjectReference randomRef = localCell.GetNthRef(0,0)
 	if (randomRef)
-		AIAgentFunctions.logMessage(cellName+ "/" + localCell.GetFormID() + "/" + curr.GetFormId() + "/" +isInterior+ "/-1/-1/0/"+randomRef.getWorldspace().GetName()+"////","named_cell")
+		int lRes=AIAgentFunctions.logMessage(cellName+ "/" + localCell.GetFormID() + "/" + curr.GetFormId() + "/" +isInterior+ "/-1/-1/0/"+randomRef.getWorldspace().GetName()+"////","named_cell")
 	else
 		Debug.Trace("[CHIM] sendCellInfo cell with no refs <0x"+DecToHex(localCell.GetFormId())+">")
 	endIf
@@ -298,9 +305,12 @@ EndFunction
 function sendCellInfoPlayer() 
 
 	
-
+	
 	ObjectReference player = Game.GetPlayer()
 	Cell localCell = player.getParentCell()
+	
+	Debug.Trace("[CHIM] AIAgentPlayerScript sendCellInfoPlayer, cell <0x"+DecToHex(localCell.GetFormId())+"> " );
+	
 	cellName = "Player Cell"
 	string worldSpaceName = player.getWorldspace().GetName()
 	
@@ -367,5 +377,12 @@ EndFunction
 Event OnUpdate()
     ; Do some stuff
 	sendCellInfoPlayer()
+	Location currLoc = Game.GetPlayer().GetCurrentLocation()
+	if (currLoc != lastLoc)
+		lastLoc = currLoc
+		AIAgentPapyrusFunctions.sendLocation( currLoc,"",Game.GetPlayer().getParentCell());
+	endif
     RegisterForSingleUpdate(5)
 endEvent
+
+
