@@ -1310,15 +1310,11 @@ EndFunction
 Function CheckAndReleaseWalkToTargetNPCs() global
 	
 	; Called periodically to release NPCs that have been walking for 40+ seconds without talking
-	if (true)
-		return 
-	endif
-	
 	Debug.Trace("[CHIM] CheckAndReleaseWalkToTargetNPCs")
 	;This is dangerous, probably we should change this method to return an array of formids and load Actors here
 	;This mehotd can return Actors that are not available/loaded
 	
-	Actor[] allAgents = AIAgentFunctions.findAllAgents()
+	Int[] allAgents = AIAgentFunctions.findAllAgentsFormId()
 	
 	if (!allAgents || allAgents.Length == 0)
 		return
@@ -1329,7 +1325,8 @@ Function CheckAndReleaseWalkToTargetNPCs() global
 	
 	int i = 0
 	while i < allAgents.Length
-		Actor npc = allAgents[i]
+	
+		Actor npc =  Game.GetFormEx(allAgents[i]) as Actor
 		
 		if (npc)
 			float startTime = StorageUtil.GetFloatValue(npc, "WalkToTargetStartTime", 0.0)
