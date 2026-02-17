@@ -22,7 +22,7 @@ body {
     bottom: 20px;
     left: 20px;
     width: 550px;
-    height: 420px;
+    height: 480px;
     background: rgba(10, 10, 15, 0.88);
     border: 1px solid rgba(242, 124, 17, 0.4);
     border-radius: 6px;
@@ -33,6 +33,10 @@ body {
     display: flex;
     flex-direction: column;
     animation: slideIn 0.3s ease;
+}
+
+#chim-chatbox.focus-only-hidden {
+    display: none;
 }
 
 @keyframes slideIn {
@@ -190,6 +194,7 @@ body {
     line-height: 1.4;
     color: #ddd;
     word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 /* Speaker Colors */
@@ -278,64 +283,100 @@ body {
     color: #ccc;
 }
 
-/* Input Area */
-.chatbox-input {
+.focus-chatbox-modal {
+    position: fixed;
+    inset: 0;
     display: flex;
-    padding: 8px;
-    background: rgba(20, 20, 30, 0.6);
-    border-top: 1px solid rgba(242, 124, 17, 0.3);
-    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
 }
 
-#chat-input {
-    flex: 1;
-    min-width: 0;
-    padding: 8px 12px;
-    background: rgba(30, 30, 40, 0.8);
-    border: 1px solid rgba(80, 80, 90, 0.5);
-    border-radius: 4px;
-    color: #e8e8e8;
-    font-size: 1em;
-    outline: none;
-    transition: all 0.2s ease;
-    pointer-events: auto;
-    user-select: text;
-    -webkit-user-select: text;
-    cursor: text;
+.focus-chatbox-modal.hidden {
+    display: none;
 }
 
-#chat-input:focus,
-#chat-input.focused {
-    border-color: rgba(242, 124, 17, 0.6);
-    background: rgba(35, 35, 45, 0.9);
-    box-shadow: 0 0 8px rgba(242, 124, 17, 0.2);
+.focus-chatbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
 }
 
-#chat-input::placeholder {
-    color: #666;
+.focus-chatbox-panel {
+    position: relative;
+    z-index: 1;
+    width: min(820px, 90vw);
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(12, 12, 18, 0.95);
+    border: 1px solid rgba(242, 124, 17, 0.45);
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.75);
+    overflow: hidden;
 }
 
-.btn-send {
-    padding: 8px 16px;
-    background: rgba(242, 124, 17, 0.3);
-    border: 1px solid rgba(242, 124, 17, 0.5);
-    border-radius: 4px;
+.focus-chatbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(242, 124, 17, 0.25);
     color: rgb(242, 124, 17);
-    font-size: 1em;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    pointer-events: auto;
 }
 
-.btn-send:hover {
-    background: rgba(242, 124, 17, 0.5);
-    border-color: rgb(242, 124, 17);
+.focus-chatbox-input {
+    width: 100%;
+    min-height: 72px;
+    max-height: 72px;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 10px 14px;
+    background: rgba(18, 18, 26, 0.95);
+    color: #e8e8e8;
+    font-size: 1.12em;
+    line-height: 1.35;
+}
+
+.focus-chatbox-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 10px 14px 14px 14px;
+    border-top: 1px solid rgba(242, 124, 17, 0.22);
+}
+
+.focus-btn {
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(242, 124, 17, 0.35);
+    background: rgba(242, 124, 17, 0.16);
+    color: #f2f2f2;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.focus-btn:hover {
+    background: rgba(242, 124, 17, 0.3);
+}
+
+.focus-btn-primary {
+    background: rgba(242, 124, 17, 0.35);
     color: #fff;
 }
 
-.btn-send:active {
-    transform: scale(0.95);
+.focus-btn-danger {
+    border-color: rgba(230, 91, 91, 0.45);
+    background: rgba(230, 91, 91, 0.2);
+}
+
+.focus-btn-close {
+    padding: 2px 10px;
+    font-size: 1.3em;
+    line-height: 1;
 }
 
 /* Loading Indicator */

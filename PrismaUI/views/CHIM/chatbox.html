@@ -20,9 +20,6 @@
             <!-- Chat Tab -->
             <div id="tab-chat" class="tab-pane active">
                 <div class="messages-container" id="chat-messages">
-                    <div class="message-welcome">
-                        <span class="message-system">CHIM Chatbox initialized. Press hotkey to toggle.</span>
-                    </div>
                 </div>
             </div>
             
@@ -35,11 +32,25 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Input Area -->
-        <div class="chatbox-input">
-            <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" spellcheck="false" />
-            <button class="btn-send" onclick="sendMessage()" title="Send">Send</button>
+    </div>
+
+    <div id="focus-chatbox-modal" class="focus-chatbox-modal hidden" aria-hidden="true">
+        <div class="focus-chatbox-backdrop"></div>
+        <div class="focus-chatbox-panel" role="dialog" aria-modal="true" aria-label="Focus Chatbox">
+            <div class="focus-chatbox-header">
+                <span>Focus Chatbox</span>
+                <button class="focus-btn focus-btn-close" type="button" title="Close" onclick="closeFocusChatbox()">&times;</button>
+            </div>
+            <textarea
+                id="focus-chatbox-input"
+                class="focus-chatbox-input"
+                rows="2"
+                placeholder="Type your message here. Enter sends, Shift+Enter adds a new line."
+                spellcheck="false"></textarea>
+            <div class="focus-chatbox-actions">
+                <button class="focus-btn focus-btn-primary" type="button" onclick="sendFocusMessage()">Send</button>
+                <button class="focus-btn focus-btn-danger" type="button" onclick="clearFocusMessage()">Clear Text</button>
+            </div>
         </div>
     </div>
     <script src="chatbox.js"></script>

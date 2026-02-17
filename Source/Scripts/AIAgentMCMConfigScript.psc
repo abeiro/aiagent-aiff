@@ -289,7 +289,7 @@ endEvent
 
 event OnConfigInit()
 
-	ModName="CHIM"
+	ModName="Text Chat"
 	Pages = new string[7]
 	Pages[0] = "Main"
 	Pages[1] = "Auto Activate"
@@ -321,7 +321,7 @@ event OnConfigInit()
 		;controlScript.setSoulgazeModeNative(1)
 	endIf
 	if (CurrentVersion<29)
-		SetTitleText("CHIM")
+		SetTitleText("Text Chat")
 	endIf
 	
 	if (CurrentVersion<35)
