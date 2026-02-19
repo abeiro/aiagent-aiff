@@ -110,6 +110,152 @@ body {
     border-color: #ff6b6b;
 }
 
+/* Compact Control Strip */
+.chatbox-controls {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(242, 124, 17, 0.2);
+    background: rgba(16, 16, 24, 0.75);
+}
+
+.chatbox-control-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1.2fr 0.8fr;
+    gap: 8px;
+}
+
+.chatbox-control-block {
+    min-width: 0;
+}
+
+.chatbox-control-label {
+    font-size: 0.7em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+    margin-bottom: 4px;
+}
+
+.chatbox-control-value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    font-size: 0.85em;
+    color: #ddd;
+}
+
+.target-name {
+    color: rgb(242, 124, 17);
+    font-weight: 600;
+    max-width: 165px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.target-name.no-target {
+    color: #666;
+    font-style: italic;
+}
+
+.target-distance {
+    color: #999;
+    font-size: 0.85em;
+}
+
+.mode-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+}
+
+.mode-badge.standard {
+    background: rgba(52, 152, 219, 0.2);
+    color: #5dade2;
+    border: 1px solid rgba(52, 152, 219, 0.4);
+}
+
+.mode-badge.whisper {
+    background: rgba(155, 89, 182, 0.2);
+    color: #bb8fce;
+    border: 1px solid rgba(155, 89, 182, 0.4);
+}
+
+.mode-badge.director {
+    background: rgba(230, 126, 34, 0.2);
+    color: #f39c12;
+    border: 1px solid rgba(230, 126, 34, 0.4);
+}
+
+.mode-badge.cheatmode {
+    background: rgba(231, 76, 60, 0.2);
+    color: #ec7063;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.mode-badge.autochat {
+    background: rgba(46, 204, 113, 0.2);
+    color: #58d68d;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.chatbox-mode-select {
+    background: rgba(30, 30, 40, 0.9);
+    border: 1px solid rgba(242, 124, 17, 0.3);
+    border-radius: 4px;
+    color: #ddd;
+    font-size: 0.88em;
+    line-height: 1.2;
+    padding: 6px 10px;
+    min-width: 148px;
+    height: 32px;
+    cursor: pointer;
+}
+
+.chatbox-mode-select:focus {
+    outline: none;
+    border-color: rgba(242, 124, 17, 0.65);
+    box-shadow: 0 0 0 2px rgba(242, 124, 17, 0.18);
+}
+
+.chatbox-inline-btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(242, 124, 17, 0.35);
+    background: rgba(242, 124, 17, 0.16);
+    color: #f2f2f2;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+.chatbox-inline-btn:hover {
+    background: rgba(242, 124, 17, 0.3);
+}
+
+.toggle-indicator {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.toggle-indicator.on {
+    background: rgba(46, 204, 113, 0.2);
+    color: #58d68d;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.toggle-indicator.off {
+    background: rgba(100, 100, 110, 0.2);
+    color: #888;
+    border: 1px solid rgba(100, 100, 110, 0.4);
+}
+
 /* Content Area */
 .chatbox-content {
     flex: 1;

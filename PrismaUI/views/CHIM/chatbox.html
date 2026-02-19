@@ -36,10 +36,46 @@
 
     <div id="focus-chatbox-modal" class="focus-chatbox-modal hidden" aria-hidden="true">
         <div class="focus-chatbox-backdrop"></div>
-        <div class="focus-chatbox-panel" role="dialog" aria-modal="true" aria-label="Focus Chatbox">
+        <div class="focus-chatbox-panel" role="dialog" aria-modal="true" aria-label="Send Message">
             <div class="focus-chatbox-header">
-                <span>Focus Chatbox</span>
+                <span>Send Message</span>
                 <button class="focus-btn focus-btn-close" type="button" title="Close" onclick="closeFocusChatbox()">&times;</button>
+            </div>
+            <div class="chatbox-controls">
+                <div class="chatbox-control-grid">
+                    <div class="chatbox-control-block">
+                        <div class="chatbox-control-label">Current Target</div>
+                        <div class="chatbox-control-value" id="chatbox-current-target">
+                            <span class="target-name no-target">No target</span>
+                        </div>
+                    </div>
+
+                    <div class="chatbox-control-block">
+                        <div class="chatbox-control-label">Current Mode</div>
+                        <div class="chatbox-control-value">
+                            <span id="chatbox-current-mode" class="mode-badge standard">Standard</span>
+                            <select id="chatbox-mode-select" class="chatbox-mode-select" title="Switch mode">
+                                <option value="mode_standard">Standard</option>
+                                <option value="mode_whisper">Whisper</option>
+                                <option value="mode_director">Director</option>
+                                <option value="mode_spawn">Spawn</option>
+                                <option value="mode_cheat">Cheat Mode</option>
+                                <option value="mode_autochat">Auto Chat</option>
+                                <option value="mode_inject_log">Event Inject</option>
+                                <option value="mode_inject_chat">Inject & Chat</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="chatbox-control-block">
+                        <div class="chatbox-control-label">Focus Chat</div>
+                        <div class="chatbox-control-value">
+                            <span id="chatbox-focus-indicator" class="toggle-indicator off">OFF</span>
+                            <button id="chatbox-focus-toggle" class="chatbox-inline-btn" type="button">Enable</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <textarea
                 id="focus-chatbox-input"

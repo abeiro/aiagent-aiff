@@ -15,6 +15,11 @@
     const tabPanes = document.querySelectorAll('.tab-pane');
     const focusModal = document.getElementById('focus-chatbox-modal');
     const focusInput = document.getElementById('focus-chatbox-input');
+    const currentTargetElement = document.getElementById('chatbox-current-target');
+    const currentModeElement = document.getElementById('chatbox-current-mode');
+    const modeSelectElement = document.getElementById('chatbox-mode-select');
+    const focusIndicatorElement = document.getElementById('chatbox-focus-indicator');
+    const focusToggleButton = document.getElementById('chatbox-focus-toggle');
 
     // State
     let currentTab = 'chat';
@@ -22,9 +27,22 @@
     let systemLogRefreshInterval = null;
     let isChatFocused = false;
     let quickChatMode = false;
+    let isFocusChatEnabled = false;
+    let currentModeAction = 'mode_standard';
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
+
+    const modeConfig = {
+        STANDARD: { label: 'Standard', class: 'standard', action: 'mode_standard' },
+        WHISPER: { label: 'Whisper', class: 'whisper', action: 'mode_whisper' },
+        DIRECTOR: { label: 'Director', class: 'director', action: 'mode_director' },
+        SPAWN: { label: 'Spawn', class: 'director', action: 'mode_spawn' },
+        CHEATMODE: { label: 'Cheat Mode', class: 'cheatmode', action: 'mode_cheat' },
+        AUTOCHAT: { label: 'Auto Chat', class: 'autochat', action: 'mode_autochat' },
+        INJECTION_LOG: { label: 'Event Inject', class: 'director', action: 'mode_inject_log' },
+        INJECTION_CHAT: { label: 'Inject & Chat', class: 'director', action: 'mode_inject_chat' }
+    };
 
     /**
      * Switch between Chat and System tabs
@@ -154,6 +172,27 @@
         }
     }
 
+    function sendControlCommand(command) {
+        if (window.chimChatboxCommand) {
+            window.chimChatboxCommand(command);
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function updateFocusIndicator(enabled) {
+        if (!focusIndicatorElement || !focusToggleButton) return;
+        focusIndicatorElement.classList.remove('on', 'off');
+        focusIndicatorElement.classList.add(enabled ? 'on' : 'off');
+        focusIndicatorElement.textContent = enabled ? 'ON' : 'OFF';
+        focusToggleButton.textContent = enabled ? 'Disable' : 'Enable';
+    }
+
     /**
      * Close chatbox
      */
@@ -251,6 +290,36 @@
         window.closeFocusChatbox(false);
     };
 
+    window.updateChatboxTarget = function(name, distance) {
+        if (!currentTargetElement) return;
+        if (name && name !== '') {
+            currentTargetElement.innerHTML = `
+                <span class="target-name">${escapeHtml(name)}</span>
+                <span class="target-distance">(${distance.toFixed(1)}m)</span>
+            `;
+        } else {
+            currentTargetElement.innerHTML = '<span class="target-name no-target">No target</span>';
+        }
+    };
+
+    window.updateChatboxMode = function(mode) {
+        const modeUpper = mode ? mode.toUpperCase().trim() : 'STANDARD';
+        const config = modeConfig[modeUpper] || modeConfig.STANDARD;
+        currentModeAction = config.action;
+        if (currentModeElement) {
+            currentModeElement.className = 'mode-badge ' + config.class;
+            currentModeElement.textContent = config.label;
+        }
+        if (modeSelectElement) {
+            modeSelectElement.value = config.action;
+        }
+    };
+
+    window.updateChatboxFocus = function(enabled) {
+        isFocusChatEnabled = !!enabled;
+        updateFocusIndicator(isFocusChatEnabled);
+    };
+
     function setChatboxViewerVisible(isVisible) {
         if (!chatboxRoot) return;
         chatboxRoot.classList.toggle('focus-only-hidden', !isVisible);
@@ -267,6 +336,23 @@
             return timestamp;
         }
     }
+
+    if (modeSelectElement) {
+        modeSelectElement.addEventListener('change', function() {
+            const action = modeSelectElement.value;
+            if (!action || action === currentModeAction) return;
+            sendControlCommand(action);
+        });
+    }
+
+    if (focusToggleButton) {
+        focusToggleButton.addEventListener('click', function() {
+            sendControlCommand('focus_chat_toggle');
+        });
+    }
+
+    updateFocusIndicator(isFocusChatEnabled);
+    window.updateChatboxMode('STANDARD');
 
     window.addEventListener('beforeunload', function() {
         if (systemLogRefreshInterval) {

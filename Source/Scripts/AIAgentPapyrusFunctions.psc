@@ -30,6 +30,7 @@ bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
 bool		followingHerika= false
 bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
+bool		_chatboxFocusHotkeySuppressed = false
 
 int		_nativeSoulGaze= 1
 
@@ -394,13 +395,19 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentChatboxFocusKey)
-	; Simple toggle: if focused, unfocus; otherwise focus (C++ handles creation/visibility)
-	if (AIAgentFunctions.isChatboxPanelFocused() == 1)
-		; Already focused - unfocus it (send message if any)
-		AIAgentFunctions.unfocusChatboxPanel()
+	if (_chatboxFocusHotkeySuppressed)
+		_chatboxFocusHotkeySuppressed = false
 	else
-		; Not focused - focus it (C++ handles creation, show, and focus)
-		AIAgentFunctions.focusChatboxPanel()
+		; Type Message hotkey: opens modal-only quick message mode when panel is hidden.
+		; If already focused, it unfocuses/closes.
+		if (AIAgentFunctions.isChatboxPanelFocused() == 1)
+			AIAgentFunctions.unfocusChatboxPanel()
+		else
+			AIAgentFunctions.focusChatboxPanel()
+			if (keyCode == 28) ; Enter key
+				_chatboxFocusHotkeySuppressed = true
+			endif
+		endif
 	endif
   EndIf
   
