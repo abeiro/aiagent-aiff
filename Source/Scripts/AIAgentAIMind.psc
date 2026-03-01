@@ -2654,6 +2654,83 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 
 EndFunction
 
+Function RentRoom(Actor player, Actor innkeeper, int cost) global
+	if (!player || !innkeeper)
+		return
+	endif
+
+	Form goldForm = Game.GetForm(0x0000000F)
+	if (!goldForm)
+		AIAgentFunctions.logMessageForActor("Room rental failed: Gold form not found.","itemfound",innkeeper.GetDisplayName())
+		return
+	endif
+
+	if (player.GetItemCount(goldForm) < cost)
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" does not have enough gold to rent a room.","itemfound",innkeeper.GetDisplayName())
+		return
+	endif
+
+	RentRoomScript rentScript = innkeeper as RentRoomScript
+	if (rentScript && rentScript.Bed)
+		rentScript.Bed.SetActorOwner(player.GetActorBase())
+		rentScript.RegisterForSingleUpdateGameTime(24.0)
+		innkeeper.SetActorValue("Variable09", 1.0)
+	endif
+
+	player.RemoveItem(goldForm, cost)
+	innkeeper.AddItem(goldForm, cost)
+	AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" paid "+cost+" gold to "+innkeeper.GetDisplayName()+" to rent a room.","itemfound",innkeeper.GetDisplayName())
+EndFunction
+
+Function HireCarriage(Actor player, Actor driver, ObjectReference destination, String destinationName, int cost) global
+	if (!player || !driver || !destination)
+		return
+	endif
+
+	if (cost <= 0)
+		cost = 20
+	endif
+
+	Form goldForm = Game.GetFormFromFile(0x0000000F, "Skyrim.esm")
+	if (!goldForm)
+		AIAgentFunctions.logMessageForActor("Carriage travel failed: Gold form not found.","itemfound",driver.GetDisplayName())
+		return
+	endif
+
+	if (player.GetItemCount(goldForm) < cost)
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" does not have enough gold for a carriage ride to "+destinationName+".","itemfound",driver.GetDisplayName())
+		return
+	endif
+
+	player.RemoveItem(goldForm, cost)
+	driver.AddItem(goldForm, cost)
+	AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" paid "+cost+" gold to "+driver.GetDisplayName()+" for carriage travel to "+destinationName+".","itemfound",driver.GetDisplayName())
+
+	; Smart wait: if the driver starts speaking, wait until speech ends before fast travel.
+	; Fallback timeout prevents getting stuck if speech state is never reported.
+	float waitStep = 0.25
+	float waitBudget = 12.0
+	bool speechStarted = false
+	bool speechActive = false
+
+	while (waitBudget > 0.0)
+		speechActive = (AIAgentFunctions.isActorTalking(driver.GetDisplayName()) == 1)
+		if (speechActive)
+			speechStarted = true
+		elseif (speechStarted)
+			; Driver already spoke and is now done.
+			waitBudget = 0.0
+		endif
+
+		if (waitBudget > 0.0)
+			Utility.Wait(waitStep)
+			waitBudget -= waitStep
+		endif
+	endwhile
+
+	Game.FastTravel(destination)
+EndFunction
+
 ; New function to handle NPC-to-NPC item transfers
 ; Called directly from C++ with all necessary parameters
 Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount, string itemName) global
