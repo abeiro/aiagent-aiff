@@ -2731,6 +2731,59 @@ Function HireCarriage(Actor player, Actor driver, ObjectReference destination, S
 	Game.FastTravel(destination)
 EndFunction
 
+Function HireFerry(Actor player, Actor ferryman, ObjectReference destination, String destinationName, int cost) global
+	if (!player || !ferryman || !destination)
+		return
+	endif
+
+	if (cost < 0)
+		cost = 0
+	endif
+
+	if (cost > 0)
+		Form goldForm = Game.GetFormFromFile(0x0000000F, "Skyrim.esm")
+		if (!goldForm)
+			AIAgentFunctions.logMessageForActor("Ferry travel failed: Gold form not found.","itemfound",ferryman.GetDisplayName())
+			return
+		endif
+
+		if (player.GetItemCount(goldForm) < cost)
+			AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" does not have enough gold for a ferry ride to "+destinationName+".","itemfound",ferryman.GetDisplayName())
+			return
+		endif
+
+		player.RemoveItem(goldForm, cost)
+		ferryman.AddItem(goldForm, cost)
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" paid "+cost+" gold to "+ferryman.GetDisplayName()+" for ferry travel to "+destinationName+".","itemfound",ferryman.GetDisplayName())
+	else
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" takes a free ferry ride with "+ferryman.GetDisplayName()+" to "+destinationName+".","itemfound",ferryman.GetDisplayName())
+	endif
+
+	; Smart wait: if the ferryman starts speaking, wait until speech ends before fast travel.
+	; Fallback timeout prevents getting stuck if speech state is never reported.
+	float waitStep = 0.25
+	float waitBudget = 12.0
+	bool speechStarted = false
+	bool speechActive = false
+
+	while (waitBudget > 0.0)
+		speechActive = (AIAgentFunctions.isActorTalking(ferryman.GetDisplayName()) == 1)
+		if (speechActive)
+			speechStarted = true
+		elseif (speechStarted)
+			; Ferryman already spoke and is now done.
+			waitBudget = 0.0
+		endif
+
+		if (waitBudget > 0.0)
+			Utility.Wait(waitStep)
+			waitBudget -= waitStep
+		endif
+	endwhile
+
+	Game.FastTravel(destination)
+EndFunction
+
 ; New function to handle NPC-to-NPC item transfers
 ; Called directly from C++ with all necessary parameters
 Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount, string itemName) global
