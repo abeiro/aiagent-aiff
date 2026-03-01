@@ -403,8 +403,8 @@ Event OnKeyDown(int keyCode)
 		if (AIAgentFunctions.isChatboxPanelFocused() == 1)
 			AIAgentFunctions.unfocusChatboxPanel()
 		else
-			AIAgentFunctions.focusChatboxPanel()
-			if (keyCode == 28) ; Enter key
+			int focusResult = AIAgentFunctions.focusChatboxPanel()
+			if (keyCode == 28) && (focusResult == 1) ; Enter key
 				_chatboxFocusHotkeySuppressed = true
 			endif
 		endif
