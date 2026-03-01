@@ -2784,6 +2784,160 @@ Function HireFerry(Actor player, Actor ferryman, ObjectReference destination, St
 	Game.FastTravel(destination)
 EndFunction
 
+Function AddBounty(Actor player, Actor guard, Faction crimeFaction, int amount, bool isViolent) global
+	if (!player || !guard || !crimeFaction)
+		return
+	endif
+
+	if (amount <= 0)
+		amount = 40
+	endif
+
+	int previousBounty = crimeFaction.GetCrimeGold() as int
+	crimeFaction.ModCrimeGold(amount, isViolent)
+	int updatedBounty = crimeFaction.GetCrimeGold() as int
+
+	Location guardLoc = guard.GetCurrentLocation()
+	string holdName = ""
+	if (guardLoc)
+		holdName = guardLoc.GetName()
+	endif
+
+	if (holdName != "")
+		Debug.Notification(amount+" gold added to bounty in "+holdName+".")
+	else
+		Debug.Notification(amount+" gold added to bounty.")
+	endif
+
+	if (updatedBounty <= previousBounty)
+		AIAgentFunctions.logMessageForActor("AddBounty warning: bounty did not increase. Previous="+previousBounty+", Updated="+updatedBounty+".","itemfound",guard.GetDisplayName())
+	endif
+
+	AIAgentFunctions.logMessageForActor(guard.GetDisplayName()+" added "+amount+" gold bounty to "+player.GetDisplayName()+" for crimes in this hold.","itemfound",guard.GetDisplayName())
+
+	float waitStep = 0.25
+	float waitBudget = 12.0
+	bool speechStarted = false
+	bool speechActive = false
+	while (waitBudget > 0.0)
+		speechActive = (AIAgentFunctions.isActorTalking(guard.GetDisplayName()) == 1)
+		if (speechActive)
+			speechStarted = true
+		elseif (speechStarted)
+			waitBudget = 0.0
+		endif
+		if (waitBudget > 0.0)
+			Utility.Wait(waitStep)
+			waitBudget -= waitStep
+		endif
+	endwhile
+EndFunction
+
+Function PayBounty(Actor player, Actor guard, Faction crimeFaction) global
+	if (!player || !guard || !crimeFaction)
+		return
+	endif
+
+	int bounty = crimeFaction.GetCrimeGold() as int
+	if (bounty <= 0)
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" has no bounty to pay in this hold.","itemfound",guard.GetDisplayName())
+		return
+	endif
+
+	Form goldForm = Game.GetFormFromFile(0x0000000F, "Skyrim.esm")
+	if (!goldForm)
+		AIAgentFunctions.logMessageForActor("PayBounty failed: Gold form not found.","itemfound",guard.GetDisplayName())
+		return
+	endif
+
+	if (player.GetItemCount(goldForm) < bounty)
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" does not have enough gold to pay the "+bounty+" gold bounty.","itemfound",guard.GetDisplayName())
+		return
+	endif
+
+	float waitStep = 0.25
+	float waitBudget = 12.0
+	bool speechStarted = false
+	bool speechActive = false
+	while (waitBudget > 0.0)
+		speechActive = (AIAgentFunctions.isActorTalking(guard.GetDisplayName()) == 1)
+		if (speechActive)
+			speechStarted = true
+		elseif (speechStarted)
+			waitBudget = 0.0
+		endif
+		if (waitBudget > 0.0)
+			Utility.Wait(waitStep)
+			waitBudget -= waitStep
+		endif
+	endwhile
+
+	crimeFaction.PlayerPayCrimeGold(true, false)
+	AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" paid "+bounty+" gold bounty. Stolen items confiscated.","itemfound",guard.GetDisplayName())
+EndFunction
+
+Function ArrestPlayer(Actor player, Actor guard, Faction crimeFaction) global
+	if (!player || !guard || !crimeFaction)
+		return
+	endif
+
+	AIAgentFunctions.logMessageForActor(guard.GetDisplayName()+" is attempting to arrest "+player.GetDisplayName()+".","itemfound",guard.GetDisplayName())
+
+	float waitStep = 0.25
+	float waitBudget = 12.0
+	bool speechStarted = false
+	bool speechActive = false
+	while (waitBudget > 0.0)
+		speechActive = (AIAgentFunctions.isActorTalking(guard.GetDisplayName()) == 1)
+		if (speechActive)
+			speechStarted = true
+		elseif (speechStarted)
+			waitBudget = 0.0
+		endif
+		if (waitBudget > 0.0)
+			Utility.Wait(waitStep)
+			waitBudget -= waitStep
+		endif
+	endwhile
+
+	string arrestChoice = SkyMessage.Show(guard.GetDisplayName()+" is placing you under arrest. Submit?", "Resist", "Submit")
+	if (arrestChoice == "Submit")
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" submitted to arrest and was sent to jail.","itemfound",guard.GetDisplayName())
+		crimeFaction.SendPlayerToJail(true, true)
+	else
+		AIAgentFunctions.logMessageForActor(player.GetDisplayName()+" resisted arrest. Guards are attacking.","itemfound",guard.GetDisplayName())
+		crimeFaction.SetPlayerEnemy()
+		guard.StartCombat(player)
+	endif
+EndFunction
+
+Function ForgiveCrime(Actor player, Actor guard, Faction crimeFaction) global
+	if (!player || !guard || !crimeFaction)
+		return
+	endif
+
+	crimeFaction.SetCrimeGold(0)
+	crimeFaction.SetCrimeGoldViolent(0)
+	AIAgentFunctions.logMessageForActor(guard.GetDisplayName()+" forgave "+player.GetDisplayName()+"'s crimes. Bounty cleared.","itemfound",guard.GetDisplayName())
+
+	float waitStep = 0.25
+	float waitBudget = 12.0
+	bool speechStarted = false
+	bool speechActive = false
+	while (waitBudget > 0.0)
+		speechActive = (AIAgentFunctions.isActorTalking(guard.GetDisplayName()) == 1)
+		if (speechActive)
+			speechStarted = true
+		elseif (speechStarted)
+			waitBudget = 0.0
+		endif
+		if (waitBudget > 0.0)
+			Utility.Wait(waitStep)
+			waitBudget -= waitStep
+		endif
+	endwhile
+EndFunction
+
 ; New function to handle NPC-to-NPC item transfers
 ; Called directly from C++ with all necessary parameters
 Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount, string itemName) global

@@ -18,6 +18,7 @@ int function requestMessageForActor(String a_msg,String type,String npc) Global 
 int function setAnimationBusy(int busy,String npc) Global Native
 int function setLocked(int locked,String npc) Global Native; 1 locks agent for talking, 0 releases.
 int function isActorTalking(String npc) Global Native
+int function getPlayerBountyForGuard(String guardName) Global Native
 int function sendRequest() Global Native
 int function hardResetExpression() Global Native
 int function shotAndUpload(String hints,int mode) Global Native
