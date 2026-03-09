@@ -48,6 +48,9 @@ ObjectReference function getWorldLocationMarkerFor(Location loc) Global Native
 ObjectReference function getNearestDoor() global Native
 ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restriction=true) global Native;restriction, ref must have a name
 
+string function GetLocationSpecialRefsString(int locationFormId)  Global Native
+ObjectReference function loadReference(int refFormId) global native
+
 int Function isUsingFurniture(Actor akActor) global Native
 int Function isInContainer(ObjectReference item) global Native
 
@@ -122,3 +125,8 @@ FormList function jsonGetFormList(string keyName,string jsonString) global nativ
 EffectShader function jsonGetEffectShader(string keyName,string jsonString) global native
 
 string function GetDoorActivationText(ObjectReference akRef) global native
+
+; Experiments
+
+int function startMusicScene(string songName,string singer) global native
+int function stopMusicScene(string singer) global native

@@ -493,6 +493,7 @@ function Follow(Actor npc, ObjectReference akTarget) global
 	
 endFunction
 
+
 function FollowSoft(Actor npc, ObjectReference akTarget) global
 	
 	; used by get into conversation to make NPC talk near plater
@@ -642,7 +643,7 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 		Debug.Trace("[CHIM] TravelToLocation, destination is "+akTarget.GetBaseObject().GetType() + " for "+DecToHex(akTarget.GetFormID()));
 	endif;
 
-
+	ResetPackages(npc);
 	npc.RemoveFromFaction(SandboxFaction)
 	npc.RemoveFromFaction(FollowFaction)
 	npc.RemoveFromFaction(WaitFaction)
@@ -726,8 +727,8 @@ function TravelToTargetEnd(Actor npc) global
 				if (!npc.Is3DLoaded())
 					;Only log as background event id npc is not 3dloaded
 					;AIAgentFunctions.logMessageForActor(npc.GetDisplayName() +" reaches destination "+destinationName,"backgroundaction",npc.GetDisplayName())
-					Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType()+ ", npc should wait here")
-					Package doNothing = Game.GetForm(0x654e2) as Package ; Package Travelto
+					Debug.Trace("[CHIM] TravelToTargetEnd: not present "+npc.GetDisplayName()+". Travel destination was "+destinationName+" "+destination.GetFormId()+"  "+destination.GetType()+ ", npc should wait here")
+					Package doNothing = Game.GetForm(0x654e2) as Package ; Package doNothing
 					ActorUtil.AddPackageOverride(npc, doNothing,100)
 				else
 					; If NPC present, issue a low priority donothing
@@ -1431,7 +1432,9 @@ function FakeDialogueWith(Actor npc,Actor listener, int animation,int movehead) 
 
 	endif
 	
-	PlaceCam(npc);
+	if (npc!=Game.GetPlayer())
+		PlaceCam(npc);
+	endif
 	
 	
 	;PlaceCam(npc)
@@ -1499,23 +1502,25 @@ endFunction
 function EndDialogue(Actor npc) global
 	; Should be called after NPC stops speech
 	;;npc.ClearLookAt()
-
+	
 	int handle = ModEvent.Create("CHIM_SpeechStopped")
 	if (handle)
 		Debug.Trace("[CHIM] Sending event CHIM_SpeechStopped");
 		ModEvent.PushForm(handle, npc)
 		ModEvent.Send(handle)
+		
 		;Debug.Trace("[CHIM] CHIM_TextReceived sent "+npcname+"@"+text)
 	endIf
 	
 endFunction
 
 function EndDialogueClear(Actor npc) global
-	; Should be called when cleaning NPC state (about 4 seconds adter las speech)
+	; Should be called when cleaning NPC state (about 90 seconds after las speech)
 	
 	Debug.Trace("[CHIM] EndDialogueClear "+npc.GetDisplayName());
 	if (npc!=Game.GetPlayer())
 		npc.ClearLookAt()
+		
 	else 
 		Debug.Trace("[CHIM] ClearLookAt on Player, avoiding");
 	endif
@@ -1671,9 +1676,12 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 	
 	bool isMob  = false
 	bool isEnemy  = false
+	bool isPrisonerCaptured  = false
 	
 	if taskid == "1"
 		isEnemy = true
+	elseif taskid == "2"
+		isPrisonerCaptured = true
 	endif 
 	
 	if (FormIdClothing == 0)
@@ -1756,6 +1764,17 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 				ref=AIAgentFunctions.getWorldLocationMarkerFor(loc);		
 				Debug.Trace("[CHIM] [SPAWN_AGENT] SpawnAgent spawning on fallback:"+DecToHex(ref.GetFormId()))
 			endif
+		else
+			; Spawning on marker
+			Debug.Trace("[CHIM] [SPAWN_AGENT] NO location, checking if reference is a ObjectReference for "+npcName);
+			ObjectReference genericRef = Game.GetFormEx(place) as ObjectReference
+			if (genericRef)
+				Debug.Trace("[CHIM] [SPAWN_AGENT] Reference is a ObjectReference "+npcName+", ref: 0x"+DecToHex(genericRef.GetFormId()));
+				ref = genericRef
+			else
+				Debug.Trace("[CHIM] [SPAWN_AGENT] Reference is NOT a ObjectReference "+DecToHex(place));
+			endif
+			
 		endif
 		Debug.Trace("[CHIM] [SPAWN_AGENT] Spawning on designed location "+ref.GetName()+ "<"+DecToHex(ref.GetFormId())+">")
 	endif
@@ -1815,7 +1834,7 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		if !isMob		
 			ActorBase source = Game.GetForm(FormIdNPCSource) as ActorBase; Will use this actor base as source to copy hair.
 			Actor finalSourceActor=Game.GetPlayer().PlaceAtMe(source,1,false,true) as Actor; Spawn source actor instance
-			Debug.Trace("[CHIM] [SPAWN_AGENT] Source actorbase is "+source.GetFormID())
+			Debug.Trace("[CHIM] [SPAWN_AGENT] Source actorbase is "+DecToHex(source.GetFormID()) + " "+DecToHex(finalSourceActor.GetFormID()))
 
 
 			;CopyApearanceFromTo(finalSourceActor,finalActor);
@@ -1860,10 +1879,10 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 		
 		; TaskId Patch. 1 is aggresive.
 		
-		int mult = 2
+		int mult = 1
 
 		if isMob	
-			mult = 4
+			mult = 2
 		endif
 
 		finalActor.ForceActorValue("OneHanded",      finalActor.GetActorValue("OneHanded")      * mult)
@@ -1897,8 +1916,11 @@ int Function SpawnAgent(string npcName,Int FormIdNPC,Int FormIdClothing, Int For
 			finalActor.SetActorValue("Aggression",1)
 		endif
 		
-		if isEnemy 
-			Debug.Trace("[CHIM] [SPAWN_AGENT] mustPatrol "+finalActor.GetDisplayName()+" at "+ref.getName()+" <"+DecToHex(ref.GetFormID())+">")
+		if isPrisonerCaptured
+			finalActor.ForceActorValue("Health",10)
+		endif
+		if isEnemy && ref
+			Debug.Trace("[CHIM] [SPAWN_AGENT] mustPatrol : <"+finalActor.GetDisplayName()+"< at <"+ref.getName()+"> <"+DecToHex(ref.GetFormID())+">")
 			PO3_SKSEFunctions.SetLinkedRef(finalActor,ref)
 			Package forcedPatrol = Game.GetFormFromFile(0x031ab1, "AIAgent.esp") as Package 
 			ActorUtil.AddPackageOverride(finalActor,forcedPatrol,99);
@@ -1986,7 +2008,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			endwhile
 		
 		endif
-		
+	elseif 	(locationReference.getType()==28 && false) ; TO-DO. Support passing Container references
 	else 
 		if (locationMarker==0)
 		
@@ -2019,7 +2041,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 			KeyWord isCave = Game.GetForm(0x000130ef) as Keyword
 			KeyWord isDungeon = Game.GetForm(0x000130db) as Keyword
 			; Check is we must spawn inside a cave
-			if (loc.IsSameLocation(Game.getPlayer().GetCurrentLocation()))
+			if (loc && loc.IsSameLocation(Game.getPlayer().GetCurrentLocation()))
 				ObjectReference[] contArray = PO3_SKSEFunctions.FindAllReferencesOfFormType(Game.GetPlayer(),28,6000)
 				int containers = contArray.length
 				int j = 0
@@ -2040,7 +2062,7 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 					Debug.Trace("[CHIM] [SPAWN_ITEM] Same location spawned_item nearby, no containers around. <"+itemname+"> , selected "+ref.GetName()+" <"+DecToHex(ref.GetFormId())+">");
 				endif
 
-			elseif (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon))
+			elseif (loc && (loc.HasKeyWord(isCave) || loc.HasKeyWord(isDungeon)))
 				; Check if same location as player 
 				Debug.Trace("[CHIM] [SPAWN_ITEM] dest location has cave/dungeon flag");
 				ObjectReference localRef=AIAgentFunctions.getWorldLocationMarkerFor(loc);
@@ -2107,21 +2129,23 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 					;Standard behaviour , spawn at location
 					ref=AIAgentFunctions.getWorldLocationMarkerFor(loc);		
 					Cell localCell = ref.getParentCell();
-					if (localCell.isAttached())
-						int doors = localCell.getNumRefs(29); Get doors
-						int j = 0
-						while j < doors
-							Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container check "+j);
-							ObjectReference localDoor = localCell.GetNthRef(j,29);
-							if (localDoor)
-								ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(localDoor)
-								ref = doorDest
-								Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell at doorDest "+DecToHex(doorDest.GetFormId())+" "+doorDest.GetType());
-								j = doors
-							endif
-							j = j +1 
-						endwhile
-					endIf
+					if (localCell)
+						if (localCell.isAttached())
+							int doors = localCell.getNumRefs(29); Get doors
+							int j = 0
+							while j < doors
+								Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell container check "+j);
+								ObjectReference localDoor = localCell.GetNthRef(j,29);
+								if (localDoor)
+									ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(localDoor)
+									ref = doorDest
+									Debug.Trace("[CHIM] [SPAWN_ITEM] Found DOOR destination insideCell at doorDest "+DecToHex(doorDest.GetFormId())+" "+doorDest.GetType());
+									j = doors
+								endif
+								j = j +1 
+							endwhile
+						endIf
+					endif
 				endif
 			endif
 			
@@ -2138,14 +2162,25 @@ int Function SpawnItem(string itemname,int itembase,int locationMarker ,String t
 				endif
 			endif
 			if (!ref)
-				;Pocket
+				;ObjectReference
 				Debug.Trace("[CHIM] [SPAWN_ITEM] NO location, checking if reference is a ObjectReference for "+itemname);
 				ObjectReference genericRef = Game.GetFormEx(locationMarker) as ObjectReference
 				if (genericRef)
 					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is a ObjectReference "+itemname+", ref: 0x"+DecToHex(genericRef.GetFormId()));
 					ref = genericRef
 				else
-					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is NOT a ObjectReference "+locationMarker);
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is NOT a ObjectReference "+DecToHex(locationMarker));
+				endif
+			endif
+			if (!ref)
+				;ObjectReference
+				Debug.Trace("[CHIM] [SPAWN_ITEM] NO location, checking if reference is a ObjectReference for "+itemname);
+				ObjectReference genericRef = AIAgentFunctions.loadReference(locationMarker) as ObjectReference
+				if (genericRef)
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is a Form "+itemname+", ref: 0x"+DecToHex(genericRef.GetFormId()));
+					
+				else
+					Debug.Trace("[CHIM] [SPAWN_ITEM] Reference is NOT a Form "+DecToHex(locationMarker));
 				endif
 			endif
 		endif
@@ -2581,7 +2616,7 @@ EndFunction
 Function AddDelayedNPC(Actor akActor) global
 
 	Debug.Trace("[CHIM] [SPAWN_AGENT_D] AddDelayedNPC checking "+akActor.GetDisplayName())
-
+	Utility.wait(1);
 	if (StorageUtil.HasFormValue(akActor,"CustomHairColor"))
 		ColorForm HairColor=StorageUtil.GetFormValue(akActor, "CustomHairColor") as ColorForm
 		PO3_SKSEFunctions.SetHairColor(akActor,HairColor )	
@@ -2731,23 +2766,28 @@ Function PickupItemFromWorld(Actor npc, ObjectReference itemRef, string itemName
 EndFunction
 
 
-function PlaceCam(Actor npc) global
+function PlaceCam(Actor npc,int position = 0,bool abBypassSitCheck=false,float randomAngle=0.0) global
 
+	debug.trace("[CHIM] PlaceCam Called")
+
+	if (!abBypassSitCheck)
+		int isActive=StorageUtil.GetIntValue(None, "AIAgentAutoFocusOnSit",1);
+		if (!isActive)
+			return
+		endif
 	
-	int isActive=StorageUtil.GetIntValue(None, "AIAgentAutoFocusOnSit",1);
-	if (!isActive)
-		return
-	endif
-	
-	if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
-		return;
-	else
-		;Debug.Trace("Player is sitting");
+		if (Game.GetPlayer().GetSitState()==0 || (Game.GetPlayer().IsOnMount())) ; Dont use feature if player is not sitting, or is on a mount
+			return;
+		else
+			;Debug.Trace("Player is sitting");
+		endif
 	endif
 	
 	Actor lastCamActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitLastActor",None) as Actor;
-	if (lastCamActor==npc && false) ; activate to update cam per speech, not per spech line
-		return
+	if (lastCamActor==npc ) ; activate to update cam per speech, not per spech line
+		;
+	else
+		StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitLastActor",npc) ;
 	endif;
 	
 	StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitLastActor",npc);
@@ -2763,49 +2803,120 @@ function PlaceCam(Actor npc) global
 			angleToNPC=-80;
 		endif;
 		
-		Game.SetSittingRotation(angleToNPC)	
-    
-		
+		Game.SetSittingRotation(angleToNPC)	; Uncomment to restore behavior
+    		
 	endif
 
 	; Test code. Never fully worked.
 	if (false)
-		float distanceOffset=100
+		float distanceOffset=75
 		Actor cameraActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",None) as Actor;
 		if (!cameraActor)
 			ActorBase newActorBase = Game.GetFormFromFile(0x0278d6,"AIAgent.esp") as ActorBase 
-			newActorBase.SetHeight(1);
+			;ActorBase newActorBase = Game.GetFormFromFile(0x025844,"AIAgent.esp") as ActorBase 
+			newActorBase.SetHeight(0.1);
 			ObjectReference newCameraReference = Game.GetPlayer().PlaceAtMe(newActorBase, 1, false, true)
 			cameraActor=newCameraReference as Actor
-			cameraActor.Enable();
+			cameraActor.SetDontMove(true)
+			cameraActor.MoveTo(npc, 1200, 1200, 1200 )
 			cameraActor.SetAlpha(0)
-			cameraActor.EnableAI(false)		
-			Game.SetCameraTarget(cameraActor)
+			cameraActor.EnableAI(true)		
+			
+			;cameraActor.SetMotionType(4)
+			cameraActor.SetGhost(true)
+			
+			cameraActor.Enable();
+			
+			;Game.SetCameraTarget(cameraActor)
 			StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",cameraActor);
+			debug.trace("[CHIM] PlaceCam Spawning")
+			;(bool abMovement = true, bool abFighting = true, bool abCamSwitch = false, bool abLooking = false, bool abSneaking = false,
+			; bool abMenu = true, bool abActivate = true, bool abJournalTabs = false,  int aiDisablePOVType = 0)
+			Game.DisablePlayerControls(abMovement=true,abFighting= true, abCamSwitch=true, abLooking = true, abSneaking=true,abMenu=false)
+			Game.SetCameraTarget(cameraActor)
+			position = 1
 		endif;
 
 		if (cameraActor)
 			
-			cameraActor.Disable();
-			;newActor.MoveTo(npc, Math.Sin(npc.GetAngleZ()) * distanceOffset, Math.Cos(npc.GetAngleZ()) * distanceOffset, 0,true)
-			;newActor.SetAngle(npc.GetAngleX(), npc.GetAngleY(), npc.GetAngleZ()+180.0)
-			float x=npc.X+Math.Sin(npc.GetAngleZ()) * distanceOffset
-			float y=npc.Y+Math.Cos(npc.GetAngleZ()) * distanceOffset
-			float z=npc.Z
+			;cameraActor.EnableAI(true)	
+			float npcX = npc.GetPositionX()
+			float npcY = npc.GetPositionY()
+			float npcZ = npc.GetPositionZ()
+			float zOffset = cameraActor.GetHeadingAngle(npc)
+			float currentDistance = cameraActor.GetDistance(npc)
 			
-			float dx = x - cameraActor.GetPositionX()
-			float dy = y - cameraActor.GetPositionY()
-			float dz = z - cameraActor.GetPositionZ()
-	
-			float delta = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-			if (delta>50)
-				cameraActor.TranslateTo(x, y, z, npc.GetAngleX(), npc.GetAngleY(), npc.GetAngleZ()+180, 99999, 0)
-				cameraActor.Enable();
-				cameraActor.SetAlpha(0)
+			if ((currentDistance > distanceOffset ) || position == 1 )
+			
+				float angleZ = npc.GetAngleZ()
+
+				float forwardX = Math.Sin(angleZ)
+				float forwardY = Math.Cos(angleZ)
+
+				float rightX = Math.Cos(angleZ)
+				float rightY = -Math.Sin(angleZ)
+
+				float sideOffset = -35.0 ; move 35 units to NPC right
+				if (position == 1)
+					sideOffset = 35.0
+				endif
+				
+
+				float finalX = (distanceOffset * forwardX) + (sideOffset * rightX)
+				float finalY = (distanceOffset * forwardY) + (sideOffset * rightY)
+
+				float heightModifier = 0
+				if (npc.GetSitState() == 2 || npc.GetSitState() == 3 );If sitting
+					;heightModifier = -35
+				endif
+				
+				
+				;cameraActor.MoveTo(npc, finalX, finalY, 0)
+				if (currentDistance > 250)
+					cameraActor.MoveTo(npc, finalX, finalY, npc.GetHeight() + heightModifier)
+					debug.trace("[CHIM] PlaceCam Position changed <dis:"+currentDistance+"> "+cameraActor.GetPositionX() +","+ cameraActor.GetPositionY()+","+ cameraActor.GetPositionZ()+" , "+position)
+				endif
+				
+				if (randomAngle> 0)
+					cameraActor.MoveTo(npc, finalX+randomAngle, finalY+randomAngle, npc.GetHeight() + randomAngle)
+					debug.trace("[CHIM] PlaceCam Position changed <dis:"+currentDistance+"> "+cameraActor.GetPositionX() +","+ cameraActor.GetPositionY()+","+ cameraActor.GetPositionZ()+" , "+position)
+				endif
+				;cameraActor.MoveTo(npc, distanceOffset * Math.Sin(npc.GetAngleZ()), distanceOffset * Math.Cos(npc.GetAngleZ()), heightModifier)
+				
+				float worldX = npc.GetPositionX() + finalX
+				float worldY = npc.GetPositionY() + finalY
+				float worldZ = npc.GetPositionZ() + npc.GetHeight() + heightModifier
+
+				float angleX = npc.GetAngleX()
+				float angleY = npc.GetAngleY()
+				float angleZ2 = npc.GetAngleZ()*-1
+				
+				
+				;cameraActor.TranslateTo(worldX, worldY, worldZ, angleX, angleY, angleZ2, 200.0)
+
+				zOffset = cameraActor.GetHeadingAngle(npc)
+				cameraActor.SetAngle(cameraActor.GetAngleX(), cameraActor.GetAngleY(), cameraActor.GetAngleZ()+ zOffset)
+				Game.SetCameraTarget(cameraActor)
+				debug.trace("[CHIM] PlaceCam Position NOT changed <dis:"+currentDistance+"> "+cameraActor.GetPositionX() +","+ cameraActor.GetPositionY()+","+ cameraActor.GetPositionZ()+" , "+position)
+				
+				
 			else
-				cameraActor.Enable();
-				cameraActor.SetAlpha(0)
+				zOffset = cameraActor.GetHeadingAngle(npc);
+				debug.trace("[CHIM] PlaceCam Position NOT changed <dis:"+currentDistance+"> "+cameraActor.GetPositionX() +","+ cameraActor.GetPositionY()+","+ cameraActor.GetPositionZ()+" , "+position+",offset:"+zOffset)
+				cameraActor.SetAngle(cameraActor.GetAngleX(), cameraActor.GetAngleY(), cameraActor.GetAngleZ()+ zOffset)
+				
 			endif
+			if (lastCamActor!=npc ) ; activate to update cam per speech, not per spech line
+				cameraActor.SetLookAt(npc)
+			endif;
+			debug.trace("[CHIM] PlaceCam "+npc.GetAngleX() +","+ npc.GetAngleY()+","+ (npc.GetAngleZ()+ zOffset))
+			
+			; 6. Hide Actor (Keep it enabled, just invisible)
+			; Note: SetAlpha is not vanilla Papyrus, keeping it assuming you have an extension
+			
+			
+			;cameraActor.EnableAI(false)	
+			cameraActor.SetAlpha(0) 
 		endif
 		
 	endif
@@ -2817,8 +2928,14 @@ EndFunction
 
 function resetCam() global
 	
-	
-		
+	debug.trace("[CHIM] PlaceCam resetCam")
+	Actor cameraActor=StorageUtil.GetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",None) as Actor;
+	if (cameraActor)
+		cameraActor.Disable();
+		Game.SetCameraTarget(Game.GetPlayer())
+		Game.EnablePlayerControls()
+		StorageUtil.SetFormValue(None, "AIAgentAutoFocusOnSitCameraMan",None) 
+	endif
 	
 endFunction
 
@@ -2977,7 +3094,12 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 					TravelToLocation(akTarget,destMarker,destination.GetName())
 				endif
 			else
-				Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
+				ObjectReference destinationRef = Game.GetFormEx(locrefId) as ObjectReference;
+				if (destinationRef)
+					TravelToLocation(akTarget,destinationRef,destinationRef.GetCurrentLocation().GetName())
+				else
+					Debug.Trace("[CHIM] BackgroundCmd, Couldn't find destination for formId: "+DecToHex(locrefId))
+				endif
 			endif
 		elseif (cmd[0] == "PickUpItem") 
 			Int locrefId=StringToInt(cmd[1])
@@ -3293,4 +3415,22 @@ function copyStatics()
 	
 	
 	Game.GetPlayer().MoveTo(dstTarget)
+endFunction
+
+function CameraFollow(Actor npc, ObjectReference akTarget) global
+	
+	Debug.Trace("[CHIM] "+npc.GetDisplayName()+" following "+akTarget.GetDisplayName())
+	ResetPackages(npc);
+	Package FollowPackage = Game.GetFormFromFile(0x01BC25, "AIAgent.esp") as Package 
+	Keyword MoveTargetKw = Game.GetFormFromFile(0x021245,"AIAgent.esp") as Keyword	
+	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	Faction SandboxFaction=Game.GetFormFromFile(0x21246, "AIAgent.esp") as Faction 		; Faction sandboxFaction
+
+	npc.RemoveFromFaction(SandboxFaction)
+	npc.SetFactionRank(FollowFaction,1)
+	
+	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget,MoveTargetKw)
+	ActorUtil.AddPackageOverride(npc, FollowPackage, 100, 0)
+	npc.EvaluatePackage()
+	
 endFunction

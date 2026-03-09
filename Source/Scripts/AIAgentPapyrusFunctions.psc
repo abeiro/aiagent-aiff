@@ -239,7 +239,7 @@ Event OnKeyDown(int keyCode)
 	If !SafeProcess()
       Return
     EndIf
-	
+	AIAgentAIMind.resetCam()
     UIExtensions.OpenMenu("UITextEntryMenu")
     string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
 	
@@ -370,6 +370,7 @@ Event OnKeyDown(int keyCode)
   EndIf
   
   If(keyCode == _currentMasterWheel)
+	AIAgentAIMind.resetCam();
 	OpenMasterWheel()
   EndIf
   
@@ -1316,12 +1317,17 @@ Function sendLocation(Location curr,string tags,Cell referenceCell=None) global
 				
 				Debug.Trace("[CHIM] SendLocation Sending location: "+DecToHex(curr.GetFormID())+","+curr.GetName()+"  Pos:"+destMarker.GetPositionX()+","+destMarker.GetPositionY()+","+destMarker.GetPositionZ())
 				
-				
+				; InterestingReferences
+				string specialRefs=AIAgentFunctions.GetLocationSpecialRefsString(curr.GetFormId());
+				string isCleared="0";
+				if (curr.IsCleared())
+					isCleared="1";
+				endif;
 				if (factionOwner)
 					Debug.Trace("[CHIM] SendLocation Sending Faction: "+DecToHex(curr.GetFormID())+","+curr.GetName())
-					int result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior+"/"+DecToHex(factionOwner.GetFormId())+"/"+destMarker.GetPositionX()+"/"+destMarker.GetPositionY(),"util_location_name")
+					int result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior+"/"+DecToHex(factionOwner.GetFormId())+"/"+destMarker.GetPositionX()+"/"+destMarker.GetPositionY()+"/"+specialRefs+"/"+isCleared,"util_location_name")
 				else
-					int result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior+"//"+destMarker.GetPositionX()+"/"+destMarker.GetPositionY(),"util_location_name")
+					int result = AIAgentFunctions.logMessage(curr.GetName() + "/" + curr.GetFormID() + "/" + parName + "/" + parName2 + "/" + types+"/"+isInterior+"//"+destMarker.GetPositionX()+"/"+destMarker.GetPositionY()+"/"+specialRefs+"/"+isCleared,"util_location_name")
 				endif
 				
 			endif
