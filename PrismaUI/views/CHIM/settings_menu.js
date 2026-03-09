@@ -131,7 +131,7 @@ function selectOption(optionId) {
     let command = optionId;
     if (currentNPCTarget && currentNPCTarget !== '' && currentNPCTarget !== 'none') {
         // NPC-specific actions
-        const npcActions = ['rp_write_diary', 'rp_update_npc', 'rp_wait', 'rp_follow', 'rp_rename', 'profile_1', 'profile_2', 'profile_3', 'profile_4'];
+        const npcActions = ['rp_write_diary', 'rp_update_npc', 'rp_wait', 'rp_follow', 'rp_rename', 'continue_chat', 'profile_1', 'profile_2', 'profile_3', 'profile_4'];
         if (npcActions.includes(optionId)) {
             command = optionId + '|' + currentNPCTarget;
         }

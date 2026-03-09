@@ -37,7 +37,7 @@
                             onmouseenter="showDescription('All input processed as cheat commands - NPCs will execute any request')"
                             onmouseleave="clearDescription()">Cheat Mode</button>
                     <button class="setting-btn" onclick="selectOption('mode_autochat')"
-                            onmouseenter="showDescription('Auto-generates lore-appropriate dialogue from your instructions')"
+                            onmouseenter="showDescription('Speaks for you using your Player Bio and Speech Style. Makes 2 LLM calls: first rewrites your input into in-character dialogue (fast model), then the NPC responds.')"
                             onmouseleave="clearDescription()">Auto Chat</button>
                     <button class="setting-btn" onclick="selectOption('mode_inject_log')"
                             onmouseenter="showDescription('Add events to NPC memory without triggering responses')"
@@ -132,6 +132,9 @@
                     <button class="setting-btn" onclick="selectOption('rp_rename')"
                             onmouseenter="showDescription('Rename this NPC or add them to background lore')"
                             onmouseleave="clearDescription()">Rename / Add to BgL</button>
+                    <button class="setting-btn" onclick="selectOption('continue_chat')"
+                            onmouseenter="showDescription('Ask this NPC to continue the conversation')"
+                            onmouseleave="clearDescription()">Continue Chat</button>
                 </div>
             </div>
 
