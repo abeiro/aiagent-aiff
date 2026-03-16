@@ -312,7 +312,10 @@ function sendCellInfoPlayer()
 	Debug.Trace("[CHIM] AIAgentPlayerScript sendCellInfoPlayer, cell <0x"+DecToHex(localCell.GetFormId())+"> " );
 	
 	cellName = "Player Cell"
-	string worldSpaceName = player.getWorldspace().GetName()
+	string worldSpaceName = ""
+	if (player.getWorldspace())
+		worldSpaceName=player.getWorldspace().GetName()
+	endif
 	
 	float northRotation = 0.0
 	northRotation = PO3_SKSEFunctions.GetCellNorthRotation(localCell)

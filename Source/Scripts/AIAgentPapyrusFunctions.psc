@@ -1732,8 +1732,10 @@ Function sendAllfactions() global
 			if (!name)
 				name = DecToHex(afFaction.GetFormId())
 			endif
+			ObjectReference cont=PO3_SKSEFunctions.GetVendorFactionContainer(afFaction)
+			string vendorRef=DecToHex(cont.GetFormId())
 			Debug.Trace("[CHIM] [FACTION] Adding faction "+name + " / "+DecToHex(afFaction.GetFormId()));
-			retFnc=AIAgentFunctions.logMessage(DecToHex(afFaction.GetFormId())+"/"+name,"util_faction_name")
+			retFnc=AIAgentFunctions.logMessage(DecToHex(afFaction.GetFormId())+"/"+name+"/"+vendorRef,"util_faction_name")
 		endif
 		i=i+1
 	endwhile

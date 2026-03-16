@@ -53,6 +53,8 @@ ObjectReference function findLocationsToSafeSpawn(float minDistance,bool restric
 string function GetLocationSpecialRefsString(int locationFormId)  Global Native
 ObjectReference function loadReference(int refFormId) global native
 
+int function PostGameData(string jsonData) global native	
+
 int Function isUsingFurniture(Actor akActor) global Native
 int Function isInContainer(ObjectReference item) global Native
 
