@@ -1,5 +1,7 @@
 // CHIM Master Menu JavaScript
 
+let hotkeyCloseArmedAt = 0;
+
 // Show description in footer
 window.showDescription = function(text) {
     const descElement = document.getElementById('hover-description');
@@ -21,6 +23,7 @@ window.clearDescription = function() {
 // Initialize when DOM is ready
 function initMasterMenu() {
     console.log('[CHIM Master Menu] Menu initialized');
+    hotkeyCloseArmedAt = Date.now() + 250;
     
     // Signal to C++ that DOM is ready
     if (window.chimMasterMenuCommand) {
@@ -35,6 +38,33 @@ function initMasterMenu() {
 function handleKeyDown(event) {
     // ESC key closes the menu
     if (event.key === 'Escape' || event.keyCode === 27) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeMenu();
+        return;
+    }
+
+    // Allow the bound hotkey to close the menu again.
+    // We intentionally avoid closing on modifier/navigation keys.
+    if (Date.now() < hotkeyCloseArmedAt || event.repeat) {
+        return;
+    }
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
+    }
+
+    const code = event.code || '';
+    const isHotkeyLike = code.startsWith('Key') ||
+        code.startsWith('Digit') ||
+        code.startsWith('Numpad') ||
+        code.startsWith('F') ||
+        [
+            'Backquote', 'Minus', 'Equal',
+            'BracketLeft', 'BracketRight', 'Backslash',
+            'Semicolon', 'Quote', 'Comma', 'Period', 'Slash'
+        ].includes(code);
+
+    if (isHotkeyLike) {
         event.preventDefault();
         event.stopPropagation();
         closeMenu();

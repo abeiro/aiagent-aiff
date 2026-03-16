@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CHIM AI Quest Manager</title>
+    <link rel="stylesheet" href="quest_manager.css">
+</head>
+<body>
+    <div id="quest-panel" class="panel-container">
+        <div class="panel-header">
+            <div class="panel-title">AI Quest Manager</div>
+            <button class="close-btn" onclick="closePanel()">X</button>
+        </div>
+
+        <div class="panel-body">
+            <div class="snqe-main">
+                <form id="snqeForm" onsubmit="return false;">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-generate" onclick="generateScenario()">Generate Scenario</button>
+                        <button type="button" class="btn btn-create" onclick="submitFormData()">Stage Storyline</button>
+                        <button type="button" class="btn btn-clear" onclick="clearAllData()">Clear Data</button>
+                        <button type="button" class="btn btn-clear" id="playQuestBtn" onclick="startQuest()" disabled>Play Quest</button>
+                        <button type="button" class="btn btn-clear" id="requestEndBtn" onclick="requestEnd()" disabled>Request End</button>
+                        <button type="button" class="btn btn-clear" onclick="cleanAll()">Clean all</button>
+                    </div>
+
+                    <div class="loading-msg" id="loading">Ready</div>
+
+                    <div class="form-group" id="suggestedGroup">
+                        <label for="suggested">User suggestions</label>
+                        <p class="small-info">Affects first scenario generation. Example: "A quest to retrieve a stolen item".</p>
+                        <textarea name="suggested" id="suggested" placeholder="Enter suggestions here..." rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group" id="userpromptGroup">
+                        <label for="userprompt">AI instructions</label>
+                        <p class="small-info">Extra details sent to AI. Example: "spawn several spiders at Broken Fang cave".</p>
+                        <textarea name="userprompt" id="userprompt" rows="6"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="questtitle">Quest Title</label>
+                        <input type="text" name="questtitle" id="questtitle" placeholder="Quest title will appear here..." readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="briefing">Quest Briefing</label>
+                        <input type="text" name="briefing" id="briefing" placeholder="Briefing will appear here..." readonly>
+                    </div>
+
+                    <div class="form-group hidden">
+                        <label>Agent Log</label>
+                        <div class="log-box" id="agentLog"></div>
+                    </div>
+
+                    <div class="form-group hidden">
+                        <label>Service Log</label>
+                        <div class="log-box" id="serviceLog"></div>
+                    </div>
+
+                    <select name="locationlist" id="locationlist" multiple class="hidden"></select>
+
+                    <div class="form-group">
+                        <label>NPCs involved</label>
+                        <div class="log-box npcs-box" id="involvedNPCs"></div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="snqe-sidebar">
+                <div class="section-title">
+                    <span class="pulse-dot"></span>
+                    Running Quests
+                </div>
+                <div id="runningQuestsList">
+                    <div class="no-quests">No running quests</div>
+                </div>
+
+                <div class="status-block">
+                    <h3>Staged Storyline</h3>
+                    <div class="status-value staged" id="stagedQuestTitle">No staged quest</div>
+                </div>
+
+                <div class="status-block hidden" id="pendingStepContainer">
+                    <h3>Current Pending Step</h3>
+                    <div class="status-value pending" id="pendingStepValue">No pending step</div>
+                </div>
+
+                <div class="status-block hidden" id="nextObjectiveContainer">
+                    <h3>Next Objective</h3>
+                    <div class="status-value next" id="nextObjectiveValue">No objective</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="quest_manager.js"></script>
+</body>
+</html>
