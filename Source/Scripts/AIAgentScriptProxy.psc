@@ -87,6 +87,7 @@ Scriptname AIAgentScriptProxy
 ;78 = SendLycanthropyStateChanged
 ;79 = SendVampirismStateChanged
 ;80 = RemoveFromAllFactions
+;81 = ShowBarterMenu
 
 ; === ObjectReference (100–199) ===
 ; 100 = Activate
@@ -159,6 +160,7 @@ Scriptname AIAgentScriptProxy
 ; 521 = SetPlayerEnemy
 ; 522 = SetPlayerExpelled
 ; 523 = SetReaction
+; 524 = GetVendorFactionContainer
 
 ; Helper log
 String Function DecToHex(Int n) global
@@ -859,6 +861,9 @@ Function ExecuteCommandActor(int cmdID, string jsonString) global
     elseif cmdID == 81 ; EvaluatePackage
         akActor.EvaluatePackage()
         Debug.Trace("[CHIM] AIProxy: EvaluatePackage SUCCESS")
+	elseif cmdID == 82 ; EvaluatePackage
+        akActor.ShowBarterMenu()
+        Debug.Trace("[CHIM] AIProxy: EvaluatePackage SUCCESS")
 	else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN Actor cmdID: " + cmdID)
     endif
@@ -1294,7 +1299,7 @@ Function ExecuteCommandActorUtil(int cmdID, string jsonString) global
 	elseif cmdID == 401 ; SetLinkedRef
         Actor akActor = AIAgentFunctions.jsonGetActor("akActor", jsonString)
         if !akActor
-            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> Play - invalid akObject")
+            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> SetLinkedRef - invalid akObject")
             return
         endif
 		
@@ -1399,7 +1404,19 @@ Function ExecuteCommandActorUtil(int cmdID, string jsonString) global
 		AIAgentFunctions.requestMessage("A new magic door appear:: "+akRef.GetDisplayName()+",this should be commented","suggestion");
 		Debug.Trace("[CHIM] AIProxy: Door spawned and linked. TargetRef: " + DecToHex(akTargetRef.GetFormId()))
 		
-    else
+    elseif cmdID == 491 ; Test
+	    Actor akActor = AIAgentFunctions.jsonGetActor("akActor", jsonString)
+		if (akActor)
+			Debug.Trace("[CHIM] AIProxy: OK ExecuteCommandActorUtil GetLinkedRef refname: " + akActor.GetDisplayName())
+			ConsoleUtil.PrintMessage(akActor.GetDisplayName())
+			ObjectReference t=akActor.GetLinkedRef();
+			Debug.Trace("[CHIM] AIProxy: OK ExecuteCommandActorUtil GetLinkedRef refname: " + DecToHex(t.GetFormId()))
+			
+			ConsoleUtil.PrintMessage(t.GetDisplayName())
+		else
+			Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil GetLinkedRef refname: " + jsonString)
+		endif
+	else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil cmdID: " + cmdID)
     endif
 EndFunction
@@ -1601,7 +1618,43 @@ Function ExecuteCommandFaction(int cmdID, string jsonString) global
         int newValue = AIAgentFunctions.jsonGetInt("aiNewValue", jsonString)
         akFaction.SetReaction(akOther, newValue)
         Debug.Trace("[CHIM] AIProxy: SetReaction SUCCESS (value=" + newValue + ")")
-        
+    
+	elseif cmdID == 524 ; GetVendorFactionContainer
+        ObjectReference cont=PO3_SKSEFunctions.GetVendorFactionContainer(akFaction)
+		Faction playerFaction=Game.GetFormEx(0x0db1) as Faction
+		int i = 0
+		int count = cont.GetNumItems()
+		Debug.Trace("[CHIM] AIProxy GetVendorFactionContainer. Container item count: " + count)
+		string jType="|type|:|market_stock|"
+		string jFaction="|faction|:|"+DecToHex(akFaction.GetFormId())+"|"
+		string jRank="|player_rank|:"+akFaction.GetReaction(playerFaction)+""
+		string jItem=""
+		while i < count
+			Form itemForm = cont.GetNthForm(i)
+			int itemCount = cont.GetItemCount(itemForm)
+
+			if itemForm
+				int value = itemForm.GetGoldValue()
+				if (i>0)
+					jItem=jItem+","
+				endif
+				int iEnchanment = 0
+				if (itemForm.GetType() == 26 ) ; armor
+					iEnchanment = (itemForm as Armor).GetEnchantment().GetGoldValue()
+				endif
+				string sanitizedName=itemForm.GetName()
+				jItem=jItem+"{|itemid|:|"+DecToHex(itemForm.GetFormId())+"|,|name|:|"+sanitizedName+"|,|count|:"+itemCount+",|gold|:"+value+",|enchantment|:|"+iEnchanment+"|}"
+				
+				;Debug.Trace("[CHIM] "+itemForm.GetName()+": Item: " + itemForm + " | Count: " + itemCount + " | BaseValue: " + value)
+			endif
+
+			i += 1
+		endwhile
+		string finalData="{"+jType+","+jFaction+","+jRank+",|list|:["+jItem+"]}"
+		Debug.Trace("[CHIM] "+finalData)
+		AIAgentFunctions.PostGameData(finalData);
+		
+        Debug.Trace("[CHIM] AIProxy: GetVendorFactionContainer SUCCESS (=" + DecToHex(cont.GetFormId()) + ")")    
     else
         Debug.Trace("[CHIM] AIProxy: UNKNOWN Faction cmdID: " + cmdID)
     endif

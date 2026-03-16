@@ -887,30 +887,34 @@ function OpenInventory(Actor npc,string originalCommand) global
 			endif
 		else
 			Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() )
-			;Experiment, we can modify prices based on vendor faction
-			Faction AIAgentFactionMerchantOres=Game.GetFormFromFile(0xaa06,"AIAgentSNN.esp") as Faction; AIAgentFactionMerchantOres
-			if (AIAgentFactionMerchantOres && npc.isInfaction(AIAgentFactionMerchantOres))
-				Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", applying commerce rules" )
-				ObjectReference vendorContainer=PO3_SKSEFunctions.GetVendorFactionContainer(AIAgentFactionMerchantOres)
-				Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", vendor container "+DecToHex(vendorContainer.getFormId()))
-				int i = 0
-				int count = vendorContainer.GetNumItems()
-				int stock = 0
-				while i < count
-					Form itemForm = vendorContainer.GetNthForm(i)
-					stock = stock + vendorContainer.GetItemCount(itemForm)
-					i = i +1
-				EndWhile
-				float priceModifier = 100/ (stock +1 ) ;
-				Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", priceModifier "+priceModifier+ " based on stock")
-				Game.SetGameSettingFloat("fBarterMin",3.0); 
-				Game.GetPlayer().ModActorValue("speechcraft", priceModifier); We should set modifier based on offer/demand
-				npc.ShowBarterMenu();
-				Utility.wait(1);Time to show UI befre restoring
-				Game.GetPlayer().ModActorValue("speechcraft", priceModifier * -1 ); We should set modifier based on offer/demand
-				Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", end")
-				Game.SetGameSettingFloat("fBarterMin",2.0);
-			else; Standard behavior
+			if (false)
+				;Experiment, we can modify prices based on vendor faction
+				Faction AIAgentFactionMerchantOres=Game.GetFormFromFile(0xaa06,"AIAgentSNN.esp") as Faction; AIAgentFactionMerchantOres
+				if (AIAgentFactionMerchantOres && npc.isInfaction(AIAgentFactionMerchantOres))
+					Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", applying commerce rules" )
+					ObjectReference vendorContainer=PO3_SKSEFunctions.GetVendorFactionContainer(AIAgentFactionMerchantOres)
+					Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", vendor container "+DecToHex(vendorContainer.getFormId()))
+					int i = 0
+					int count = vendorContainer.GetNumItems()
+					int stock = 0
+					while i < count
+						Form itemForm = vendorContainer.GetNthForm(i)
+						stock = stock + vendorContainer.GetItemCount(itemForm)
+						i = i +1
+					EndWhile
+					float priceModifier = 100/ (stock +1 ) ;
+					Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", priceModifier "+priceModifier+ " based on stock")
+					Game.SetGameSettingFloat("fBarterMin",3.0); 
+					Game.GetPlayer().ModActorValue("speechcraft", priceModifier); We should set modifier based on offer/demand
+					npc.ShowBarterMenu();
+					Utility.wait(1);Time to show UI befre restoring
+					Game.GetPlayer().ModActorValue("speechcraft", priceModifier * -1 ); We should set modifier based on offer/demand
+					Debug.Trace("[CHIM] Call ShowBarterMenu "+npc.GetDisplayName() + ", end")
+					Game.SetGameSettingFloat("fBarterMin",2.0);
+				else; Standard behavior
+					npc.ShowBarterMenu();
+				endif
+			else
 				npc.ShowBarterMenu();
 			endif
 		endif
