@@ -360,5 +360,10 @@
         }
     });
 
+    // Apply corner placement via shared layout manager
+    if (window.chimLayout) {
+        window.chimLayout.apply(chatboxRoot, 'chatbox');
+    }
+
     console.log('[Chatbox] Initialized - display mode + focus modal input');
 })();

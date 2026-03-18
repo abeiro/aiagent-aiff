@@ -35,6 +35,12 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
+/* Corner placement - driven by layout.js */
+#chim-status-hud.chim-corner-top-left     { top: 10px !important;    left: 10px !important;  bottom: auto !important; right: auto !important; }
+#chim-status-hud.chim-corner-top-right    { top: 10px !important;    right: 10px !important; bottom: auto !important; left: auto !important;  }
+#chim-status-hud.chim-corner-bottom-left  { bottom: 10px !important; left: 10px !important;  top: auto !important;    right: auto !important; }
+#chim-status-hud.chim-corner-bottom-right { bottom: 10px !important; right: 10px !important; top: auto !important;    left: auto !important;  }
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }

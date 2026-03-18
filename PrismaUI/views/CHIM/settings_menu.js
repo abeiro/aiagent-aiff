@@ -183,9 +183,108 @@ window.setNPCTarget = function(npcName) {
     }
 };
 
+// ─── HUD Layout / Corner Placement ──────────────────────────────────────────
+
+/**
+ * Set the corner for a specific view.
+ * Called from the HTML onclick handlers: setViewCorner('overlay', 'top-left')
+ *
+ * @param {string} viewId   e.g. 'chatbox', 'overlay', 'status_hud', 'aiview_left' …
+ * @param {string} corner   'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+ */
+window.setViewCorner = function(viewId, corner) {
+    // Apply and persist immediately
+    if (window.chimLayout) {
+        window.chimLayout.setCorner(viewId, corner);
+    }
+
+    // Highlight the active button in the picker for this view
+    var picker = document.querySelector('.corner-picker[data-view="' + viewId + '"]');
+    if (picker) {
+        var btns = picker.querySelectorAll('.corner-btn');
+        for (var i = 0; i < btns.length; i++) {
+            var btn = btns[i];
+            if (btn.getAttribute('data-corner') === corner) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    }
+};
+
+/** Reset all layout settings to their defaults */
+window.resetLayoutDefaults = function() {
+    if (!window.chimLayout) return;
+    
+    var defaults = window.chimLayout.views;
+    for (var viewId in defaults) {
+        if (defaults.hasOwnProperty(viewId)) {
+            window.setViewCorner(viewId, defaults[viewId]);
+        }
+    }
+    
+    // Reset gap
+    window.updateLayoutGap(20);
+    var slider = document.getElementById('layout-gap-slider');
+    if (slider) slider.value = 20;
+    
+    // Show feedback
+    showDescription('Layout reset to defaults!');
+    setTimeout(clearDescription, 2000);
+};
+
+/** Update the gap from screen edges */
+window.updateLayoutGap = function(value) {
+    var gap = parseInt(value, 10);
+    var valueDisplay = document.getElementById('layout-gap-value');
+    if (valueDisplay) {
+        valueDisplay.textContent = gap + 'px';
+    }
+    
+    if (window.chimLayout) {
+        window.chimLayout.setGap(gap);
+    }
+};
+
+/** Restore all saved corner highlights when the settings menu opens */
+function initLayoutPickers() {
+    if (!window.chimLayout) return;
+    
+    // Restore gap
+    var gap = window.chimLayout.getGap();
+    var slider = document.getElementById('layout-gap-slider');
+    var valueDisplay = document.getElementById('layout-gap-value');
+    if (slider) slider.value = gap;
+    if (valueDisplay) valueDisplay.textContent = gap + 'px';
+    
+    var pickers = document.querySelectorAll('.corner-picker[data-view]');
+    for (var i = 0; i < pickers.length; i++) {
+        var picker = pickers[i];
+        var viewId = picker.getAttribute('data-view');
+        var saved  = window.chimLayout.getCorner(viewId);
+        
+        var btns = picker.querySelectorAll('.corner-btn');
+        for (var j = 0; j < btns.length; j++) {
+            var btn = btns[j];
+            if (btn.getAttribute('data-corner') === saved) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Initialize on load
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSettingsMenu);
+    document.addEventListener('DOMContentLoaded', function() {
+        initSettingsMenu();
+        initLayoutPickers();
+    });
 } else {
     initSettingsMenu();
+    initLayoutPickers();
 }

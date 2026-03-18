@@ -239,6 +239,12 @@
         }
     }
 
+    // Apply corner placement via shared layout manager
+    var overlayRoot = document.getElementById('chim-overlay');
+    if (window.chimLayout) {
+        window.chimLayout.apply(overlayRoot, 'overlay');
+    }
+
     // Initialize with loading state
     console.log('CHIM Overlay initialized');
     
