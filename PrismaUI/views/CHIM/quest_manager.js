@@ -404,13 +404,12 @@ window.initQuestManager = function(serverUrl) {
 };
 
 window.addEventListener("DOMContentLoaded", () => {
-    if (!window.chimQuestManagerCommand) {
-        window.chimQuestManagerCommand = function(command) {
-            console.log("[QuestManager] Command (no bridge):", command);
-        };
+    if (window.chimQuestManagerCommand) {
+        window.chimQuestManagerCommand("dom_ready");
+    } else {
+        console.warn("[QuestManager] chimQuestManagerCommand bridge is unavailable");
     }
 
-    window.chimQuestManagerCommand("dom_ready");
     setServerBase(DEFAULT_SERVER_BASE);
     restoreLocalState();
     refreshRunningQuests();

@@ -159,6 +159,12 @@
         startPolling();
     }
     
+    // Apply corner placement via shared layout manager
+    var hudRoot = document.getElementById('chim-status-hud');
+    if (window.chimLayout) {
+        window.chimLayout.apply(hudRoot, 'status_hud');
+    }
+
     // Cleanup
     window.addEventListener('beforeunload', stopPolling);
     

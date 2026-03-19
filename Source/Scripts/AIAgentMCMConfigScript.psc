@@ -673,8 +673,8 @@ event OnPageReset(string a_page)
 	
 	if (a_page=="Tools")
 		
-		_actionSendLocations = AddToggleOption("Send all locations to server", false)
-		_actionSendVoices = AddToggleOption("Send all vanilla voice samples to server", false)
+		_actionSendLocations = AddToggleOption("Send faction and location info", false)
+		_actionSendVoices = AddToggleOption("Send all voice samples to server", false)
 	
 	endif
 
@@ -1526,14 +1526,14 @@ event OnOptionSelect(int a_option)
  	endIf
 	
 	if (a_option == _actionSendLocations)
-		ShowMessage("Please..wait 1 minute for the 'Done' message. ")
- 		AIAgentPapyrusFunctions.sendAllLocations();
- 		ShowMessage("Done")
+		ShowMessage("Please wait 3-5 minutes. You only need to do this once per playthrough.")
+ 		AIAgentPapyrusFunctions.RunToolsSendFactionLocationInfo()
+ 		ShowMessage("factions and locations fully synced and complete!")
  	endIf
 	
  	if (a_option == _actionSendVoices)
 		ShowMessage("Uploading all voice samples. Will take 5-10 seconds.")
-		AIAgentFunctions.sendAllVoices()
+		AIAgentPapyrusFunctions.RunToolsSendAllVoiceSamples()
 		ShowMessage("Voice samples uploaded successfully")
 	endIf
 	
@@ -1785,11 +1785,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _actionSendLocations)
-		SetInfoText("Will send all locations found in-game to server, so TravelTo action can work better")
+		SetInfoText("Send faction and location info to the server so TravelTo works better. This can take 3-5 minutes and only needs to be done once per playthrough.")
 	endIf
 	
 	if (a_option == _actionSendVoices)
-		SetInfoText("Upload all vanilla Skyrim voice type samples to the server. This may take 5-10 seconds.")
+		SetInfoText("Upload all available voice type samples to the server.")
 	endIf
 
 	if (a_option == _toggle_openmic)

@@ -78,6 +78,11 @@ Event OnInit()
 	RegisterForSingleUpdate(0.1)
 EndEvent
 
+Event OnPlayerLoadGame()
+	; Re-arm polling after load to ensure Prisma pending actions are always processed.
+	RegisterForSingleUpdate(0.1)
+EndEvent
+
 ; Process pending settings menu action (shared by hotkey and mod event)
 Function ProcessPendingSettingsAction()
 	String pendingAction = AIAgentFunctions.getSettingsMenuPendingAction()
@@ -166,6 +171,14 @@ Function ProcessPendingSettingsAction()
 			AIAgentFunctions.logMessage("chim_renamenpc@" + originalname + "@" + messageText + "@" + targetActor.GetFormId(), "setconf")
 			StorageUtil.SetStringValue(targetActor, "forcedName", messageText)
 		endif
+	elseif (actionId == "tools_sync_factions_locations")
+		Debug.Notification("Please wait 3-5 minutes. You only need to do this once per playthrough.")
+		RunToolsSendFactionLocationInfo()
+		Debug.Notification("factions and locations fully synced and complete!")
+	elseif (actionId == "tools_send_all_voice_samples")
+		Debug.Notification("Uploading all voice samples. This may take 3-5 minutes.")
+		RunToolsSendAllVoiceSamples()
+		Debug.Notification("Voice samples uploaded successfully")
 	elseif (StringUtil.Find(actionId, "sg_") == 0)
 		; Soulgaze actions (check if starts with "sg_")
 		int mode = AIAgentFunctions.get_conf_i("_sgmode")
@@ -432,6 +445,9 @@ Event OnKeyDown(int keyCode)
 	If (!UI.IsMenuOpen("Console")) \
 	&& (!UI.IsMenuOpen("Crafting Menu")) \
 	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		; Ensure polling is started for master menu tool actions too
+		RegisterForSingleUpdate(0.1)
+		
 		; Toggle the menu
 		AIAgentFunctions.toggleMasterMenu()
 	EndIf
@@ -669,6 +685,14 @@ Bool Function SafeProcess(bool allowMenuMode = false)
 	Else
 		Return False
 	EndIf
+EndFunction
+
+Function RunToolsSendFactionLocationInfo() global
+	sendAllLocations()
+EndFunction
+
+Function RunToolsSendAllVoiceSamples() global
+	AIAgentFunctions.sendAllVoices()
 EndFunction
 
 Function sendAllLocationsOld() global
