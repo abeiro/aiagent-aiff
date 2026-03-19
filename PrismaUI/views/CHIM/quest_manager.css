@@ -15,12 +15,22 @@ body {
 }
 
 .panel-container {
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50vw;
+    height: 50vh;
+    min-width: 860px;
+    min-height: 520px;
+    max-width: 1500px;
+    max-height: 960px;
     display: flex;
     flex-direction: column;
     background: rgba(18, 18, 22, 0.98);
     border: 1px solid rgba(242, 124, 17, 0.35);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75);
 }
 
 .panel-header {
@@ -280,6 +290,13 @@ input[readonly] {
 }
 
 @media (max-width: 1100px) {
+    .panel-container {
+        width: 92vw;
+        height: 88vh;
+        min-width: 0;
+        min-height: 0;
+    }
+
     .panel-body {
         flex-direction: column;
     }

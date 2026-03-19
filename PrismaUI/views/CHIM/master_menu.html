@@ -25,17 +25,17 @@
                             onmouseenter="showDescription('View conversation history with AI NPCs - pauses game')"
                             onmouseleave="clearDescription()">Conversation History</button>
                     <button class="setting-btn" onclick="selectPanel('diaries')"
-                            onmouseenter="showDescription('Read NPC diaries and memory logs - pauses game')"
-                            onmouseleave="clearDescription()">NPC Diaries</button>
+                            onmouseenter="showDescription('Read diaries and memory logs - pauses game')"
+                            onmouseleave="clearDescription()">Diaries</button>
                     <button class="setting-btn" onclick="selectPanel('overlay')"
-                            onmouseenter="showDescription('Display CHIM status overlay with current mode and settings')"
-                            onmouseleave="clearDescription()">Overlay</button>
+                            onmouseenter="showDescription('Display CHIM Status Bar with current mode and settings')"
+                            onmouseleave="clearDescription()">Status Bar</button>
                     <button class="setting-btn" onclick="selectPanel('statushud')"
-                            onmouseenter="showDescription('Show Status HUD with nearby NPCs and their states')"
-                            onmouseleave="clearDescription()">Status HUD</button>
+                            onmouseenter="showDescription('Show MiniHUD with nearby NPCs and their states')"
+                            onmouseleave="clearDescription()">MiniHUD</button>
                     <button class="setting-btn" onclick="selectPanel('aiview')"
-                            onmouseenter="showDescription('View detailed AI profile of targeted NPC')"
-                            onmouseleave="clearDescription()">AI View</button>
+                            onmouseenter="showDescription('View detailed Terminator View profile of targeted NPC')"
+                            onmouseleave="clearDescription()">Terminator View</button>
                     <button class="setting-btn" onclick="selectPanel('browser')"
                             onmouseenter="showDescription('Open CHIM Browser (Beta) - full web interface in-game')"
                             onmouseleave="clearDescription()">CHIM Browser (Beta)</button>
@@ -43,14 +43,101 @@
                             onmouseenter="showDescription('Open CHIM Logs View (Beta) - server logs and diagnostics')"
                             onmouseleave="clearDescription()">CHIM Logs View (Beta)</button>
                     <button class="setting-btn" onclick="selectPanel('chatbox')"
-                            onmouseenter="showDescription('Toggle CHIM Chatbox - MMO-style chat interface')"
-                            onmouseleave="clearDescription()">CHIM Chatbox</button>
+                            onmouseenter="showDescription('Toggle ChatView - MMO-style chat interface')"
+                            onmouseleave="clearDescription()">ChatView</button>
                     <button class="setting-btn" onclick="selectPanel('settings')"
-                            onmouseenter="showDescription('Open CHIM Settings Menu - centralized settings interface')"
-                            onmouseleave="clearDescription()">CHIM Settings</button>
+                            onmouseenter="showDescription('Open CHIM Actions menu - centralized actions interface')"
+                            onmouseleave="clearDescription()">CHIM Actions</button>
                     <button class="setting-btn" onclick="selectPanel('questmanager')"
                             onmouseenter="showDescription('Open AI Quest Manager - Prisma-native quest generation panel')"
                             onmouseleave="clearDescription()">AI Quest Manager</button>
+                </div>
+
+                <div class="layout-collapsible">
+                    <button type="button" class="layout-toggle-btn" id="hud-layout-toggle"
+                            aria-expanded="false"
+                            onclick="toggleHudLayout()"
+                            onmouseenter="showDescription('Expand HUD Layout controls for panel corner placement')"
+                            onmouseleave="clearDescription()">
+                        <span>HUD Layout</span>
+                        <span class="layout-toggle-indicator" id="hud-layout-indicator">+</span>
+                    </button>
+
+                    <div class="layout-dropdown" id="hud-layout-dropdown" hidden>
+                        <div class="layout-grid-3x2">
+                            <div class="layout-card">
+                                <div class="layout-label" onmouseenter="showDescription('ChatView panel corner placement')" onmouseleave="clearDescription()">ChatView</div>
+                                <div class="corner-picker" data-view="chatbox">
+                                    <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('chatbox','top-left')">&#8598;</button>
+                                    <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('chatbox','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-left" onclick="setViewCorner('chatbox','bottom-left')"><span class="corner-arrow corner-arrow-bl">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('chatbox','bottom-right')">&#8600;</button>
+                                </div>
+                            </div>
+
+                            <div class="layout-card">
+                                <div class="layout-label" onmouseenter="showDescription('Status Bar panel corner placement')" onmouseleave="clearDescription()">Status Bar</div>
+                                <div class="corner-picker" data-view="overlay">
+                                    <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('overlay','top-left')">&#8598;</button>
+                                    <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('overlay','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-left" onclick="setViewCorner('overlay','bottom-left')"><span class="corner-arrow corner-arrow-bl">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('overlay','bottom-right')">&#8600;</button>
+                                </div>
+                            </div>
+
+                            <div class="layout-card">
+                                <div class="layout-label" onmouseenter="showDescription('MiniHUD panel corner placement')" onmouseleave="clearDescription()">MiniHUD</div>
+                                <div class="corner-picker" data-view="status_hud">
+                                    <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('status_hud','top-left')">&#8598;</button>
+                                    <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('status_hud','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-left" onclick="setViewCorner('status_hud','bottom-left')"><span class="corner-arrow corner-arrow-bl">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('status_hud','bottom-right')">&#8600;</button>
+                                </div>
+                            </div>
+
+                            <div class="layout-card">
+                                <div class="layout-label" onmouseenter="showDescription('Terminator View Identity panel corner placement')" onmouseleave="clearDescription()">Terminator View Identity</div>
+                                <div class="corner-picker" data-view="aiview_identity">
+                                    <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('aiview_identity','top-left')">&#8598;</button>
+                                    <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('aiview_identity','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-left" onclick="setViewCorner('aiview_identity','bottom-left')"><span class="corner-arrow corner-arrow-bl">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('aiview_identity','bottom-right')">&#8600;</button>
+                                </div>
+                            </div>
+
+                            <div class="layout-card">
+                                <div class="layout-label" onmouseenter="showDescription('Terminator View Settings panel corner placement')" onmouseleave="clearDescription()">Terminator View Settings</div>
+                                <div class="corner-picker" data-view="aiview_settings">
+                                    <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('aiview_settings','top-left')">&#8598;</button>
+                                    <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('aiview_settings','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-left" onclick="setViewCorner('aiview_settings','bottom-left')"><span class="corner-arrow corner-arrow-bl">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('aiview_settings','bottom-right')">&#8600;</button>
+                                </div>
+                            </div>
+
+                            <div class="layout-card">
+                                <div class="layout-label" onmouseenter="showDescription('Terminator View Bio panel corner placement')" onmouseleave="clearDescription()">Terminator View Bio</div>
+                                <div class="corner-picker" data-view="aiview_bio">
+                                    <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('aiview_bio','top-left')">&#8598;</button>
+                                    <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('aiview_bio','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-left" onclick="setViewCorner('aiview_bio','bottom-left')"><span class="corner-arrow corner-arrow-bl">&#8598;</span></button>
+                                    <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('aiview_bio','bottom-right')">&#8600;</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layout-actions">
+                            <div class="gap-control">
+                                <label for="layout-gap-slider">Screen Edge Gap</label>
+                                <input type="range" id="layout-gap-slider" min="0" max="100" step="5" value="20"
+                                       oninput="updateLayoutGap(this.value)">
+                                <span id="layout-gap-value">20px</span>
+                            </div>
+                            <button type="button" class="layout-reset-btn" onclick="resetLayoutDefaults()"
+                                    onmouseenter="showDescription('Reset all HUD panel corners to default')"
+                                    onmouseleave="clearDescription()">Reset Defaults</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -60,6 +147,7 @@
         </div>
     </div>
     
+    <script src="layout.js"></script>
     <script src="master_menu.js"></script>
 </body>
 </html>

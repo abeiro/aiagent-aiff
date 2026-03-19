@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CHIM Settings</title>
+    <title>CHIM Actions</title>
     <link rel="stylesheet" href="settings_menu.css">
 </head>
 <body>
@@ -10,7 +10,7 @@
         <!-- Header -->
         <div class="modal-header">
             <div class="breadcrumb">
-                <span>CHIM Settings</span>
+                <span>CHIM Actions</span>
             </div>
             <button class="close-btn" onclick="closeMenu()">×</button>
         </div>
@@ -26,110 +26,6 @@
                             onmouseleave="clearDescription()">AI Quest Manager</button>
                 </div>
             </div>
-
-            <!-- HUD Layout / Corner Placement -->
-            <div class="settings-group">
-                <h2 class="group-title">HUD Layout</h2>
-                <div class="layout-grid">
-
-                    <!-- Chatbox -->
-                    <div class="layout-row">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('Chatbox: the main chat panel')"
-                              onmouseleave="clearDescription()">Chatbox</span>
-                        <div class="corner-picker" data-view="chatbox">
-                            <button type="button" class="corner-btn" data-corner="top-left"     onclick="setViewCorner('chatbox','top-left')">↖</button>
-                            <button type="button" class="corner-btn" data-corner="top-right"    onclick="setViewCorner('chatbox','top-right')">↗</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-left"  onclick="setViewCorner('chatbox','bottom-left')">↙</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('chatbox','bottom-right')">↘</button>
-                        </div>
-                    </div>
-
-                    <!-- Overlay -->
-                    <div class="layout-row">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('Overlay: the CHIM status panel showing mode, model and agents')"
-                              onmouseleave="clearDescription()">Overlay</span>
-                        <div class="corner-picker" data-view="overlay">
-                            <button type="button" class="corner-btn" data-corner="top-left"     onclick="setViewCorner('overlay','top-left')">↖</button>
-                            <button type="button" class="corner-btn" data-corner="top-right"    onclick="setViewCorner('overlay','top-right')">↗</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-left"  onclick="setViewCorner('overlay','bottom-left')">↙</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('overlay','bottom-right')">↘</button>
-                        </div>
-                    </div>
-
-                    <!-- Status HUD -->
-                    <div class="layout-row">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('Status HUD: the minimal pipeline indicator')"
-                              onmouseleave="clearDescription()">Status HUD</span>
-                        <div class="corner-picker" data-view="status_hud">
-                            <button type="button" class="corner-btn" data-corner="top-left"     onclick="setViewCorner('status_hud','top-left')">↖</button>
-                            <button type="button" class="corner-btn" data-corner="top-right"    onclick="setViewCorner('status_hud','top-right')">↗</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-left"  onclick="setViewCorner('status_hud','bottom-left')">↙</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('status_hud','bottom-right')">↘</button>
-                        </div>
-                    </div>
-
-                    <!-- AI View: Left Panel -->
-                    <div class="layout-row">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('AI View – Identity &amp; Profile panel')"
-                              onmouseleave="clearDescription()">AI View · Identity</span>
-                        <div class="corner-picker" data-view="aiview_identity">
-                            <button type="button" class="corner-btn" data-corner="top-left"     onclick="setViewCorner('aiview_identity','top-left')">↖</button>
-                            <button type="button" class="corner-btn" data-corner="top-right"    onclick="setViewCorner('aiview_identity','top-right')">↗</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-left"  onclick="setViewCorner('aiview_identity','bottom-left')">↙</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('aiview_identity','bottom-right')">↘</button>
-                        </div>
-                    </div>
-
-                    <!-- AI View: Right Panel -->
-                    <div class="layout-row">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('AI View – Settings panel')"
-                              onmouseleave="clearDescription()">AI View · Settings</span>
-                        <div class="corner-picker" data-view="aiview_settings">
-                            <button type="button" class="corner-btn" data-corner="top-left"     onclick="setViewCorner('aiview_settings','top-left')">↖</button>
-                            <button type="button" class="corner-btn" data-corner="top-right"    onclick="setViewCorner('aiview_settings','top-right')">↗</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-left"  onclick="setViewCorner('aiview_settings','bottom-left')">↙</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('aiview_settings','bottom-right')">↘</button>
-                        </div>
-                    </div>
-
-                    <!-- AI View: Bio Panel -->
-                    <div class="layout-row">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('AI View – Bio panel: NPC biography &amp; relationships')"
-                              onmouseleave="clearDescription()">AI View · Bio</span>
-                        <div class="corner-picker" data-view="aiview_bio">
-                            <button type="button" class="corner-btn" data-corner="top-left"     onclick="setViewCorner('aiview_bio','top-left')">↖</button>
-                            <button type="button" class="corner-btn" data-corner="top-right"    onclick="setViewCorner('aiview_bio','top-right')">↗</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-left"  onclick="setViewCorner('aiview_bio','bottom-left')">↙</button>
-                            <button type="button" class="corner-btn" data-corner="bottom-right" onclick="setViewCorner('aiview_bio','bottom-right')">↘</button>
-                        </div>
-                    </div>
-
-                    <!-- Screen Edge Gap -->
-                    <div class="layout-row" style="margin-top: 8px;">
-                        <span class="layout-label"
-                              onmouseenter="showDescription('Distance from the edge of the screen for all HUD panels')"
-                              onmouseleave="clearDescription()">Screen Edge Gap</span>
-                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                            <input type="range" id="layout-gap-slider" min="0" max="100" step="5" value="20" 
-                                   oninput="updateLayoutGap(this.value)" 
-                                   style="flex: 1; accent-color: rgb(242, 124, 17);">
-                            <span id="layout-gap-value" style="min-width: 40px; text-align: right; color: rgb(242, 124, 17); font-weight: bold;">20px</span>
-                        </div>
-                    </div>
-
-                </div>
-                
-                <div class="layout-actions" style="margin-top: 16px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="setting-btn" onclick="resetLayoutDefaults()" onmouseenter="showDescription('Reset all HUD panels to their default corners')" onmouseleave="clearDescription()" style="padding: 8px 16px; font-size: 0.9em; background: rgba(231, 76, 60, 0.2); border-color: rgba(231, 76, 60, 0.4);">Reset Defaults</button>
-                </div>
-            </div>
-
             <!-- Mode Options -->
             <div class="settings-group">
                 <h2 class="group-title">Mode</h2>
