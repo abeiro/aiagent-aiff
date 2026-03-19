@@ -112,12 +112,19 @@ body {
     border-color: #ff6b6b;
 }
 
+/* Corner placement - driven by layout.js */
+/* left-panel: default top-left */
+.left-panel.chim-corner-top-left     { top: 20px !important;    left: 20px !important;  bottom: auto !important; right: auto !important; }
+.left-panel.chim-corner-top-right    { top: 20px !important;    right: 20px !important; bottom: auto !important; left: auto !important;  }
+.left-panel.chim-corner-bottom-left  { bottom: 20px !important; left: 20px !important;  top: auto !important;    right: auto !important; }
+.left-panel.chim-corner-bottom-right { bottom: 20px !important; right: 20px !important; top: auto !important;    left: auto !important;  }
+
 /* =========================
    LEFT PANEL - Identity & Profile
    ========================= */
 .left-panel {
     position: fixed;
-    top: 70px;
+    top: 20px;
     left: 20px;
     width: 340px;
     max-height: calc(100vh - 90px);
@@ -133,12 +140,18 @@ body {
     flex-direction: column;
 }
 
+/* right-panel: default top-right */
+.right-panel.chim-corner-top-left     { top: 20px !important;    left: 20px !important;  bottom: auto !important; right: auto !important; }
+.right-panel.chim-corner-top-right    { top: 20px !important;    right: 20px !important; bottom: auto !important; left: auto !important;  }
+.right-panel.chim-corner-bottom-left  { bottom: 20px !important; left: 20px !important;  top: auto !important;    right: auto !important; }
+.right-panel.chim-corner-bottom-right { bottom: 20px !important; right: 20px !important; top: auto !important;    left: auto !important;  }
+
 /* =========================
    RIGHT PANEL - Settings Only (Wider)
    ========================= */
 .right-panel {
     position: fixed;
-    top: 70px;
+    top: 20px;
     right: 20px;
     width: 320px;
     max-height: 400px;
@@ -153,6 +166,12 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+/* bio-panel: default bottom-right */
+.bio-panel.chim-corner-top-left     { top: 20px !important;    left: 20px !important;  bottom: auto !important; right: auto !important; }
+.bio-panel.chim-corner-top-right    { top: 20px !important;    right: 20px !important; bottom: auto !important; left: auto !important;  }
+.bio-panel.chim-corner-bottom-left  { bottom: 20px !important; left: 20px !important;  top: auto !important;    right: auto !important; }
+.bio-panel.chim-corner-bottom-right { bottom: 20px !important; right: 20px !important; top: auto !important;    left: auto !important;  }
 
 /* =========================
    BIOGRAPHY PANEL - Bottom Right (2-column, WIDER with Relationships)

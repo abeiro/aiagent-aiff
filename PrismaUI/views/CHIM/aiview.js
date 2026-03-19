@@ -374,6 +374,13 @@
         // Don't clear it, so user knows which NPC triggered the error
     };
 
+    // Apply corner placement via shared layout manager
+    if (window.chimLayout) {
+        window.chimLayout.apply(document.getElementById('left-panel'),  'aiview_identity');
+        window.chimLayout.apply(document.getElementById('right-panel'), 'aiview_settings');
+        window.chimLayout.apply(document.getElementById('bio-panel'),   'aiview_bio');
+    }
+
     // Initialize
     showLoading();
     console.log('CHIM AI View (Multi-Window HUD) initialized');

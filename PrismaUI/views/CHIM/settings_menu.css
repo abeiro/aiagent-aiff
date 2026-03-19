@@ -218,3 +218,70 @@ body {
     color: #999;
     font-size: 1.1em;
 }
+
+/* ── HUD Layout section ─────────────────────────────────────────────────── */
+
+/* Outer container: one row per view */
+.layout-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Each row: label on the left, 2×2 picker on the right */
+.layout-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.layout-label {
+    flex: 0 0 130px;
+    font-size: 0.9em;
+    color: #ccc;
+    cursor: default;
+    user-select: none;
+}
+
+/* 2×2 grid of arrow buttons */
+.corner-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+}
+
+.corner-btn {
+    width: 38px;
+    height: 32px;
+    background: rgba(40, 40, 44, 0.8);
+    border: 1px solid rgba(242, 124, 17, 0.2);
+    border-radius: 5px;
+    color: #e8e8e8;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.corner-btn:hover {
+    background: rgba(242, 124, 17, 0.25);
+    border-color: rgba(242, 124, 17, 0.6);
+    color: rgb(242, 124, 17);
+    box-shadow: 0 2px 8px rgba(242, 124, 17, 0.25);
+    transform: scale(1.1);
+}
+
+.corner-btn:active {
+    transform: scale(0.94);
+}
+
+.corner-btn.active {
+    background: rgba(242, 124, 17, 0.3);
+    border-color: rgb(242, 124, 17);
+    color: rgb(242, 124, 17);
+    box-shadow: 0 0 8px rgba(242, 124, 17, 0.4);
+}
