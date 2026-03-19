@@ -28,11 +28,16 @@ function setLoading(message, active) {
 }
 
 function askConfirm(text) {
+    if (typeof window.chimQuestManagerCommand === "function") {
+        // Prisma host dialogs are unreliable; treat confirmations as accepted.
+        return true;
+    }
     if (typeof window.confirm !== "function") {
         return true;
     }
     try {
-        return window.confirm(text);
+        const result = window.confirm(text);
+        return typeof result === "boolean" ? result : true;
     } catch (error) {
         return true;
     }
@@ -108,14 +113,15 @@ function applyStagedVisibility(stagedQuestTitle) {
 }
 
 function updateQuestButtons(hasStagedQuest, hasRunningQuests) {
-    const shouldEnable = hasStagedQuest && !hasRunningQuests;
+    const canPlayQuest = hasStagedQuest && !hasRunningQuests;
+    const canRequestEnd = hasRunningQuests;
     const playQuestBtn = document.getElementById("playQuestBtn");
     const requestEndBtn = document.getElementById("requestEndBtn");
     if (playQuestBtn) {
-        playQuestBtn.disabled = !shouldEnable;
+        playQuestBtn.disabled = !canPlayQuest;
     }
     if (requestEndBtn) {
-        requestEndBtn.disabled = !shouldEnable;
+        requestEndBtn.disabled = !canRequestEnd;
     }
 }
 
@@ -327,7 +333,8 @@ async function postAction(action, confirmText, loadingText, successText, failure
         }
         setLoading(`Error: ${data.message || failureText}`, false);
     } catch (error) {
-        setLoading(failureText, false);
+        const reason = error && error.message ? ` (${error.message})` : "";
+        setLoading(`${failureText}${reason}`, false);
     }
 }
 
