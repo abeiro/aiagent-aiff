@@ -2,6 +2,7 @@
 
 let hotkeyCloseArmedAt = 0;
 let hudLayoutExpanded = false;
+let toolsExpanded = false;
 
 // Show description in footer
 window.showDescription = function(text) {
@@ -36,6 +37,7 @@ function initMasterMenu() {
 
     initLayoutPickers();
     setHudLayoutExpanded(false);
+    setToolsExpanded(false);
 }
 
 // Handle keyboard events
@@ -101,6 +103,24 @@ function setHudLayoutExpanded(expanded) {
 
 window.toggleHudLayout = function() {
     setHudLayoutExpanded(!hudLayoutExpanded);
+};
+
+function setToolsExpanded(expanded) {
+    const dropdown = document.getElementById('tools-dropdown');
+    const toggle = document.getElementById('tools-toggle');
+    const indicator = document.getElementById('tools-indicator');
+    if (!dropdown || !toggle || !indicator) {
+        return;
+    }
+
+    toolsExpanded = !!expanded;
+    toggle.setAttribute('aria-expanded', toolsExpanded ? 'true' : 'false');
+    dropdown.hidden = !toolsExpanded;
+    indicator.textContent = toolsExpanded ? '-' : '+';
+}
+
+window.toggleToolsDropdown = function() {
+    setToolsExpanded(!toolsExpanded);
 };
 
 window.setViewCorner = function(viewId, corner) {

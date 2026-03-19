@@ -215,6 +215,16 @@ body {
     background: rgba(20, 20, 24, 0.65);
 }
 
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+
+#tools-dropdown .setting-btn {
+    width: 100%;
+}
+
 .layout-grid-3x2 {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

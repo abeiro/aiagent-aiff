@@ -139,6 +139,30 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="layout-collapsible">
+                    <button type="button" class="layout-toggle-btn" id="tools-toggle"
+                            aria-expanded="false"
+                            onclick="toggleToolsDropdown()"
+                            onmouseenter="showDescription('Expand Tools actions for data sync and voice uploads')"
+                            onmouseleave="clearDescription()">
+                        <span>Tools</span>
+                        <span class="layout-toggle-indicator" id="tools-indicator">+</span>
+                    </button>
+
+                    <div class="layout-dropdown" id="tools-dropdown" hidden>
+                        <div class="tools-grid">
+                            <button class="setting-btn"
+                                    onclick="selectPanel('tools_sync_factions_locations')"
+                                    onmouseenter="showDescription('Sync faction and location data to the server (3-5 minutes, one-time per playthrough)')"
+                                    onmouseleave="clearDescription()">Send Faction and Location Info</button>
+                            <button class="setting-btn"
+                                    onclick="selectPanel('tools_send_all_voice_samples')"
+                                    onmouseenter="showDescription('Upload all available voice samples to the server')"
+                                    onmouseleave="clearDescription()">Send All Voice Samples</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
