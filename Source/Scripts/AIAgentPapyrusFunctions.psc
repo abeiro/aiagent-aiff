@@ -1057,8 +1057,8 @@ Function OpenModeWheel()
 	
 	if (_currentModeIndex==1)
 		Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo)
-		AIAgentFunctions.setConf("_max_distance_inside",256,256,256)
-		AIAgentFunctions.setConf("_max_distance_outside",256,256,256)
+		AIAgentFunctions.setConf("_max_distance_inside",200,200,200)
+		AIAgentFunctions.setConf("_max_distance_outside",200,200,200)
 	else
 		Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo)
 		AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string)
@@ -1698,8 +1698,8 @@ Function OpenModeToggleWheel(float holdTime)
 	
 	if (_currentModeIndex == 1)
 		Debug.Trace("[CHIM] Enabling intimacy bubble effect: saving settings: "+mdi+","+mdo)
-		AIAgentFunctions.setConf("_max_distance_inside",256,256,256)
-		AIAgentFunctions.setConf("_max_distance_outside",256,256,256)
+		AIAgentFunctions.setConf("_max_distance_inside",200,200,200)
+		AIAgentFunctions.setConf("_max_distance_outside",200,200,200)
 	else
 		Debug.Trace("[CHIM] Disabling intimacy bubble effect: saving settings: "+mdi+","+mdo)
 		AIAgentFunctions.setConf("_max_distance_inside",mdi,mdi as int,mdi as string)

@@ -87,6 +87,12 @@ float		_max_distance_inside		= 1200.0
 int			_slider_max_distance_outside
 float		_max_distance_outside		= 2400.0
 
+int			_slider_spatial_hearing_inside
+float		_spatial_hearing_inside		= 471.0
+
+int			_slider_spatial_hearing_outside
+float		_spatial_hearing_outside	= 1018.0
+
 int			_slider_bored_period
 float		_bored_period		= 60.0
 
@@ -377,6 +383,23 @@ event OnConfigInit()
 		_toggle_cancel_dialogue_on_combat_state = false
 		controlScript.setConf("_cancel_dialogue_on_combat", 0)
 	endIf
+
+	; Load spatial hearing distance settings
+	int spatialHearingInsideValue = AIAgentFunctions.get_conf_i("_spatial_hearing_inside")
+	if (spatialHearingInsideValue > 0)
+		_spatial_hearing_inside = spatialHearingInsideValue as float
+	else
+		_spatial_hearing_inside = 471.0
+	endIf
+	controlScript.setConf("_spatial_hearing_inside", _spatial_hearing_inside)
+
+	int spatialHearingOutsideValue = AIAgentFunctions.get_conf_i("_spatial_hearing_outside")
+	if (spatialHearingOutsideValue > 0)
+		_spatial_hearing_outside = spatialHearingOutsideValue as float
+	else
+		_spatial_hearing_outside = 1018.0
+	endIf
+	controlScript.setConf("_spatial_hearing_outside", _spatial_hearing_outside)
 	
 	if (CurrentVersion<38)
 		_toggle_autofocus_on_sit=0
@@ -408,12 +431,17 @@ endEvent
 
 int function GetVersion()
 
-	return 54
+	return 55
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 55 && a_version > CurrentVersion)
+		; Version 55: Added spatial awareness hearing range sliders
+		OnConfigInit()
+	endIf
 
 	if (a_version == 54 && a_version > CurrentVersion)
 		; Version 54: Added CHIM Master Menu to Prisma UI page
@@ -528,6 +556,8 @@ event OnPageReset(string a_page)
 		
 		_slider_max_distance_inside	= AddSliderOption("Interior Auto Activate Distance",_max_distance_inside,"{0}" )
 		_slider_max_distance_outside	= AddSliderOption("Exterior Auto Activate Distance",_max_distance_outside,"{0}" )
+		_slider_spatial_hearing_inside	= AddSliderOption("Interior Spatial Hearing Distance",_spatial_hearing_inside,"{0}" )
+		_slider_spatial_hearing_outside	= AddSliderOption("Exterior Spatial Hearing Distance",_spatial_hearing_outside,"{0}" )
 		
 		AddEmptyOption()
 		
@@ -742,6 +772,20 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogRange(10, 5000)
 		SetSliderDialogInterval(1)
 	endIf
+
+	if (a_option == _slider_spatial_hearing_inside)
+		SetSliderDialogStartValue(_spatial_hearing_inside)
+		SetSliderDialogDefaultValue(471)
+		SetSliderDialogRange(50, 5000)
+		SetSliderDialogInterval(1)
+	endIf
+
+	if (a_option == _slider_spatial_hearing_outside)
+		SetSliderDialogStartValue(_spatial_hearing_outside)
+		SetSliderDialogDefaultValue(1018)
+		SetSliderDialogRange(50, 5000)
+		SetSliderDialogInterval(1)
+	endIf
 	
 	if (a_option == _slider_bored_period)
 		SetSliderDialogStartValue(_bored_period)
@@ -833,6 +877,18 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		controlScript.mdo=_max_distance_outside;
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
+
+	if (a_option == _slider_spatial_hearing_inside)
+		_spatial_hearing_inside = a_value
+		controlScript.setConf("_spatial_hearing_inside",_spatial_hearing_inside)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
+
+	if (a_option == _slider_spatial_hearing_outside)
+		_spatial_hearing_outside = a_value
+		controlScript.setConf("_spatial_hearing_outside",_spatial_hearing_outside)
+		SetSliderOptionValue(a_option, a_value, "{1}")
+	endIf
 	
 	if (a_option == _slider_bored_period)
 		_bored_period = a_value
@@ -892,6 +948,8 @@ event OnGameReload()
 
 	a=controlScript.setConf("_max_distance_inside",_max_distance_inside)
 	a=controlScript.setConf("_max_distance_outside",_max_distance_outside)
+	a=controlScript.setConf("_spatial_hearing_inside",_spatial_hearing_inside)
+	a=controlScript.setConf("_spatial_hearing_outside",_spatial_hearing_outside)
 	
 	controlScript.mdi=_max_distance_inside;
 	controlScript.mdo=_max_distance_outside;
@@ -1694,6 +1752,14 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _slider_max_distance_outside)
 		SetInfoText("AI within this distance outside are Auto Activated.")
+	endIf
+
+	if (a_option == _slider_spatial_hearing_inside)
+		SetInfoText("Sets indoor conversation hearing distance for spatial awareness checks.")
+	endIf
+
+	if (a_option == _slider_spatial_hearing_outside)
+		SetInfoText("Sets outdoor conversation hearing distance for spatial awareness checks.")
 	endIf
 	
 	if (a_option == _toggleAddAllNPC)
