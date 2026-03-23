@@ -1665,10 +1665,12 @@ event OnOptionSelect(int a_option)
  		ShowMessage("factions and locations fully synced and complete!")
  	endIf
 	
- 	if (a_option == _actionSendVoices)
-		ShowMessage("Uploading all voice samples. Will take 5-10 seconds.")
-		AIAgentPapyrusFunctions.RunToolsSendAllVoiceSamples()
-		ShowMessage("Voice samples uploaded successfully")
+  	if (a_option == _actionSendVoices)
+		ShowMessage("Uploading all voice samples. Will take 20-30 seconds.")
+		int voiceUploadResult = AIAgentPapyrusFunctions.RunToolsSendAllVoiceSamples()
+		if (voiceUploadResult == 0)
+			ShowMessage("Voice samples uploaded successfully")
+		endif
 	endIf
 	
  	; Handle AI Agents page options
