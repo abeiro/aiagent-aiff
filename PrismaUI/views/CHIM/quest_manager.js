@@ -351,20 +351,20 @@ function startQuest() {
 function requestEnd() {
     postAction(
         "request_end",
-        "Request quest end now?",
-        "Requesting quest end...",
-        "Quest end requested.",
-        "Failed to request quest end."
+        "Stop quest now?",
+        "Stopping quest...",
+        "Quest stop requested.",
+        "Failed to stop quest."
     );
 }
 
 function cleanAll() {
     postAction(
         "clean_all",
-        "Clean all quest data? This will remove running quests and state files.",
-        "Cleaning all data...",
-        "Clean all executed.",
-        "Failed to clean all data."
+        "Clear running quests? This will remove running quests and state files.",
+        "Clearing running quests...",
+        "Clear running quests executed.",
+        "Failed to clear running quests."
     );
 }
 

@@ -1112,8 +1112,8 @@ Function OpenSNQEWheel()
 			
 	String[] _label = new String[4]
 	_label[0] = "Start/Continue"
-	_label[1] = "Request End"
-	_label[2] = "Stop & Clean"
+	_label[1] = "Stop Quest"
+	_label[2] = "Clear Running Quests"
 	_label[3] = "Try to restart"
 	UIExtensions.InitMenu("UIWheelMenu")
 

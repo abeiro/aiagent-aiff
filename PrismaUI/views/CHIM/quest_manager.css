@@ -45,7 +45,7 @@ body {
 .panel-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: rgb(242, 124, 17);
+    color: #ffffff;
     letter-spacing: 0.4px;
 }
 
@@ -94,7 +94,7 @@ body {
 
 .section-title {
     font-weight: 700;
-    color: rgb(242, 124, 17);
+    color: #ffffff;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -201,6 +201,14 @@ input[readonly] {
     color: #9a9a9a;
 }
 
+textarea.briefing-box {
+    min-height: 140px;
+    max-height: 260px;
+    overflow-y: auto;
+    line-height: 1.35;
+    white-space: pre-wrap;
+}
+
 .log-box {
     border: 1px solid #333;
     border-radius: 6px;
@@ -251,7 +259,7 @@ input[readonly] {
 .status-block h3 {
     margin: 0 0 8px;
     font-size: 0.95rem;
-    color: rgb(242, 124, 17);
+    color: #ffffff;
 }
 
 .status-value {
