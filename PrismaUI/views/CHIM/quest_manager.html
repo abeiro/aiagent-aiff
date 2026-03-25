@@ -2,13 +2,13 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>CHIM AI Quest Manager</title>
+    <title>CHIM AI Quest Manager V1</title>
     <link rel="stylesheet" href="quest_manager.css">
 </head>
 <body>
     <div id="quest-panel" class="panel-container">
         <div class="panel-header">
-            <div class="panel-title">AI Quest Manager</div>
+            <div class="panel-title">AI Quest Manager V1</div>
             <button class="close-btn" onclick="closePanel()">X</button>
         </div>
 
@@ -18,10 +18,10 @@
                     <div class="btn-group">
                         <button type="button" class="btn btn-generate" onclick="generateScenario()">Generate Scenario</button>
                         <button type="button" class="btn btn-create" onclick="submitFormData()">Stage Storyline</button>
+                        <button type="button" class="btn btn-create" id="playQuestBtn" onclick="startQuest()" disabled>Play Quest</button>
+                        <button type="button" class="btn btn-clear" id="requestEndBtn" onclick="requestEnd()" disabled>Stop Quest</button>
                         <button type="button" class="btn btn-clear" onclick="clearAllData()">Clear Data</button>
-                        <button type="button" class="btn btn-clear" id="playQuestBtn" onclick="startQuest()" disabled>Play Quest</button>
-                        <button type="button" class="btn btn-clear" id="requestEndBtn" onclick="requestEnd()" disabled>Request End</button>
-                        <button type="button" class="btn btn-clear" onclick="cleanAll()">Clean all</button>
+                        <button type="button" class="btn btn-clear" onclick="cleanAll()">Clear Running Quests</button>
                     </div>
 
                     <div class="loading-msg" id="loading">Ready</div>
@@ -45,7 +45,7 @@
 
                     <div class="form-group">
                         <label for="briefing">Quest Briefing</label>
-                        <input type="text" name="briefing" id="briefing" placeholder="Briefing will appear here..." readonly>
+                        <textarea name="briefing" id="briefing" class="briefing-box" placeholder="Briefing will appear here..." rows="6" readonly></textarea>
                     </div>
 
                     <div class="form-group hidden">
