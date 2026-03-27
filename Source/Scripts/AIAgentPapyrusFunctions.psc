@@ -176,9 +176,11 @@ Function ProcessPendingSettingsAction()
 		RunToolsSendFactionLocationInfo()
 		Debug.Notification("factions and locations fully synced and complete!")
 	elseif (actionId == "tools_send_all_voice_samples")
-		Debug.Notification("Uploading all voice samples. This may take 3-5 minutes.")
-		RunToolsSendAllVoiceSamples()
-		Debug.Notification("Voice samples uploaded successfully")
+		Debug.Notification("Uploading all voice samples. Will take 20-30 seconds.")
+		int voiceUploadResult = RunToolsSendAllVoiceSamples()
+		if (voiceUploadResult == 0)
+			Debug.Notification("Voice samples uploaded successfully")
+		endif
 	elseif (StringUtil.Find(actionId, "sg_") == 0)
 		; Soulgaze actions (check if starts with "sg_")
 		int mode = AIAgentFunctions.get_conf_i("_sgmode")
@@ -691,8 +693,8 @@ Function RunToolsSendFactionLocationInfo() global
 	sendAllLocations()
 EndFunction
 
-Function RunToolsSendAllVoiceSamples() global
-	AIAgentFunctions.sendAllVoices()
+int Function RunToolsSendAllVoiceSamples() global
+	return AIAgentFunctions.sendAllVoices()
 EndFunction
 
 Function sendAllLocationsOld() global

@@ -330,14 +330,21 @@ function TakeASeat(Actor npc, ObjectReference akTarget) global
 	Package SeatPackage = Game.GetFormFromFile(0x01C6E9, "AIAgent.esp") as Package ; Package AIAgentSeatPackage
 	Faction SeatFaction=Game.GetFormFromFile(0x01C6EA, "AIAgent.esp") as Faction ; Faction AIAgentFactionSeat
 	Faction FollowFaction=Game.GetFormFromFile(0x01BC24, "AIAgent.esp") as Faction 
+	Faction WaitFaction=Game.GetFormFromFile(0x02021E, "AIAgent.esp") as Faction 
+	Package WaitPackage = Game.GetFormFromFile(0x02021F, "AIAgent.esp") as Package ; Package MoveToTarget
+
 	
+
 	npc.SetFactionRank(SeatFaction,1)
-	npc.RemoveFromFaction(FollowFaction);
 	PO3_SKSEFunctions.SetLinkedRef(npc,akTarget)
+	ActorUtil.RemovePackageOverride(npc, WaitPackage)
 	ActorUtil.AddPackageOverride(npc, SeatPackage, 100)
+	
+	npc.RemoveFromFaction(FollowFaction);
+	npc.RemoveFromFaction(WaitFaction);
 	npc.EvaluatePackage()
 	
-	;Debug.Notification("Mission MoveToTarget start")
+	Debug.Trace("[CHIM] Sitting at "+akTarget.GetDisplayName())
 	Debug.Notification("[CHIM] Sitting at "+akTarget.GetDisplayName())
 	Debug.Trace("[CHIM] TakeASeat end")
 
@@ -493,7 +500,6 @@ function Follow(Actor npc, ObjectReference akTarget) global
 	
 endFunction
 
-
 function FollowSoft(Actor npc, ObjectReference akTarget) global
 	
 	; used by get into conversation to make NPC talk near plater
@@ -531,7 +537,6 @@ function MakeFollower(Actor npc) global
 	AIAgentNpcUtil.MakeFollower(npc); Needs NFF
 	
 endFunction
-
 
 function StopCurrent(Actor npc) global
 	npc.EnableAI(false) 
@@ -596,8 +601,6 @@ function SheatheWeapon(Actor npc) global
 
 
 endFunction
-
-
 
 function TravelToTargetPlayer(Actor npc, ObjectReference akTarget,String place) global
 	Game.SetPlayerAiDriven(true)

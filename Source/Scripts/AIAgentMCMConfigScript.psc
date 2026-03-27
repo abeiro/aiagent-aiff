@@ -46,6 +46,12 @@ float		_sound_postclip				= 100.0
 int			_slider_ds
 float		_sound_ds				= 1.0
 
+int			_slider_playback_dropoff_inside
+float		_playback_dropoff_inside		= 70.0
+
+int			_slider_playback_dropoff_outside
+float		_playback_dropoff_outside		= 70.0
+
 
 int			_toggle1OID_E
 bool		_toggleState7			= true
@@ -229,6 +235,8 @@ float		_sound_volumeDefault			= 75.0
 float		_sound_preclipDefault			= 100.0
 float		_sound_postclipDefault			= 0.0
 float		_sound_dsDefault				= 1.0
+float		_playback_dropoff_insideDefault		= 70.0
+float		_playback_dropoff_outsideDefault	= 70.0
 bool		_toggleState7Default			= true
 float		_lip_resDefault					= 500.0
 float		_lip_intDefault					= 1.0
@@ -400,6 +408,22 @@ event OnConfigInit()
 		_spatial_hearing_outside = 1000.0
 	endIf
 	controlScript.setConf("_spatial_hearing_outside", _spatial_hearing_outside)
+
+	int playbackDropoffInsideValue = AIAgentFunctions.get_conf_i("_playback_dropoff_inside")
+	if (playbackDropoffInsideValue >= 25 && playbackDropoffInsideValue <= 200)
+		_playback_dropoff_inside = playbackDropoffInsideValue as float
+	else
+		_playback_dropoff_inside = 70.0
+	endIf
+	controlScript.setConf("_playback_dropoff_inside", _playback_dropoff_inside)
+
+	int playbackDropoffOutsideValue = AIAgentFunctions.get_conf_i("_playback_dropoff_outside")
+	if (playbackDropoffOutsideValue >= 25 && playbackDropoffOutsideValue <= 200)
+		_playback_dropoff_outside = playbackDropoffOutsideValue as float
+	else
+		_playback_dropoff_outside = 70.0
+	endIf
+	controlScript.setConf("_playback_dropoff_outside", _playback_dropoff_outside)
 	
 	if (CurrentVersion<38)
 		_toggle_autofocus_on_sit=0
@@ -431,12 +455,17 @@ endEvent
 
 int function GetVersion()
 
-	return 55
+	return 56
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 56 && a_version > CurrentVersion)
+		; Version 56: Added playback dropoff aggressiveness sliders for indoor/outdoor audio playback
+		OnConfigInit()
+	endIf
 
 	if (a_version == 55 && a_version > CurrentVersion)
 		; Version 55: Added spatial awareness hearing range sliders
@@ -596,23 +625,28 @@ event OnPageReset(string a_page)
 	
 
 	if (a_page=="Sound")
+		AddHeaderOption("Basic")
+		AddEmptyOption()
 		_slider_volume		= AddSliderOption("AI Voice Volume", _sound_volume,"{0}")
 		_slider_ds			= AddSliderOption("AI Voice Distance Scale",_sound_ds,"{1}" )
+		_slider_playback_dropoff_inside = AddSliderOption("Interior Playback Dropoff (%)", _playback_dropoff_inside, "{0}")
+		_slider_playback_dropoff_outside = AddSliderOption("Exterior Playback Dropoff (%)", _playback_dropoff_outside, "{0}")
 		
+		AddEmptyOption()
+		AddHeaderOption("Advanced")
+		AddEmptyOption()
 		_slider_preclip		= AddSliderOption("Skip milliseconds at begining",_sound_preclip,"{0}" )
 		_slider_postclip	= AddSliderOption("Skip milliseconds at end",_sound_postclip,"{0}" )
 		
 		_toggleInvertHeading	= AddToggleOption("3D Sound Invert Heading",_invertheadingstate)
-		AddEmptyOption();
 		
 		_slider_lip_res	= AddSliderOption("Resolution of Lip Animations",_lip_res,"{0}" )
 		_slider_lip_int			= AddSliderOption("Intensity of Lip Animations ",_lip_int,"{1}" )
 		
-		;AddEmptyOption();
 		_togglePauseDialogue	= AddToggleOption("Pause Dialogue on Game Pause",_pauseDialogueState)
 		_toggle_usewebsocketstt			= AddToggleOption("Use WebSocket STT",_toggle_usewebsocketstt_state)
 		
-		AddEmptyOption();
+		AddEmptyOption()
 		AddHeaderOption("Open Mic Settings")
 		_toggle_openmic		= AddToggleOption("Enable Open Mic", _toggle_openmic_state)
 		_slider_openmic_sensitivity = AddSliderOption("Voice Detection Sensitivity", _openmic_sensitivity, "{0}")
@@ -734,10 +768,27 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(2)
 	endIf
 	if (a_option == _slider_ds)
+		if (_sound_ds < 1.0)
+			_sound_ds = 1.0
+		elseif (_sound_ds > 5.0)
+			_sound_ds = 5.0
+		endIf
 		SetSliderDialogStartValue(_sound_ds)
 		SetSliderDialogDefaultValue(1)
-		SetSliderDialogRange(1, 1000)
+		SetSliderDialogRange(1.0, 5.0)
 		SetSliderDialogInterval(0.1)
+	endIf
+	if (a_option == _slider_playback_dropoff_inside)
+		SetSliderDialogStartValue(_playback_dropoff_inside)
+		SetSliderDialogDefaultValue(70)
+		SetSliderDialogRange(25, 200)
+		SetSliderDialogInterval(1)
+	endIf
+	if (a_option == _slider_playback_dropoff_outside)
+		SetSliderDialogStartValue(_playback_dropoff_outside)
+		SetSliderDialogDefaultValue(70)
+		SetSliderDialogRange(25, 200)
+		SetSliderDialogInterval(1)
 	endIf
 	if (a_option == _slider_lip_int)
 		SetSliderDialogStartValue(_lip_int)
@@ -846,6 +897,16 @@ event OnOptionSliderAccept(int a_option, float a_value)
 		controlScript.setConf("_sound_ds",a_value)
 		SetSliderOptionValue(a_option, a_value, "{1}")
 	endIf
+	if (a_option == _slider_playback_dropoff_inside)
+		_playback_dropoff_inside = a_value
+		controlScript.setConf("_playback_dropoff_inside", _playback_dropoff_inside)
+		SetSliderOptionValue(a_option, a_value, "{0}")
+	endIf
+	if (a_option == _slider_playback_dropoff_outside)
+		_playback_dropoff_outside = a_value
+		controlScript.setConf("_playback_dropoff_outside", _playback_dropoff_outside)
+		SetSliderOptionValue(a_option, a_value, "{0}")
+	endIf
 	if (a_option == _slider_lip_int)
 		_lip_int = a_value
 		controlScript.setConf("_lip_int",_lip_int)
@@ -940,7 +1001,14 @@ event OnGameReload()
 	a=controlScript.setConf("_sound_postclip",_sound_postclip)
 	a=controlScript.setConf("_sound_preclip",_sound_preclip)
 	a=controlScript.setConf("_sound_volume",_sound_volume)
+	if (_sound_ds < 1.0)
+		_sound_ds = 1.0
+	elseif (_sound_ds > 5.0)
+		_sound_ds = 5.0
+	endIf
 	a=controlScript.setConf("_sound_ds",_sound_ds)
+	a=controlScript.setConf("_playback_dropoff_inside",_playback_dropoff_inside)
+	a=controlScript.setConf("_playback_dropoff_outside",_playback_dropoff_outside)
 	a=controlScript.setConf("_lip_int",_lip_int)
 	a=controlScript.setConf("_lip_res",_lip_res)
 	a=controlScript.setConf("_timeout",_timeout_int)
@@ -1098,6 +1166,14 @@ event OnOptionDefault(int a_option)
 	elseif (a_option == _slider_ds)
 		_sound_ds = _sound_dsDefault
 		SetSliderOptionValue(a_option, _sound_ds, "{1}")
+
+	elseif (a_option == _slider_playback_dropoff_inside)
+		_playback_dropoff_inside = _playback_dropoff_insideDefault
+		SetSliderOptionValue(a_option, _playback_dropoff_inside, "{0}")
+
+	elseif (a_option == _slider_playback_dropoff_outside)
+		_playback_dropoff_outside = _playback_dropoff_outsideDefault
+		SetSliderOptionValue(a_option, _playback_dropoff_outside, "{0}")
 
 	elseif (a_option == _slider_preclip)
 		_sound_preclip = _sound_preclipDefault
@@ -1589,10 +1665,12 @@ event OnOptionSelect(int a_option)
  		ShowMessage("factions and locations fully synced and complete!")
  	endIf
 	
- 	if (a_option == _actionSendVoices)
-		ShowMessage("Uploading all voice samples. Will take 5-10 seconds.")
-		AIAgentPapyrusFunctions.RunToolsSendAllVoiceSamples()
-		ShowMessage("Voice samples uploaded successfully")
+  	if (a_option == _actionSendVoices)
+		ShowMessage("Uploading all voice samples. Will take 20-30 seconds.")
+		int voiceUploadResult = AIAgentPapyrusFunctions.RunToolsSendAllVoiceSamples()
+		if (voiceUploadResult == 0)
+			ShowMessage("Voice samples uploaded successfully")
+		endif
 	endIf
 	
  	; Handle AI Agents page options
@@ -1712,7 +1790,13 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Skips specified millisecods at end of a sentence. Some TTS services add some silence at the end of audio clips.")
 	endIf
 	if (a_option == _slider_ds)
-		SetInfoText("Adjust AI NPC volume at distance.")
+		SetInfoText("Adjust AI NPC volume at distance. Range: 1.0 to 5.0.")
+	endIf
+	if (a_option == _slider_playback_dropoff_inside)
+		SetInfoText("Indoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
+	endIf
+	if (a_option == _slider_playback_dropoff_outside)
+		SetInfoText("Outdoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
 	endIf
 	if (a_option == _toggle1OID_E)
 		SetInfoText("Enable HD mode for Soulgaze (DirectX backbuffer access, server compression). Disable for in-game screenshots (VR users should disable).")
