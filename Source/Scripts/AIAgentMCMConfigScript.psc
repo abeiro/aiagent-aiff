@@ -303,7 +303,7 @@ endEvent
 
 event OnConfigInit()
 
-	ModName="Text Chat"
+	ModName="CHIM"
 	Pages = new string[7]
 	Pages[0] = "Main"
 	Pages[1] = "Auto Activate"
@@ -335,7 +335,7 @@ event OnConfigInit()
 		;controlScript.setSoulgazeModeNative(1)
 	endIf
 	if (CurrentVersion<29)
-		SetTitleText("Text Chat")
+		SetTitleText("CHIM")
 	endIf
 	
 	if (CurrentVersion<35)
@@ -455,12 +455,17 @@ endEvent
 
 int function GetVersion()
 
-	return 56
+	return 57
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 57 && a_version > CurrentVersion)
+		; Version 57: Restored CHIM MCM name and clarified Quest Creator entry point
+		OnConfigInit()
+	endIf
 
 	if (a_version == 56 && a_version > CurrentVersion)
 		; Version 56: Added playback dropoff aggressiveness sliders for indoor/outdoor audio playback
@@ -1919,7 +1924,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_settingsmenu)
-		SetInfoText("Open the CHIM Settings Menu. Central interface for all in-game settings from the 4 wheels. Game pauses when open, press hotkey again to close. Requires Prisma UI.")
+		SetInfoText("Open the CHIM Settings Menu. Central interface for all in-game settings from the 4 wheels, including Quest Creator (AI Quest Manager V1). Game pauses when open, press hotkey again to close. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_mastermenu)
