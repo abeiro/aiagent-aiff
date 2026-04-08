@@ -31,6 +31,7 @@ bool		currentTTSStatus= false
 bool		followingHerika= false
 bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
 bool		_chatboxFocusHotkeySuppressed = false
+bool		_playerMenuTTSPending = false
 
 int		_nativeSoulGaze= 1
 
@@ -73,12 +74,14 @@ EndFunction
 Event OnInit()
 	doBinding(_currentKey)
 	Debug.Trace("[CHIM] AIAgentPapyrusFunctions quest script OnInit()")
+	thirdPartyInit()
 	
 	; Start polling for pending settings menu actions
 	RegisterForSingleUpdate(0.1)
 EndEvent
 
 Event OnPlayerLoadGame()
+	thirdPartyInit()
 	; Re-arm polling after load to ensure Prisma pending actions are always processed.
 	RegisterForSingleUpdate(0.1)
 EndEvent
@@ -626,12 +629,37 @@ EndFunction
 
 
 bool Function thirdPartyInit()
-	Debug.Trace("[CHIM] thirdPartyInit")
 	UnRegisterForModEvent("CHIM_CommandReceivedInternal")
 	RegisterForModEvent("CHIM_CommandReceivedInternal", "CommandManager")
+	UnRegisterForModEvent("PlayMenuTopic")
+	RegisterForModEvent("PlayMenuTopic", "OnPlayerMenuTopicSelected")
+	UnRegisterForModEvent("AIAgent_PlayerMenuTTSFinished")
+	RegisterForModEvent("AIAgent_PlayerMenuTTSFinished", "OnPlayerMenuTTSFinished")
 	PlayerRefAlias.ForceRefTo(Game.GetPlayer());
 	
 EndFunction
+
+Event OnPlayerMenuTopicSelected(String eventName, String strArg, Float numArg, Form sender)
+	_playerMenuTTSPending = false
+
+	int started = AIAgentFunctions.startPlayerMenuDialogueTTS(strArg)
+	if (started > 0)
+		_playerMenuTTSPending = true
+	else
+		UI.InvokeString("Dialogue Menu", "_root.DialogueMenu_mc.startTopicClickedTimer", "off")
+	endif
+EndEvent
+
+Event OnPlayerMenuTTSFinished(String eventName, String strArg, Float numArg, Form sender)
+	if (!_playerMenuTTSPending)
+		return
+	endif
+
+	_playerMenuTTSPending = false
+	if (UI.IsMenuOpen("Dialogue Menu"))
+		UI.InvokeString("Dialogue Menu", "_root.DialogueMenu_mc.startTopicClickedTimer", "off")
+	endif
+EndEvent
 
 
 Function InitTSE() 
