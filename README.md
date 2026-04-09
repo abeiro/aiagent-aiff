@@ -1,0 +1,1 @@
+CHIM plugin client files
