@@ -81,6 +81,9 @@ bool		_invertheadingstate			= false
 int			_togglePauseDialogue
 bool		_pauseDialogueState			= false
 
+int			_togglePlayerTtsTraditionalDialogue
+bool		_playerTtsTraditionalDialogueState	= false
+
 
 ; Auto Activate related
 
@@ -244,6 +247,7 @@ float		_timeout_intDefault				= 30.0
 bool		_animationstateDefault			= false
 bool		_invertheadingstateDefault		= false
 bool		_pauseDialogueStateDefault		= false
+bool		_playerTtsTraditionalDialogueStateDefault = false
 bool 		_rechat_policy_asap_default		= true
 bool		_toggle_openmic_stateDefault	= false
 float		_openmic_sensitivityDefault		= 1000.0
@@ -298,6 +302,15 @@ event OnPlayerLoadGame()
 	else
 		_toggle_cancel_dialogue_on_combat_state = false
 		controlScript.setConf("_cancel_dialogue_on_combat", 0)
+	endIf
+
+	int traditionalDialoguePlayerTtsValue = AIAgentFunctions.get_conf_i("_player_tts_traditional_dialogue")
+	if (traditionalDialoguePlayerTtsValue > 0)
+		_playerTtsTraditionalDialogueState = true
+		controlScript.setConf("_player_tts_traditional_dialogue", 1)
+	else
+		_playerTtsTraditionalDialogueState = false
+		controlScript.setConf("_player_tts_traditional_dialogue", 0)
 	endIf
 endEvent
 
@@ -392,6 +405,15 @@ event OnConfigInit()
 		controlScript.setConf("_cancel_dialogue_on_combat", 0)
 	endIf
 
+	int traditionalDialoguePlayerTtsValue = AIAgentFunctions.get_conf_i("_player_tts_traditional_dialogue")
+	if (traditionalDialoguePlayerTtsValue > 0)
+		_playerTtsTraditionalDialogueState = true
+		controlScript.setConf("_player_tts_traditional_dialogue", 1)
+	else
+		_playerTtsTraditionalDialogueState = false
+		controlScript.setConf("_player_tts_traditional_dialogue", 0)
+	endIf
+
 	; Load spatial hearing distance settings
 	int spatialHearingInsideValue = AIAgentFunctions.get_conf_i("_spatial_hearing_inside")
 	if (spatialHearingInsideValue > 0)
@@ -455,12 +477,17 @@ endEvent
 
 int function GetVersion()
 
-	return 57
+	return 58
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 58 && a_version > CurrentVersion)
+		; Version 58: Added optional Player TTS for traditional dialogue toggle
+		OnConfigInit()
+	endIf
 
 	if (a_version == 57 && a_version > CurrentVersion)
 		; Version 57: Restored CHIM MCM name and clarified Quest Creator entry point
@@ -579,6 +606,7 @@ event OnPageReset(string a_page)
 		; === Settings ===
 		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
 		_toggleAnimation		= AddToggleOption("Enable Animations", _animationstate)
+		_togglePlayerTtsTraditionalDialogue = AddToggleOption("Player TTS for Traditional Dialogue", _playerTtsTraditionalDialogueState)
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
 		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
 	endif
@@ -1203,6 +1231,11 @@ event OnOptionDefault(int a_option)
 	elseif (a_option == _togglePauseDialogue)
 		_pauseDialogueState = _pauseDialogueStateDefault
 		SetToggleOptionValue(a_option, _pauseDialogueState)
+
+	elseif (a_option == _togglePlayerTtsTraditionalDialogue)
+		_playerTtsTraditionalDialogueState = _playerTtsTraditionalDialogueStateDefault
+		controlScript.setConf("_player_tts_traditional_dialogue", 0)
+		SetToggleOptionValue(a_option, _playerTtsTraditionalDialogueState)
 		
 	elseif (a_option == _toggle_openmic)
 		_toggle_openmic_state = _toggle_openmic_stateDefault
@@ -1505,6 +1538,18 @@ event OnOptionSelect(int a_option)
 		endif
 		
 		SetToggleOptionValue(a_option, _pauseDialogueState)
+	endIf
+
+	if (a_option == _togglePlayerTtsTraditionalDialogue)
+		_playerTtsTraditionalDialogueState = !_playerTtsTraditionalDialogueState
+		
+		if (_playerTtsTraditionalDialogueState)
+			controlScript.setConf("_player_tts_traditional_dialogue",1)
+		else
+			controlScript.setConf("_player_tts_traditional_dialogue",0)
+		endif
+		
+		SetToggleOptionValue(a_option, _playerTtsTraditionalDialogueState)
 	endIf
 	
 	if (a_option == _toggleRechat_policy_asap)
@@ -1833,6 +1878,10 @@ event OnOptionHighlight(int a_option)
 
 	if (a_option == _togglePauseDialogue)
 		SetInfoText("Enable to pause dialogue during game pauses. Disable to allow dialogue to continue during game pauses.")
+	endIf
+
+	if (a_option == _togglePlayerTtsTraditionalDialogue)
+		SetInfoText("Will play whatever PlayerTTS is selected for traditional dialogue. It must be enabled and set within the CHIM webpage for this to work.")
 	endIf
 
 	if (a_option == _slider_max_distance_inside)

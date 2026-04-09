@@ -642,6 +642,11 @@ EndFunction
 Event OnPlayerMenuTopicSelected(String eventName, String strArg, Float numArg, Form sender)
 	_playerMenuTTSPending = false
 
+	if (AIAgentFunctions.get_conf_i("_player_tts_traditional_dialogue") <= 0)
+		UI.InvokeString("Dialogue Menu", "_root.DialogueMenu_mc.startTopicClickedTimer", "off")
+		return
+	endif
+
 	int started = AIAgentFunctions.startPlayerMenuDialogueTTS(strArg)
 	if (started > 0)
 		_playerMenuTTSPending = true
