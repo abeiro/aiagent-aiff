@@ -1881,7 +1881,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 
 	if (a_option == _togglePlayerTtsTraditionalDialogue)
-		SetInfoText("Will play whatever PlayerTTS is selected for traditional dialogue. It must be enabled and set within the CHIM webpage for this to work.")
+		SetInfoText("Will play whatever PlayerTTS is selected for traditional dialogue. It must be enabled and set within the CHIM webpage and requires the optional regular or VR dialogue menu interface patch.")
 	endIf
 
 	if (a_option == _slider_max_distance_inside)
