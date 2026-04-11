@@ -3,6 +3,7 @@
   <moduleName>CHIM - AI Agent</moduleName>
   <requiredInstallFiles>
     <file source="AIAgent.esp" destination="AIAgent.esp" priority="0" />
+    <file source="DwemerDistro.exe" destination="DwemerDistro.exe" priority="0" />
     <folder source="AIAgent" destination="AIAgent" priority="0" />
     <folder source="PrismaUI" destination="PrismaUI" priority="0" />
     <folder source="Scripts" destination="Scripts" priority="0" />
@@ -16,20 +17,13 @@
       <optionalFileGroups order="Explicit">
         <group name="Choose one" type="SelectExactlyOne">
           <plugins order="Explicit">
-            <plugin name="None">
-              <description>Default. Does not install a dialogue menu override.</description>
-              <files />
-              <typeDescriptor>
-                <type name="Recommended" />
-              </typeDescriptor>
-            </plugin>
-            <plugin name="Regular Skyrim">
+            <plugin name="SE/AE Skyrim">
               <description>Use for Skyrim SE/AE.</description>
               <files>
                 <folder source="Optional\TraditionalDialoguePlayerTTS\Interface" destination="Interface" priority="10" />
               </files>
               <typeDescriptor>
-                <type name="Optional" />
+                <type name="Recommended" />
               </typeDescriptor>
             </plugin>
             <plugin name="Skyrim VR">
