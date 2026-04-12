@@ -1082,6 +1082,12 @@ event OnGameReload()
 	else
 		a=controlScript.setConf("_pause_dialogue_when_menu_open",0)
 	endif
+
+	if (_playerTtsTraditionalDialogueState)
+		a=controlScript.setConf("_player_tts_traditional_dialogue",1)
+	else
+		a=controlScript.setConf("_player_tts_traditional_dialogue",0)
+	endif
 	
 	if (_toggle_autoadd_hostile_state)
 		a=controlScript.setConf("_autoadd_hostile",1)
