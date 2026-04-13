@@ -304,12 +304,11 @@ event OnPlayerLoadGame()
 		controlScript.setConf("_cancel_dialogue_on_combat", 0)
 	endIf
 
-	int traditionalDialoguePlayerTtsValue = AIAgentFunctions.get_conf_i("_player_tts_traditional_dialogue")
-	if (traditionalDialoguePlayerTtsValue > 0)
-		_playerTtsTraditionalDialogueState = true
+	; Restore Player TTS from the saved MCM state instead of the DLL's current runtime flag.
+	; The native flag boots false on a fresh load, so reading it here forces the feature off.
+	if (_playerTtsTraditionalDialogueState)
 		controlScript.setConf("_player_tts_traditional_dialogue", 1)
 	else
-		_playerTtsTraditionalDialogueState = false
 		controlScript.setConf("_player_tts_traditional_dialogue", 0)
 	endIf
 endEvent
@@ -1082,6 +1081,12 @@ event OnGameReload()
 		a=controlScript.setConf("_pause_dialogue_when_menu_open",1)
 	else
 		a=controlScript.setConf("_pause_dialogue_when_menu_open",0)
+	endif
+
+	if (_playerTtsTraditionalDialogueState)
+		a=controlScript.setConf("_player_tts_traditional_dialogue",1)
+	else
+		a=controlScript.setConf("_player_tts_traditional_dialogue",0)
 	endif
 	
 	if (_toggle_autoadd_hostile_state)
@@ -1881,7 +1886,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 
 	if (a_option == _togglePlayerTtsTraditionalDialogue)
-		SetInfoText("Will play whatever PlayerTTS is selected for traditional dialogue. It must be enabled and set within the CHIM webpage for this to work.")
+		SetInfoText("Will play whatever PlayerTTS is selected for traditional dialogue. It must be enabled and set within the CHIM webpage and requires the optional regular or VR dialogue menu interface patch.")
 	endIf
 
 	if (a_option == _slider_max_distance_inside)

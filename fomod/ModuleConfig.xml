@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+  <moduleName>CHIM - AI Agent</moduleName>
+  <requiredInstallFiles>
+    <file source="AIAgent.esp" destination="AIAgent.esp" priority="0" />
+    <file source="DwemerDistro.exe" destination="DwemerDistro.exe" priority="0" />
+    <folder source="AIAgent" destination="AIAgent" priority="0" />
+    <folder source="PrismaUI" destination="PrismaUI" priority="0" />
+    <folder source="Scripts" destination="Scripts" priority="0" />
+    <folder source="SKSE" destination="SKSE" priority="0" />
+    <folder source="Sound" destination="Sound" priority="0" />
+    <folder source="Source" destination="Source" priority="0" />
+    <folder source="Textures" destination="Textures" priority="0" />
+  </requiredInstallFiles>
+  <installSteps order="Explicit">
+    <installStep name="Player Dialogue Menu">
+      <optionalFileGroups order="Explicit">
+        <group name="Choose one (required for player dialogue TTS)" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="Vanilla SE/AE Skyrim UI">
+              <description>Installs the Skyrim SE/AE player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim SE/AE.</description>
+              <files>
+                <folder source="Optional\TraditionalDialoguePlayerTTS\Interface" destination="Interface" priority="10" />
+              </files>
+              <typeDescriptor>
+                <type name="Recommended" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="Skyrim VR">
+              <description>Installs the Skyrim VR player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim VR.</description>
+              <files>
+                <folder source="Optional\TraditionalDialoguePlayerTTS-VR\Interface" destination="Interface" priority="10" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="None (Disable Player Dialogue TTS)">
+              <description>Installs no Player Dialogue menu overwrite. If you choose this, the Player Dialogue TTS feature will not function in-game.</description>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
+</config>

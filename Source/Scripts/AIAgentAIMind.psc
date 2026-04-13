@@ -882,6 +882,14 @@ function OpenInventory(Actor npc,string originalCommand) global
 	Faction CurrentFollowerFaction=Game.GetForm(0x5c84e) as Faction; PlayerFollowerFaction
 	Debug.Notification("[CHIM] OpenInventory "+npc.GetDisplayName() )
 	
+	float now = Utility.GetCurrentRealTime()
+	float lastInventoryMenuOpen = StorageUtil.GetFloatValue(npc, "CHIM_LastInventoryMenuOpenRealTime", -999.0)
+	if ((now - lastInventoryMenuOpen) < 2.5)
+		Debug.Trace("[CHIM] Suppressing rapid inventory reopen for "+npc.GetDisplayName()+" via "+originalCommand)
+		return
+	endif
+	StorageUtil.SetFloatValue(npc, "CHIM_LastInventoryMenuOpenRealTime", now)
+	
 	if (originalCommand=="OpenInventory2")
 		Debug.Trace("[CHIM] Call ShowGiftMenu "+npc.GetDisplayName() )
 		npc.ShowGiftMenu(true,None,false,false);

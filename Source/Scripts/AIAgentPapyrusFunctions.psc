@@ -631,10 +631,10 @@ EndFunction
 bool Function thirdPartyInit()
 	UnRegisterForModEvent("CHIM_CommandReceivedInternal")
 	RegisterForModEvent("CHIM_CommandReceivedInternal", "CommandManager")
+	; Traditional dialogue Player TTS is handled in native code.
+	; Re-registering the Papyrus bridge here can resume the held topic twice.
 	UnRegisterForModEvent("PlayMenuTopic")
-	RegisterForModEvent("PlayMenuTopic", "OnPlayerMenuTopicSelected")
 	UnRegisterForModEvent("AIAgent_PlayerMenuTTSFinished")
-	RegisterForModEvent("AIAgent_PlayerMenuTTSFinished", "OnPlayerMenuTTSFinished")
 	PlayerRefAlias.ForceRefTo(Game.GetPlayer());
 	
 EndFunction
