@@ -13,12 +13,12 @@
     <folder source="Textures" destination="Textures" priority="0" />
   </requiredInstallFiles>
   <installSteps order="Explicit">
-    <installStep name="Dialogue Menu Patch">
+    <installStep name="Player Dialogue Menu">
       <optionalFileGroups order="Explicit">
-        <group name="Choose one" type="SelectExactlyOne">
+        <group name="Choose one (required for player dialogue TTS)" type="SelectExactlyOne">
           <plugins order="Explicit">
             <plugin name="SE/AE Skyrim">
-              <description>Use for Skyrim SE/AE.</description>
+              <description>Installs the Skyrim SE/AE player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim SE/AE.</Description>
               <files>
                 <folder source="Optional\TraditionalDialoguePlayerTTS\Interface" destination="Interface" priority="10" />
               </files>
@@ -27,10 +27,16 @@
               </typeDescriptor>
             </plugin>
             <plugin name="Skyrim VR">
-              <description>Use for Skyrim VR.</description>
+              <description>Installs the Skyrim VR player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim VR.</description>
               <files>
                 <folder source="Optional\TraditionalDialoguePlayerTTS-VR\Interface" destination="Interface" priority="10" />
               </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="None (Disable Player Dialogue TTS)">
+              <description>Installs no Player Dialogue menu overwrite. If you choose this, the Player Dialogue TTS feature will not function in-game.</description>
               <typeDescriptor>
                 <type name="Optional" />
               </typeDescriptor>
