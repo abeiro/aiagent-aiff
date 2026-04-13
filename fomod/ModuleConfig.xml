@@ -18,7 +18,7 @@
         <group name="Choose one (required for player dialogue TTS)" type="SelectExactlyOne">
           <plugins order="Explicit">
             <plugin name="Vanilla SE/AE Skyrim UI">
-              <description>Installs the Skyrim SE/AE player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim SE/AE.</Description>
+              <description>Installs the Skyrim SE/AE player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim SE/AE.</description>
               <files>
                 <folder source="Optional\TraditionalDialoguePlayerTTS\Interface" destination="Interface" priority="10" />
               </files>
