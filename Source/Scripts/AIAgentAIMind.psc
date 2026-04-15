@@ -1237,6 +1237,8 @@ endFunction
 
 Function GetIntoConversation(Actor npc,ObjectReference reference) global
 
+	BackgroundCmd(npc,"Track")
+
 	int isActive=StorageUtil.GetIntValue(None, "AIAgentNpcWalkNear",1);
 	if (isActive==0)
 		Debug.Trace("[CHIM] GetIntoConversation for "+npc.GetDisplayName()+" not active")
