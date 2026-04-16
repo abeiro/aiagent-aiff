@@ -497,12 +497,22 @@ endEvent
 
 int function GetVersion()
 
-	return 62
+	return 64
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 64 && a_version > CurrentVersion)
+		; Version 64: Reordered Prisma UI hotkeys and restored Dialogue History entry
+		OnConfigInit()
+	endIf
+
+	if (a_version == 63 && a_version > CurrentVersion)
+		; Version 63: Simplified Prisma UI hotkeys and updated Prisma labels
+		OnConfigInit()
+	endIf
 
 	if (a_version == 62 && a_version > CurrentVersion)
 		; Version 62: Moved Recording Device section below Open Mic Settings
@@ -735,18 +745,15 @@ event OnPageReset(string a_page)
 	endif
 	
 	if (a_page=="Prisma UI")
-		AddHeaderOption("View Cycling Hotkeys")
-		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries Cycle", _historydiaries_cycle_key)
-		_keymap_overlaystatus_cycle = AddKeyMapOption("Overlay/Status/AI View Cycle", _overlaystatus_cycle_key)
-		
-		AddEmptyOption()
-		AddHeaderOption("Panel Hotkeys")
+		AddHeaderOption("Hotkeys")
 		_keymap_mastermenu = AddKeyMapOption("Master Menu", _mastermenu_key)
+		_keymap_chatbox_focus = AddKeyMapOption("Text Chat", _chatbox_focus_key)
+		_keymap_chatbox = AddKeyMapOption("Dialogue History", _chatbox_key)
+		_keymap_settingsmenu = AddKeyMapOption("Actions Menu", _settingsmenu_key)
+		_keymap_overlaystatus_cycle = AddKeyMapOption("Status, Minihud, Terminator Views", _overlaystatus_cycle_key)
+		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries", _historydiaries_cycle_key)
 		_keymap_browser = AddKeyMapOption("Browser (Beta)", _browser_key)
 		_keymap_debugger = AddKeyMapOption("Logs View (Beta)", _debugger_key)
-		_keymap_chatbox = AddKeyMapOption("Chatbox", _chatbox_key)
-		_keymap_chatbox_focus = AddKeyMapOption("Chatbox Type Message", _chatbox_focus_key)
-		_keymap_settingsmenu = AddKeyMapOption("Settings Menu", _settingsmenu_key)
 	endif
 	
 	if (a_page=="AI Agents")
@@ -2033,7 +2040,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_overlaystatus_cycle)
-		SetInfoText("Cycle through CHIM UI states: Press once for Overlay, press again for Status HUD, press again for AI View, press again to close. Convenient single-key access to all info panels. Requires Prisma UI.")
+		SetInfoText("Cycle through the Prisma status views: Status, Minihud, and Terminator. Press again to close. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_browser)
@@ -2045,15 +2052,15 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_chatbox)
-		SetInfoText("Toggle the CHIM Chatbox. MMO-style chat interface with Chat tab for AI dialogue and System tab for DLL errors. Type messages to communicate with AI agents. Requires Prisma UI.")
+		SetInfoText("Open the Dialogue History panel in Prisma UI. This shows recent AI dialogue and system chat history. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_chatbox_focus)
-		SetInfoText("Focus/Unfocus the CHIM Chatbox. When chatbox is visible but unfocused, press to enable typing. When focused, press to send message and return control to game.")
+		SetInfoText("Open text chat input for Prisma UI so you can type and send a message, then return control to the game.")
 	endIf
 	
 	if (a_option == _keymap_settingsmenu)
-		SetInfoText("Open the CHIM Settings Menu. Central interface for all in-game settings from the 4 wheels, including Quest Creator (AI Quest Manager V1). Game pauses when open, press hotkey again to close. Requires Prisma UI.")
+		SetInfoText("Open the Actions Menu. This is the Prisma UI action panel for in-game AI interactions and commands. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_mastermenu)
