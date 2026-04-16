@@ -74,6 +74,8 @@ bool		_animationstate			= false
 
 int			_toggle1OID_Rereg
 
+int			_toggleEnable3DAudioPlayback
+bool		_enable3daudioplaybackstate		= true
 
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
@@ -245,6 +247,7 @@ float		_lip_resDefault					= 500.0
 float		_lip_intDefault					= 1.0
 float		_timeout_intDefault				= 30.0
 bool		_animationstateDefault			= false
+bool		_enable3daudioplaybackstateDefault	= true
 bool		_invertheadingstateDefault		= false
 bool		_pauseDialogueStateDefault		= false
 bool		_playerTtsTraditionalDialogueStateDefault = false
@@ -311,6 +314,12 @@ event OnPlayerLoadGame()
 	else
 		controlScript.setConf("_player_tts_traditional_dialogue", 0)
 	endIf
+
+	if (_enable3daudioplaybackstate)
+		controlScript.setConf("_enable_3d_audio_playback", 1)
+	else
+		controlScript.setConf("_enable_3d_audio_playback", 0)
+	endIf
 endEvent
 
 event OnConfigInit()
@@ -363,6 +372,10 @@ event OnConfigInit()
 	
 	if (CurrentVersion<43)
 		_dynamic_profile_period=20
+	endIf
+
+	if (CurrentVersion<59)
+		_enable3daudioplaybackstate = true
 	endIf
 	
 	; Load combat dialogue settings
@@ -445,6 +458,12 @@ event OnConfigInit()
 		_playback_dropoff_outside = 70.0
 	endIf
 	controlScript.setConf("_playback_dropoff_outside", _playback_dropoff_outside)
+
+	if (_enable3daudioplaybackstate)
+		controlScript.setConf("_enable_3d_audio_playback", 1)
+	else
+		controlScript.setConf("_enable_3d_audio_playback", 0)
+	endIf
 	
 	if (CurrentVersion<38)
 		_toggle_autofocus_on_sit=0
@@ -476,12 +495,17 @@ endEvent
 
 int function GetVersion()
 
-	return 58
+	return 59
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 59 && a_version > CurrentVersion)
+		; Version 59: Added player-facing 3D audio playback toggle
+		OnConfigInit()
+	endIf
 
 	if (a_version == 58 && a_version > CurrentVersion)
 		; Version 58: Added optional Player TTS for traditional dialogue toggle
@@ -663,6 +687,7 @@ event OnPageReset(string a_page)
 		_slider_ds			= AddSliderOption("AI Voice Distance Scale",_sound_ds,"{1}" )
 		_slider_playback_dropoff_inside = AddSliderOption("Interior Playback Dropoff (%)", _playback_dropoff_inside, "{0}")
 		_slider_playback_dropoff_outside = AddSliderOption("Exterior Playback Dropoff (%)", _playback_dropoff_outside, "{0}")
+		_toggleEnable3DAudioPlayback = AddToggleOption("Enable 3D Audio Playback", _enable3daudioplaybackstate)
 		
 		AddEmptyOption()
 		AddHeaderOption("Advanced")
@@ -1041,6 +1066,11 @@ event OnGameReload()
 	a=controlScript.setConf("_sound_ds",_sound_ds)
 	a=controlScript.setConf("_playback_dropoff_inside",_playback_dropoff_inside)
 	a=controlScript.setConf("_playback_dropoff_outside",_playback_dropoff_outside)
+	if (_enable3daudioplaybackstate)
+		a=controlScript.setConf("_enable_3d_audio_playback",1)
+	else
+		a=controlScript.setConf("_enable_3d_audio_playback",0)
+	endif
 	a=controlScript.setConf("_lip_int",_lip_int)
 	a=controlScript.setConf("_lip_res",_lip_res)
 	a=controlScript.setConf("_timeout",_timeout_int)
@@ -1228,6 +1258,15 @@ event OnOptionDefault(int a_option)
 	elseif (a_option == _slider_lip_int)
 		_lip_int = _lip_intDefault
 		SetSliderOptionValue(a_option, _lip_int, "{1}")
+
+	elseif (a_option == _toggleEnable3DAudioPlayback)
+		_enable3daudioplaybackstate = _enable3daudioplaybackstateDefault
+		if (_enable3daudioplaybackstate)
+			controlScript.setConf("_enable_3d_audio_playback", 1)
+		else
+			controlScript.setConf("_enable_3d_audio_playback", 0)
+		endif
+		SetToggleOptionValue(a_option, _enable3daudioplaybackstate)
 
 	elseif (a_option == _toggleInvertHeading)
 		_invertheadingstate = _invertheadingstateDefault
@@ -1519,6 +1558,18 @@ event OnOptionSelect(int a_option)
 	if (a_option == _toggle1OID_Rereg)
 		ConsoleUtil.ExecuteCommand("SetStage SKI_ConfigManagerInstance 1")
 		ShowMessage("Close menu")
+	endIf
+
+	if (a_option == _toggleEnable3DAudioPlayback)
+		_enable3daudioplaybackstate = !_enable3daudioplaybackstate
+
+		if (_enable3daudioplaybackstate)
+			controlScript.setConf("_enable_3d_audio_playback",1)
+		else
+			controlScript.setConf("_enable_3d_audio_playback",0)
+		endif
+
+		SetToggleOptionValue(a_option, _enable3daudioplaybackstate)
 	endIf
 	
 	if (a_option == _toggleInvertHeading)
@@ -1853,6 +1904,9 @@ event OnOptionHighlight(int a_option)
 	if (a_option == _slider_playback_dropoff_outside)
 		SetInfoText("Outdoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
 	endIf
+	if (a_option == _toggleEnable3DAudioPlayback)
+		SetInfoText("Controls player-heard 3D voice playback only. Disabling this keeps spatial dialogue awareness for who can hear speech, but plays voices back in flat 2D.")
+	endIf
 	if (a_option == _toggle1OID_E)
 		SetInfoText("Enable HD mode for Soulgaze (DirectX backbuffer access, server compression). Disable for in-game screenshots (VR users should disable).")
 	endIf
@@ -1878,7 +1932,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggleInvertHeading)
-		SetInfoText("When using 3D sound, it will try inverting the heading. This may resolve issues where NPCs in the front are heard at a lower volume.")
+		SetInfoText("When 3D audio playback is enabled, it will try inverting the heading. This may resolve issues where NPCs in the front are heard at a lower volume.")
 	endIf
 
 	if (a_option == _togglePauseDialogue)
