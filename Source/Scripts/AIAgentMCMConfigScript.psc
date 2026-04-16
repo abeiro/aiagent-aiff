@@ -1896,7 +1896,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Settings Wheel - Looking at NPC: Assign profiles (1-4). Not looking: Switch LLM models, toggle focus chat.")
 	endIf
 	if (a_option == _keymapOID_K4)
-		SetInfoText("Roleplay Wheel - Write Diary, Gather NPCs, Follow NPC, Update NPC, Wait/Follow, Stop All AI, Add to BgL. Hold it for nearby NPCs to write diary entries.")
+		SetInfoText("Roleplay Wheel - Write Diary, Gather NPCs, Update NPC, Wait/Follow, Stop All AI, Add to BgL. Hold it for nearby NPCs to write diary entries.")
 	endIf
 	if (a_option == _keymapOID_K5)
 		SetInfoText("Change AI/LLM Connector.")

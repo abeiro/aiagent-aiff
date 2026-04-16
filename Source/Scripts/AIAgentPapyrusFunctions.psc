@@ -4,7 +4,6 @@ ReferenceAlias Property PlayerRefAlias  Auto
 
 
 Spell Property IntimacySpell  Auto  
-AIAgentFollowNPCQuestScript Property FollowNPCQuestScript Auto
 
 
 int			_currentKey = 0x52
@@ -28,7 +27,6 @@ int 		_currentSettingsMenuKey
 int 		_currentMasterMenuKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
-bool		followingHerika= false
 bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
 bool		_chatboxFocusHotkeySuppressed = false
 bool		_playerMenuTTSPending = false
@@ -52,7 +50,6 @@ int _currentModeIndex = 0
 float storedMusicVolValue 
 
 
-Actor	currentPlayerFollowTarget;
 Actor	currentPlayerHorse;
 
 
@@ -693,11 +690,6 @@ bool Function setNewActionMode( int mode)
 	
 
 	; Removed action mode notifications - no longer displayed on save load
-	
-	if (!FollowNPCQuestScript)
-		Quest source =  Game.GetFormFromFile(0x2a3e4,"AIAgent.esp") as Quest;
-		FollowNPCQuestScript = source as AIAgentFollowNPCQuestScript
-	endif
 		
 	InitTSE();	
 	a=thirdPartyInit();	
@@ -985,32 +977,30 @@ Function OpenRoleplayWheel()
 		leader = crosshairRef as Actor
 	EndIf
 	
-	String[] _modes = new String[8]
+	String[] _modes = new String[7]
 	_modes[0] = "Write Diary"
 	_modes[1] = "GATHER"
-	_modes[2] = "FOLLOW_NPC"
-	_modes[3] = "UPDATE_NPC"
-	_modes[4] = "WAIT"
-	_modes[5] = "FOLLOW"
-	_modes[6] = "HALT"
-	_modes[7] = "RENAME"
+	_modes[2] = "UPDATE_NPC"
+	_modes[3] = "WAIT"
+	_modes[4] = "FOLLOW"
+	_modes[5] = "HALT"
+	_modes[6] = "RENAME"
 	
-	String[] _label = new String[8]
+	String[] _label = new String[7]
 	_label[0] = "Write Diary"
 	_label[1] = "Gather friends"
-	_label[2] = "Follow NPC"
-	_label[3] = "Update NPC"
-	_label[4] = "Wait Here"
-	_label[5] = "Follow Me"
-	_label[6] = "Stop All AI"
-	_label[7] = "Add to BgL"
+	_label[2] = "Update NPC"
+	_label[3] = "Wait Here"
+	_label[4] = "Follow Me"
+	_label[5] = "Stop All AI"
+	_label[6] = "Add to BgL"
 
 	if leader
 		if leader.GetrelationShipRank(Game.GetPlayer()) < 0
-			_label[4] = "Force Wait"
-			_label[5] = "Force Follow"
+			_label[3] = "Force Wait"
+			_label[4] = "Force Follow"
 		elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
-			_label[5] = "Force Follow"
+			_label[4] = "Force Follow"
 		endif
 	endif
 	
@@ -1039,40 +1029,9 @@ Function OpenRoleplayWheel()
 			; No target - check if looking up for Narrator diary
 			Debug.Trace("[CHIM] Diary with no target - routing to handler for camera pitch detection")
 			AIAgentFunctions.requestMessageForActor("Please, update your diary","diary","")
-		EndIf
+	EndIf
 	ElseIf ( currentMode ==  "GATHER")
 		AIAgentAIMind.GatherAround()
-	ElseIf ( currentMode ==  "FOLLOW_NPC")
-		If (leader)
-			if (!followingHerika)
-				followingHerika=true
-				Actor player=Game.GetPlayer()
-				Game.SetPlayerAiDriven(true)
-				currentPlayerFollowTarget = leader
-				Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-				
-				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
-			else
-				Actor player=Game.GetPlayer()
-				player.ClearKeepOffsetFromActor()
-				Game.SetPlayerAiDriven(false)
-				Game.EnablePlayerControls()
-				FollowNPCQuestScript.stopFollowing(leader);
-				followingHerika=false
-			endif
-		Else
-			if (followingHerika)
-				Actor player=Game.GetPlayer()
-				player.ClearKeepOffsetFromActor()
-				Game.SetPlayerAiDriven(false)
-				Game.EnablePlayerControls()
-				
-				FollowNPCQuestScript.stopFollowing(leader);
-				followingHerika=false
-			else
-				Debug.Notification("[CHIM] You must look at a target to use this")
-			endif
-		EndIf
 	ElseIf ( currentMode ==  "UPDATE_NPC")
 		If (leader)
 			Debug.Trace("[CHIM] Updating dynamic profile for "+leader.GetDisplayName())
