@@ -10,6 +10,7 @@ int function stopRecording(int bindedKey)  Global Native
 int function startOpenMicMonitoring()  Global Native
 int function stopOpenMicMonitoring()  Global Native
 int function setOpenMicMuted(bool muted)  Global Native
+String function getCurrentRecordingDeviceName() Global Native
 int function setNewActionMode(int mode)  Global Native
 int function logMessage(String a_msg,String type) Global Native			; Send message for logging purposes. Doesn't expect response
 int function logMessageForActor(String a_msg,String type,String npc) Global Native			; Send message for logging purposes. Doesn't expect response

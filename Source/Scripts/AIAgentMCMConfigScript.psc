@@ -151,6 +151,8 @@ float		_openmic_enddelay				= 1.0
 int			_keymap_openmic_mute
 int			_openmic_mute_key				= -1
 
+int			_text_current_recording_device
+
 
 int			_keymap_godmode
 int			_godmode_key					= -1
@@ -495,12 +497,27 @@ endEvent
 
 int function GetVersion()
 
-	return 59
+	return 62
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 62 && a_version > CurrentVersion)
+		; Version 62: Moved Recording Device section below Open Mic Settings
+		OnConfigInit()
+	endIf
+
+	if (a_version == 61 && a_version > CurrentVersion)
+		; Version 61: Renamed Recording Device row to Current Device for clearer MCM display
+		OnConfigInit()
+	endIf
+
+	if (a_version == 60 && a_version > CurrentVersion)
+		; Version 60: Added dedicated Recording Device section to the Sound page
+		OnConfigInit()
+	endIf
 
 	if (a_version == 59 && a_version > CurrentVersion)
 		; Version 59: Added player-facing 3D audio playback toggle
@@ -709,6 +726,10 @@ event OnPageReset(string a_page)
 		_slider_openmic_sensitivity = AddSliderOption("Voice Detection Sensitivity", _openmic_sensitivity, "{0}")
 		_slider_openmic_enddelay = AddSliderOption("End of Sentence Delay (seconds)", _openmic_enddelay, "{1}")
 		_keymap_openmic_mute = AddKeyMapOption("Mute Open Mic", _openmic_mute_key)
+
+		AddEmptyOption()
+		AddHeaderOption("Recording Device")
+		_text_current_recording_device = AddTextOption("Current Device", AIAgentFunctions.getCurrentRecordingDeviceName())
 
 	
 	endif
@@ -1863,7 +1884,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Enables Text-to-Speech for AI NPCs.")
 	endIf
 	if (a_option == _keymapOID_K2)
-		SetInfoText("Push-to-Talk: Speak with AI NPCs or summarize open books. Ensure your microphone is set as default recording device in Windows.")
+		SetInfoText("Push-to-Talk: Speak with AI NPCs or summarize open books. CHIM records from the current Windows default recording device shown below.")
 	endIf
 	if (a_option == _toggle1OID_C)
 		SetInfoText("Enable AI to perform actions.")
@@ -2069,6 +2090,9 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_openmic_mute)
 		SetInfoText("Key to temporarily mute open microphone.")
+	endIf
+	if (a_option == _text_current_recording_device)
+		SetInfoText("Read-only display of the Windows recording device currently resolved by CHIM's voice capture path.")
 	endIf
 	
 
