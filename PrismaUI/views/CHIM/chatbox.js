@@ -305,6 +305,10 @@
         sendControlCommand('stop_all_dialogue');
     };
 
+    window.triggerHaltAIActions = function() {
+        sendControlCommand('halt_ai_actions');
+    };
+
     if (focusInput) {
         focusInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
