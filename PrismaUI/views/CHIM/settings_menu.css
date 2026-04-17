@@ -192,6 +192,30 @@ body {
     transform: scale(0.98);
 }
 
+.setting-btn.is-active {
+    background: linear-gradient(180deg, rgba(242, 124, 17, 0.34) 0%, rgba(150, 68, 8, 0.28) 100%);
+    border-color: rgba(242, 124, 17, 0.92);
+    color: #fff4df;
+    box-shadow: 0 0 0 1px rgba(255, 218, 176, 0.12), 0 8px 22px rgba(242, 124, 17, 0.22);
+}
+
+.setting-btn.is-active::after {
+    content: 'Active';
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 0.66em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 229, 192, 0.9);
+    pointer-events: none;
+}
+
+.setting-btn.profile-btn.is-active .profile-name {
+    color: #fff4df;
+}
+
 .setting-btn.is-busy,
 .setting-btn:disabled {
     opacity: 0.7;

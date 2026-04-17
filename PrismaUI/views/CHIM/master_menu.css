@@ -143,6 +143,43 @@ body {
     z-index: auto;
 }
 
+.prisma-panels-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    max-width: 1060px;
+    margin: 0 auto;
+}
+
+.primary-actions-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 260px));
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.secondary-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.secondary-actions-row .setting-btn {
+    flex: 0 1 220px;
+    max-width: 240px;
+}
+
+.primary-panel-btn {
+    min-height: 58px;
+    font-size: 1.04em;
+    font-weight: 600;
+}
+
 /* Setting Buttons - compact for grid */
 .setting-btn {
     padding: 14px 18px;
@@ -354,12 +391,31 @@ body {
 }
 
 @media (max-width: 980px) {
+    .primary-actions-row {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+        max-width: 560px;
+    }
+
     .layout-grid-3x2 {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 640px) {
+    .primary-actions-row,
+    .secondary-actions-row {
+        width: 100%;
+    }
+
+    .primary-actions-row {
+        grid-template-columns: 1fr;
+    }
+
+    .secondary-actions-row .setting-btn {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
     .layout-grid-3x2 {
         grid-template-columns: 1fr;
     }

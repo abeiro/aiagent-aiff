@@ -3,7 +3,31 @@
 let currentNPCTarget = '';
 let profileSlots = {};
 let aiGenerateProfileInFlight = false;
+let activeModeAction = '';
+let activeModelAction = '';
+let activeNpcProfileId = null;
+let activeNpcProfileLabel = '';
+let activeStateRefreshTimeouts = [];
 const DEFAULT_SERVER_BASE = 'http://127.0.0.1:8081/HerikaServer';
+
+const MODE_ACTION_MAP = {
+    STANDARD: 'mode_standard',
+    WHISPER: 'mode_whisper',
+    NARRATOR: 'mode_narrator',
+    DIRECTOR: 'mode_director',
+    SPAWN: 'mode_spawn',
+    CHEATMODE: 'mode_cheat',
+    AUTOCHAT: 'mode_autochat',
+    INJECTION_LOG: 'mode_inject_log',
+    INJECTION_CHAT: 'mode_inject_chat'
+};
+
+const MODEL_ACTION_MAP = {
+    1: 'llm_standard',
+    2: 'llm_fast',
+    3: 'llm_powerful',
+    4: 'llm_experimental'
+};
 
 // Show description in footer
 window.showDescription = function(text) {
@@ -32,8 +56,9 @@ function initSettingsMenu() {
         window.chimSettingsMenuCommand('dom_ready');
     }
     
-    // Fetch profile information
+    // Fetch profile information and current active state
     fetchProfilesInfo();
+    refreshActiveState();
     
     // Add keyboard listener for ESC key to close menu
     document.addEventListener('keydown', handleKeyDown);
@@ -70,6 +95,7 @@ async function fetchProfilesInfo() {
         if (data.success && data.profile_slots) {
             profileSlots = data.profile_slots;
             updateProfileButtons();
+            updateActiveHighlights();
         } else {
             console.error('[CHIM Settings] Invalid data structure:', data);
             setFallbackProfiles();
@@ -84,12 +110,13 @@ async function fetchProfilesInfo() {
 function setFallbackProfiles() {
     console.log('[CHIM Settings] Using fallback profile data');
     profileSlots = {
-        1: { profile_name: 'Profile 1' },
-        2: { profile_name: 'Profile 2' },
-        3: { profile_name: 'Profile 3' },
-        4: { profile_name: 'Profile 4' }
+        1: { profile_id: 1, profile_name: 'Profile 1' },
+        2: { profile_id: 2, profile_name: 'Profile 2' },
+        3: { profile_id: 3, profile_name: 'Profile 3' },
+        4: { profile_id: 4, profile_name: 'Profile 4' }
     };
     updateProfileButtons();
+    updateActiveHighlights();
 }
 
 function getServerBaseUrl() {
@@ -110,6 +137,111 @@ function setAIGenerateButtonState(busy) {
     button.disabled = !!busy;
     button.classList.toggle('is-busy', !!busy);
     button.textContent = busy ? 'Generating Profile...' : 'AI Generate Profile';
+}
+
+function resolveActiveNpcProfileSlot() {
+    for (let slot = 1; slot <= 4; slot++) {
+        const slotProfile = profileSlots[slot];
+        if (!slotProfile) {
+            continue;
+        }
+
+        if (activeNpcProfileId !== null && activeNpcProfileId !== '' && Number(slotProfile.profile_id) === Number(activeNpcProfileId)) {
+            return slot;
+        }
+
+        if (activeNpcProfileLabel && slotProfile.profile_name === activeNpcProfileLabel) {
+            return slot;
+        }
+    }
+
+    return null;
+}
+
+function updateActiveHighlights() {
+    const activeNpcProfileSlot = resolveActiveNpcProfileSlot();
+    const buttons = document.querySelectorAll('.setting-btn[data-option]');
+
+    buttons.forEach(function(button) {
+        const optionId = button.getAttribute('data-option');
+        const isActive =
+            optionId === activeModeAction ||
+            optionId === activeModelAction ||
+            (activeNpcProfileSlot !== null && optionId === `profile_${activeNpcProfileSlot}`);
+
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+}
+
+async function fetchOverlayState() {
+    try {
+        const response = await fetch(`${getServerBaseUrl()}/ui/api/chim_overlay.php`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        if (!payload || !payload.success || !payload.data) {
+            throw new Error('Invalid overlay payload');
+        }
+
+        const overlay = payload.data;
+        const modeKey = overlay.mode ? String(overlay.mode).toUpperCase().trim() : 'STANDARD';
+        activeModeAction = MODE_ACTION_MAP[modeKey] || 'mode_standard';
+        activeModelAction = MODEL_ACTION_MAP[Number(overlay.active_model_slot)] || 'llm_standard';
+        updateActiveHighlights();
+    } catch (error) {
+        console.error('[CHIM Settings] Error fetching overlay state:', error);
+    }
+}
+
+async function fetchNpcProfileState() {
+    if (!currentNPCTarget || currentNPCTarget === 'none') {
+        activeNpcProfileId = null;
+        activeNpcProfileLabel = '';
+        updateActiveHighlights();
+        return;
+    }
+
+    try {
+        const params = new URLSearchParams({ npc_name: currentNPCTarget });
+        const response = await fetch(`${getServerBaseUrl()}/ui/api/chim_aiview.php?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        if (!payload || !payload.success || !payload.data || !payload.data.profile) {
+            throw new Error('Invalid NPC profile payload');
+        }
+
+        activeNpcProfileId = payload.data.profile.id ?? null;
+        activeNpcProfileLabel = payload.data.profile.label || '';
+        updateActiveHighlights();
+    } catch (error) {
+        console.error('[CHIM Settings] Error fetching NPC profile state:', error);
+        activeNpcProfileId = null;
+        activeNpcProfileLabel = '';
+        updateActiveHighlights();
+    }
+}
+
+function scheduleActiveStateRefresh() {
+    activeStateRefreshTimeouts.forEach(function(timeoutId) {
+        clearTimeout(timeoutId);
+    });
+
+    activeStateRefreshTimeouts = [175, 700].map(function(delay) {
+        return setTimeout(function() {
+            refreshActiveState();
+        }, delay);
+    });
+}
+
+function refreshActiveState() {
+    fetchOverlayState();
+    fetchNpcProfileState();
 }
 
 async function triggerAIGenerateProfile() {
@@ -187,6 +319,8 @@ function updateProfileButtons() {
             nameElement.textContent = `Profile ${slot}`;
         }
     }
+
+    updateActiveHighlights();
 }
 
 // Called by C++ to signal that the JavaScript environment is ready
@@ -226,6 +360,10 @@ function selectOption(optionId) {
             }, 100); // Small delay to ensure action is stored
         }
     }
+
+    if (optionId.startsWith('mode_') || optionId.startsWith('llm_') || optionId.startsWith('profile_')) {
+        scheduleActiveStateRefresh();
+    }
 }
 
 // Close menu
@@ -252,12 +390,16 @@ window.setNPCTarget = function(npcName) {
         document.getElementById('npc-name').textContent = npcName;
         document.getElementById('roleplay-npc-name').textContent = npcName;
         setAIGenerateButtonState(false);
+        fetchNpcProfileState();
     } else {
         // Hide NPC-specific sections
         document.getElementById('npc-settings').style.display = 'none';
         document.getElementById('roleplay-npc-actions').style.display = 'none';
         currentNPCTarget = '';
         setAIGenerateButtonState(false);
+        activeNpcProfileId = null;
+        activeNpcProfileLabel = '';
+        updateActiveHighlights();
     }
 };
 

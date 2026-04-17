@@ -30,31 +30,31 @@
             <div class="settings-group">
                 <h2 class="group-title">Mode</h2>
                 <div class="options-grid">
-                    <button class="setting-btn" onclick="selectOption('mode_standard')" 
+                    <button class="setting-btn" data-option="mode_standard" onclick="selectOption('mode_standard')" 
                             onmouseenter="showDescription('Normal conversation mode with roleplay and event injection support')"
                             onmouseleave="clearDescription()">Standard Chat</button>
-                    <button class="setting-btn" onclick="selectOption('mode_whisper')"
+                    <button class="setting-btn" data-option="mode_whisper" onclick="selectOption('mode_whisper')"
                             onmouseenter="showDescription('Private conversation mode - only nearby NPCs (4 meters) can hear and respond')"
                             onmouseleave="clearDescription()">Whisper Chat</button>
-                    <button class="setting-btn" onclick="selectOption('mode_narrator')"
+                    <button class="setting-btn" data-option="mode_narrator" onclick="selectOption('mode_narrator')"
                             onmouseenter="showDescription('Private narrator mode - when you speak, only The Narrator hears the conversation and nearby NPCs do not')"
                             onmouseleave="clearDescription()">Narrator Mode</button>
-                    <button class="setting-btn" onclick="selectOption('mode_director')"
+                    <button class="setting-btn" data-option="mode_director" onclick="selectOption('mode_director')"
                             onmouseenter="showDescription('Give direct instructions to NPCs as game director')"
                             onmouseleave="clearDescription()">Director Mode</button>
-                    <button class="setting-btn" onclick="selectOption('mode_spawn')"
+                    <button class="setting-btn" data-option="mode_spawn" onclick="selectOption('mode_spawn')"
                             onmouseenter="showDescription('Spawn new characters by describing them')"
                             onmouseleave="clearDescription()">Spawn NPC</button>
-                    <button class="setting-btn" onclick="selectOption('mode_cheat')"
+                    <button class="setting-btn" data-option="mode_cheat" onclick="selectOption('mode_cheat')"
                             onmouseenter="showDescription('All input processed as cheat commands - NPCs will execute any request')"
                             onmouseleave="clearDescription()">Cheat Mode</button>
-                    <button class="setting-btn" onclick="selectOption('mode_autochat')"
+                    <button class="setting-btn" data-option="mode_autochat" onclick="selectOption('mode_autochat')"
                             onmouseenter="showDescription('Speaks for you using your Player Bio and Speech Style. Makes 2 LLM calls: first rewrites your input into in-character dialogue (fast model), then the NPC responds.')"
                             onmouseleave="clearDescription()">Auto Chat</button>
-                    <button class="setting-btn" onclick="selectOption('mode_inject_log')"
+                    <button class="setting-btn" data-option="mode_inject_log" onclick="selectOption('mode_inject_log')"
                             onmouseenter="showDescription('Add events to NPC memory without triggering responses')"
                             onmouseleave="clearDescription()">Inject Event</button>
-                    <button class="setting-btn" onclick="selectOption('mode_inject_chat')"
+                    <button class="setting-btn" data-option="mode_inject_chat" onclick="selectOption('mode_inject_chat')"
                             onmouseenter="showDescription('Add events to NPC memory and get a response')"
                             onmouseleave="clearDescription()">Inject & Chat</button>
                 </div>
@@ -64,16 +64,16 @@
             <div class="settings-group">
                 <h2 class="group-title">LLM Profiles</h2>
                 <div class="options-grid">
-                    <button class="setting-btn" onclick="selectOption('llm_standard')"
+                    <button class="setting-btn" data-option="llm_standard" onclick="selectOption('llm_standard')"
                             onmouseenter="showDescription('Balanced speed and quality for general conversations')"
                             onmouseleave="clearDescription()">Standard LLM</button>
-                    <button class="setting-btn" onclick="selectOption('llm_fast')"
+                    <button class="setting-btn" data-option="llm_fast" onclick="selectOption('llm_fast')"
                             onmouseenter="showDescription('Faster responses with lighter model')"
                             onmouseleave="clearDescription()">Fast LLM</button>
-                    <button class="setting-btn" onclick="selectOption('llm_powerful')"
+                    <button class="setting-btn" data-option="llm_powerful" onclick="selectOption('llm_powerful')"
                             onmouseenter="showDescription('Best quality responses with heavier model')"
                             onmouseleave="clearDescription()">Powerful LLM</button>
-                    <button class="setting-btn" onclick="selectOption('llm_experimental')"
+                    <button class="setting-btn" data-option="llm_experimental" onclick="selectOption('llm_experimental')"
                             onmouseenter="showDescription('Experimental features and cutting-edge models')"
                             onmouseleave="clearDescription()">Experimental LLM</button>
                     <button class="setting-btn" onclick="selectOption('llm_focus')"
@@ -86,22 +86,22 @@
             <div id="npc-settings" class="settings-group" style="display: none;">
                 <h2 class="group-title">Assign Profile to <span id="npc-name" class="npc-highlight">NPC</span></h2>
                 <div class="options-grid">
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_1')" 
+                    <button class="setting-btn profile-btn" data-option="profile_1" onclick="selectOption('profile_1')" 
                             onmouseenter="showDescription('Assign Profile 1 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-1-name">Profile 1</div>
                     </button>
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_2')"
+                    <button class="setting-btn profile-btn" data-option="profile_2" onclick="selectOption('profile_2')"
                             onmouseenter="showDescription('Assign Profile 2 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-2-name">Profile 2</div>
                     </button>
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_3')"
+                    <button class="setting-btn profile-btn" data-option="profile_3" onclick="selectOption('profile_3')"
                             onmouseenter="showDescription('Assign Profile 3 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-3-name">Profile 3</div>
                     </button>
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_4')"
+                    <button class="setting-btn profile-btn" data-option="profile_4" onclick="selectOption('profile_4')"
                             onmouseenter="showDescription('Assign Profile 4 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-4-name">Profile 4</div>
