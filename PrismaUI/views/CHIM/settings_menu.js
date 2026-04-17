@@ -2,6 +2,8 @@
 
 let currentNPCTarget = '';
 let profileSlots = {};
+let aiGenerateProfileInFlight = false;
+const DEFAULT_SERVER_BASE = 'http://127.0.0.1:8081/HerikaServer';
 
 // Show description in footer
 window.showDescription = function(text) {
@@ -50,8 +52,7 @@ function handleKeyDown(event) {
 // Fetch profiles and connector information from server
 async function fetchProfilesInfo() {
     try {
-        // Get server URL from C++ or use default
-        const serverUrl = window.chimServerUrl || 'http://127.0.0.1:8081';
+        const serverUrl = getServerBaseUrl();
         const apiUrl = `${serverUrl}/ui/api/chim_profiles.php`;
         console.log('[CHIM Settings] Fetching profiles from:', apiUrl);
         
@@ -91,6 +92,76 @@ function setFallbackProfiles() {
     updateProfileButtons();
 }
 
+function getServerBaseUrl() {
+    let base = window.chimServerUrl || DEFAULT_SERVER_BASE;
+    base = String(base || '').replace(/\/+$/, '');
+    if (!/\/HerikaServer$/i.test(base)) {
+        base += '/HerikaServer';
+    }
+    return base;
+}
+
+function setAIGenerateButtonState(busy) {
+    const button = document.getElementById('ai-generate-profile-btn');
+    if (!button) {
+        return;
+    }
+
+    button.disabled = !!busy;
+    button.classList.toggle('is-busy', !!busy);
+    button.textContent = busy ? 'Generating Profile...' : 'AI Generate Profile';
+}
+
+async function triggerAIGenerateProfile() {
+    if (aiGenerateProfileInFlight) {
+        return;
+    }
+
+    if (!currentNPCTarget || currentNPCTarget === 'none') {
+        showDescription('AI Generate Profile requires an NPC target.');
+        return;
+    }
+
+    aiGenerateProfileInFlight = true;
+    setAIGenerateButtonState(true);
+    showDescription(`Generating CHIM profile for ${currentNPCTarget} from up to the last 100 usable events...`);
+
+    try {
+        const serverUrl = getServerBaseUrl();
+        const response = await fetch(`${serverUrl}/ui/cmd/action_ai_regen_profile.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: new URLSearchParams({
+                name: currentNPCTarget,
+                event_limit: '100'
+            }).toString()
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (!result || !result.done) {
+            const errorMessage = result && result.error ? result.error : 'AI profile generation failed.';
+            throw new Error(errorMessage);
+        }
+
+        showDescription(`AI profile generated for ${currentNPCTarget}.`);
+        setTimeout(() => {
+            closeMenu();
+        }, 150);
+    } catch (error) {
+        console.error('[CHIM Settings] AI Generate Profile failed:', error);
+        showDescription(`AI Generate Profile failed: ${error.message || error}`);
+    } finally {
+        aiGenerateProfileInFlight = false;
+        setAIGenerateButtonState(false);
+    }
+}
+
 // Update profile buttons with profile names (simplified)
 function updateProfileButtons() {
     console.log('[CHIM Settings] Updating profile buttons');
@@ -126,6 +197,11 @@ window.chimSettingsMenuReady = function() {
 // Handle option selection
 function selectOption(optionId) {
     console.log('[CHIM Settings] Selected option:', optionId);
+
+    if (optionId === 'rp_ai_generate_profile') {
+        triggerAIGenerateProfile();
+        return;
+    }
     
     // If NPC-targeted action, include NPC name
     let command = optionId;
@@ -175,11 +251,13 @@ window.setNPCTarget = function(npcName) {
         // Update NPC names in UI
         document.getElementById('npc-name').textContent = npcName;
         document.getElementById('roleplay-npc-name').textContent = npcName;
+        setAIGenerateButtonState(false);
     } else {
         // Hide NPC-specific sections
         document.getElementById('npc-settings').style.display = 'none';
         document.getElementById('roleplay-npc-actions').style.display = 'none';
         currentNPCTarget = '';
+        setAIGenerateButtonState(false);
     }
 };
 

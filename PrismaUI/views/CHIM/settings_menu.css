@@ -192,6 +192,13 @@ body {
     transform: scale(0.98);
 }
 
+.setting-btn.is-busy,
+.setting-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+    transform: none;
+}
+
 /* Footer */
 .menu-footer {
     padding: 12px 24px;
