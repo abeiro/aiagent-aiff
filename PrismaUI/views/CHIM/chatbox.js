@@ -38,6 +38,7 @@
     const modeConfig = {
         STANDARD: { label: 'Standard', class: 'standard', action: 'mode_standard' },
         WHISPER: { label: 'Whisper', class: 'whisper', action: 'mode_whisper' },
+        NARRATOR: { label: 'Narrator', class: 'narrator', action: 'mode_narrator' },
         DIRECTOR: { label: 'Director', class: 'director', action: 'mode_director' },
         SPAWN: { label: 'Spawn', class: 'director', action: 'mode_spawn' },
         CHEATMODE: { label: 'Cheat Mode', class: 'cheatmode', action: 'mode_cheat' },
