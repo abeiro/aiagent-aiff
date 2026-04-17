@@ -853,14 +853,14 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(2)
 	endIf
 	if (a_option == _slider_ds)
-		if (_sound_ds < 1.0)
-			_sound_ds = 1.0
-		elseif (_sound_ds > 5.0)
-			_sound_ds = 5.0
+		if (_sound_ds < 0.1)
+			_sound_ds = 0.1
+		elseif (_sound_ds > 11.0)
+			_sound_ds = 11.0
 		endIf
 		SetSliderDialogStartValue(_sound_ds)
 		SetSliderDialogDefaultValue(1)
-		SetSliderDialogRange(1.0, 5.0)
+		SetSliderDialogRange(0.1, 11.0)
 		SetSliderDialogInterval(0.1)
 	endIf
 	if (a_option == _slider_playback_dropoff_inside)
@@ -1086,10 +1086,10 @@ event OnGameReload()
 	a=controlScript.setConf("_sound_postclip",_sound_postclip)
 	a=controlScript.setConf("_sound_preclip",_sound_preclip)
 	a=controlScript.setConf("_sound_volume",_sound_volume)
-	if (_sound_ds < 1.0)
-		_sound_ds = 1.0
-	elseif (_sound_ds > 5.0)
-		_sound_ds = 5.0
+	if (_sound_ds < 0.1)
+		_sound_ds = 0.1
+	elseif (_sound_ds > 11.0)
+		_sound_ds = 11.0
 	endIf
 	a=controlScript.setConf("_sound_ds",_sound_ds)
 	a=controlScript.setConf("_playback_dropoff_inside",_playback_dropoff_inside)
@@ -1930,7 +1930,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Skips specified millisecods at end of a sentence. Some TTS services add some silence at the end of audio clips.")
 	endIf
 	if (a_option == _slider_ds)
-		SetInfoText("Adjust AI NPC volume at distance. Range: 1.0 to 5.0.")
+		SetInfoText("Adjust AI NPC volume at distance. Range: 0.1 to 11.0.")
 	endIf
 	if (a_option == _slider_playback_dropoff_inside)
 		SetInfoText("Indoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
