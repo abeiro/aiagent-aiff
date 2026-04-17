@@ -31,6 +31,7 @@
     let isFocusChatEnabled = false;
     let currentModeAction = 'mode_standard';
     let currentModelAction = 'llm_standard';
+    let currentTargetName = '';
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
@@ -287,6 +288,16 @@
         focusInput.focus();
     };
 
+    window.triggerContinueSpeaking = function() {
+        if (!currentTargetName) {
+            sendControlCommand('continue_chat');
+            return;
+        }
+
+        sendControlCommand('continue_chat');
+        window.closeFocusChatbox(true);
+    };
+
     if (focusInput) {
         focusInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -325,6 +336,7 @@
 
     window.updateChatboxTarget = function(name, distance) {
         if (!currentTargetElement) return;
+        currentTargetName = name || '';
         if (name && name !== '') {
             currentTargetElement.innerHTML = `
                 <span class="target-name">${escapeHtml(name)}</span>
