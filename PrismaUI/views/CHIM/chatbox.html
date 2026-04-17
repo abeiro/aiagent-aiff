@@ -36,70 +36,83 @@
 
     <div id="focus-chatbox-modal" class="focus-chatbox-modal hidden" aria-hidden="true">
         <div class="focus-chatbox-backdrop"></div>
-        <div class="focus-chatbox-panel" role="dialog" aria-modal="true" aria-label="CHIM Chat">
-            <div class="focus-chatbox-header">
-                <span>CHIM Chat</span>
-                <button class="focus-btn focus-btn-close" type="button" title="Close" onclick="closeFocusChatbox()">&times;</button>
-            </div>
-            <div class="chatbox-controls">
-                <div class="chatbox-control-grid">
-                    <div class="chatbox-control-block">
-                        <div class="chatbox-control-label">Current Target</div>
-                        <div class="chatbox-control-value" id="chatbox-current-target">
-                            <span class="target-name no-target">No target</span>
-                        </div>
-                    </div>
-
-                    <div class="chatbox-control-block">
-                        <div class="chatbox-control-label">Current Mode</div>
-                        <div class="chatbox-control-value">
-                            <span id="chatbox-current-mode" class="mode-badge standard">Standard</span>
-                            <select id="chatbox-mode-select" class="chatbox-mode-select" title="Switch mode">
-                                <option value="mode_standard">Standard</option>
-                                <option value="mode_whisper">Whisper</option>
-                                <option value="mode_narrator">Narrator</option>
-                                <option value="mode_director">Director</option>
-                                <option value="mode_spawn">Spawn</option>
-                                <option value="mode_cheat">Cheat Mode</option>
-                                <option value="mode_autochat">Auto Chat</option>
-                                <option value="mode_inject_log">Event Inject</option>
-                                <option value="mode_inject_chat">Inject & Chat</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="chatbox-control-block">
-                        <div class="chatbox-control-label">Current Model</div>
-                        <div class="chatbox-control-value">
-                            <span id="chatbox-current-model" class="mode-badge standard">Standard</span>
-                            <select id="chatbox-model-select" class="chatbox-mode-select" title="Switch model">
-                                <option value="llm_standard">Standard</option>
-                                <option value="llm_fast">Fast</option>
-                                <option value="llm_powerful">Powerful</option>
-                                <option value="llm_experimental">Experimental</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="chatbox-control-block">
-                        <div class="chatbox-control-label">Focus Chat</div>
-                        <div class="chatbox-control-value">
-                            <button id="chatbox-focus-toggle" class="chatbox-focus-toggle off" type="button" aria-pressed="false">OFF</button>
-                        </div>
+        <div class="focus-chatbox-shell">
+            <div class="chatbox-targets-window" aria-label="Conversation Targets">
+                <div class="chatbox-targets-panel">
+                    <div class="chatbox-side-header">Targets</div>
+                    <div id="chatbox-targets-list" class="chatbox-targets-list">
+                        <div class="chatbox-target-empty">No spatially available targets right now.</div>
                     </div>
                 </div>
-
             </div>
-            <textarea
-                id="focus-chatbox-input"
-                class="focus-chatbox-input"
-                rows="2"
-                placeholder="Type your message here. Enter sends, Shift+Enter adds a new line."
-                spellcheck="false"></textarea>
-            <div class="focus-chatbox-actions">
-                <button class="focus-btn focus-btn-primary" type="button" onclick="sendFocusMessage()">Send</button>
-                <button class="focus-btn focus-btn-danger" type="button" onclick="clearFocusMessage()">Clear Text</button>
-                <button class="focus-btn" type="button" onclick="triggerContinueSpeaking()">Continue Speaking</button>
+            <div class="focus-chatbox-panel" role="dialog" aria-modal="true" aria-label="CHIM Chat">
+                <div class="focus-chatbox-header">
+                    <span>CHIM Chat</span>
+                    <button class="focus-btn focus-btn-close" type="button" title="Close" onclick="closeFocusChatbox()">&times;</button>
+                </div>
+                <div class="focus-chatbox-main">
+                    <div class="chatbox-controls">
+                        <div class="chatbox-control-grid">
+                            <div class="chatbox-control-block">
+                                <div class="chatbox-control-label">Current Target</div>
+                                <div class="chatbox-control-value" id="chatbox-current-target">
+                                    <span class="target-name no-target">No target</span>
+                                </div>
+                            </div>
+
+                            <div class="chatbox-control-block select-stack">
+                                <div class="chatbox-control-label">Current Mode</div>
+                                <div class="chatbox-control-value">
+                                    <span id="chatbox-current-mode" class="mode-badge standard">Standard</span>
+                                    <select id="chatbox-mode-select" class="chatbox-mode-select" title="Switch mode">
+                                        <option value="mode_standard">Standard</option>
+                                        <option value="mode_whisper">Whisper</option>
+                                        <option value="mode_narrator">Narrator</option>
+                                        <option value="mode_director">Director</option>
+                                        <option value="mode_spawn">Spawn</option>
+                                        <option value="mode_cheat">Cheat Mode</option>
+                                        <option value="mode_autochat">Auto Chat</option>
+                                        <option value="mode_inject_log">Event Inject</option>
+                                        <option value="mode_inject_chat">Inject & Chat</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="chatbox-control-block select-stack">
+                                <div class="chatbox-control-label">Current Model</div>
+                                <div class="chatbox-control-value">
+                                    <span id="chatbox-current-model" class="mode-badge standard">Standard</span>
+                                    <select id="chatbox-model-select" class="chatbox-mode-select" title="Switch model">
+                                        <option value="llm_standard">Standard</option>
+                                        <option value="llm_fast">Fast</option>
+                                        <option value="llm_powerful">Powerful</option>
+                                        <option value="llm_experimental">Experimental</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="chatbox-control-block focus-stack">
+                                <div class="chatbox-control-label">Focus Chat</div>
+                                <div class="chatbox-control-value">
+                                    <button id="chatbox-focus-toggle" class="chatbox-focus-toggle off" type="button" aria-pressed="false">OFF</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <textarea
+                        id="focus-chatbox-input"
+                        class="focus-chatbox-input"
+                        rows="2"
+                        placeholder="Type your message here. Enter sends, Shift+Enter adds a new line."
+                        spellcheck="false"></textarea>
+                    <div class="focus-chatbox-actions">
+                        <button class="focus-btn focus-btn-primary" type="button" onclick="sendFocusMessage()">Send</button>
+                        <button class="focus-btn focus-btn-danger" type="button" onclick="clearFocusMessage()">Clear Text</button>
+                        <button class="focus-btn" type="button" onclick="triggerContinueSpeaking()">Continue Speaking</button>
+                        <button class="focus-btn focus-btn-stop" type="button" onclick="triggerStopAllDialogue()">Stop All Dialogue</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

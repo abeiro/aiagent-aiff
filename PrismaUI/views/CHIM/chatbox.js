@@ -16,6 +16,7 @@
     const focusModal = document.getElementById('focus-chatbox-modal');
     const focusInput = document.getElementById('focus-chatbox-input');
     const currentTargetElement = document.getElementById('chatbox-current-target');
+    const targetsListElement = document.getElementById('chatbox-targets-list');
     const currentModeElement = document.getElementById('chatbox-current-mode');
     const modeSelectElement = document.getElementById('chatbox-mode-select');
     const currentModelElement = document.getElementById('chatbox-current-model');
@@ -32,6 +33,8 @@
     let currentModeAction = 'mode_standard';
     let currentModelAction = 'llm_standard';
     let currentTargetName = '';
+    let currentTargetFormId = 0;
+    let currentTargetOverrideActive = false;
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
@@ -298,6 +301,10 @@
         window.closeFocusChatbox(true);
     };
 
+    window.triggerStopAllDialogue = function() {
+        sendControlCommand('stop_all_dialogue');
+    };
+
     if (focusInput) {
         focusInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -337,14 +344,70 @@
     window.updateChatboxTarget = function(name, distance) {
         if (!currentTargetElement) return;
         currentTargetName = name || '';
+        const suffix = currentTargetOverrideActive ? '<span class="target-distance">(Override)</span>' : '';
         if (name && name !== '') {
             currentTargetElement.innerHTML = `
                 <span class="target-name">${escapeHtml(name)}</span>
                 <span class="target-distance">(${distance.toFixed(1)}m)</span>
+                ${suffix}
             `;
         } else {
             currentTargetElement.innerHTML = '<span class="target-name no-target">No target</span>';
         }
+    };
+
+    window.updateChatboxTargets = function(payloadJson) {
+        if (!targetsListElement) return;
+
+        let payload = null;
+        try {
+            payload = JSON.parse(payloadJson);
+        } catch (_err) {
+            return;
+        }
+
+        const targets = Array.isArray(payload.targets) ? payload.targets : [];
+        currentTargetOverrideActive = !!payload.override_active;
+        currentTargetFormId = Number(payload.active_form_id || 0);
+        currentTargetName = payload.active_name || '';
+
+        const parts = [];
+        if (payload.show_auto) {
+            parts.push(`
+                <button class="chatbox-target-item auto-target ${payload.auto_active ? 'active' : ''}" type="button" data-auto="true">
+                    <span class="chatbox-target-meta">
+                        <span class="chatbox-target-name">Auto</span>
+                    </span>
+                    <span class="chatbox-target-distance">Mode</span>
+                </button>
+            `);
+        }
+
+        targets.forEach(function(target) {
+            const formId = Number(target.form_id || 0);
+            const itemClasses = ['chatbox-target-item'];
+            if (target.active) itemClasses.push('active');
+            if (target.override) itemClasses.push('override');
+            const distanceLabel = target.narrator ? 'Narrator' : `${Number(target.distance || 0).toFixed(1)}m`;
+            parts.push(`
+                <button class="${itemClasses.join(' ')}" type="button" data-form-id="${formId}" data-target-name="${escapeHtml(target.name || '')}">
+                    <span class="chatbox-target-meta">
+                        <span class="chatbox-target-name">${escapeHtml(target.name || 'Unknown Target')}</span>
+                    </span>
+                    <span class="chatbox-target-distance">${escapeHtml(distanceLabel)}</span>
+                </button>
+            `);
+        });
+
+        if (parts.length === 0) {
+            parts.push(`<div class="chatbox-target-empty">${escapeHtml(payload.empty_message || 'No spatially available targets right now.')}</div>`);
+        }
+
+        targetsListElement.innerHTML = parts.join('');
+        const activeTarget = targets.find(function(target) {
+            return Number(target.form_id || 0) === currentTargetFormId || (target.name || '') === currentTargetName;
+        });
+        window.updateChatboxTarget(currentTargetName, Number(activeTarget ? activeTarget.distance || 0 : 0));
     };
 
     window.updateChatboxMode = function(mode) {
@@ -414,6 +477,23 @@
     if (focusToggleButton) {
         focusToggleButton.addEventListener('click', function() {
             sendControlCommand('focus_chat_toggle');
+        });
+    }
+
+    if (targetsListElement) {
+        targetsListElement.addEventListener('click', function(e) {
+            const targetButton = e.target.closest('.chatbox-target-item');
+            if (!targetButton) return;
+
+            if (targetButton.dataset.auto === 'true') {
+                sendControlCommand('target_override_clear');
+                return;
+            }
+
+            const formId = targetButton.dataset.formId || '0';
+            const targetName = targetButton.dataset.targetName || '';
+            if (!targetName) return;
+            sendControlCommand(`target_override|${formId}|${targetName}`);
         });
     }
 
