@@ -1350,6 +1350,12 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 		a_keyCode = -1
 	endIf
 
+	bool prismaChatHotkeyConflict = a_keyCode != -1 && ((a_option == _keymap_chatbox && a_keyCode == _chatbox_focus_key) || (a_option == _keymap_chatbox_focus && a_keyCode == _chatbox_key))
+	if (prismaChatHotkeyConflict)
+		ShowMessage("Text Chat and Dialogue History must use different hotkeys.")
+		return
+	endIf
+
 	if (continue)
 		if (a_option == _keymapOID_K)
 			controlScript.removeBinding(_myKey)

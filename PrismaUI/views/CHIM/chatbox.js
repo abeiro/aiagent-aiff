@@ -206,12 +206,32 @@
     };
 
     /**
+     * Prepare the quick text chat mode before the Prisma view is shown/focused.
+     * This keeps the tabbed chat/history viewer hidden so only the modal is exposed.
+     */
+    window.prepareQuickChatFocus = function() {
+        quickChatMode = true;
+        currentTab = 'chat';
+        setChatboxViewerVisible(false);
+        if (focusModal) {
+            focusModal.classList.add('hidden');
+            focusModal.setAttribute('aria-hidden', 'true');
+        }
+        if (focusInput) {
+            focusInput.value = '';
+            focusInput.blur();
+        }
+        window.switchTab('chat');
+    };
+
+    /**
      * Open centered focus chat modal
      */
     window.openFocusChatbox = function() {
         if (!focusModal || !focusInput) return;
         focusModal.classList.remove('hidden');
         focusModal.setAttribute('aria-hidden', 'false');
+        focusInput.value = '';
         setTimeout(function() {
             focusInput.focus();
             focusInput.selectionStart = focusInput.value.length;
@@ -227,6 +247,7 @@
         const shouldNotifyBridge = notifyBridge !== false;
         focusModal.classList.add('hidden');
         focusModal.setAttribute('aria-hidden', 'true');
+        focusInput.value = '';
         focusInput.blur();
         if (shouldNotifyBridge && window.chimChatboxCommand) {
             if (quickChatMode) {
@@ -284,9 +305,10 @@
      * Called when chatbox loses focus from C++
      */
     window.onChatboxUnfocused = function() {
+        const wasQuickChatMode = quickChatMode;
         isChatFocused = false;
         quickChatMode = false;
-        setChatboxViewerVisible(true);
+        setChatboxViewerVisible(!wasQuickChatMode);
         window.closeFocusChatbox(false);
     };
 

@@ -420,16 +420,14 @@ Event OnKeyDown(int keyCode)
 	AIAgentFunctions.cycleHistoryDiariesPanels()
   EndIf
   
-  If(keyCode == _currentChatboxKey)
-	AIAgentFunctions.toggleChatboxPanel()
-  EndIf
-  
   If(keyCode == _currentChatboxFocusKey)
 	if (_chatboxFocusHotkeySuppressed)
 		_chatboxFocusHotkeySuppressed = false
 	else
 		ToggleChatboxFocusAction(keyCode)
 	endif
+  ElseIf(keyCode == _currentChatboxKey)
+	AIAgentFunctions.toggleChatboxPanel()
   EndIf
   
   If(keyCode == _currentSettingsMenuKey)
