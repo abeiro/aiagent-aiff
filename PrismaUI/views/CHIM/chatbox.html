@@ -68,10 +68,22 @@
                     </div>
 
                     <div class="chatbox-control-block">
+                        <div class="chatbox-control-label">Current Model</div>
+                        <div class="chatbox-control-value">
+                            <span id="chatbox-current-model" class="mode-badge standard">Standard</span>
+                            <select id="chatbox-model-select" class="chatbox-mode-select" title="Switch model">
+                                <option value="llm_standard">Standard</option>
+                                <option value="llm_fast">Fast</option>
+                                <option value="llm_powerful">Powerful</option>
+                                <option value="llm_experimental">Experimental</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="chatbox-control-block">
                         <div class="chatbox-control-label">Focus Chat</div>
                         <div class="chatbox-control-value">
-                            <span id="chatbox-focus-indicator" class="toggle-indicator off">OFF</span>
-                            <button id="chatbox-focus-toggle" class="chatbox-inline-btn" type="button">Enable</button>
+                            <button id="chatbox-focus-toggle" class="chatbox-focus-toggle off" type="button" aria-pressed="false">OFF</button>
                         </div>
                     </div>
                 </div>

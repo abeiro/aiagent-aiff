@@ -125,7 +125,7 @@ body {
 
 .chatbox-control-grid {
     display: grid;
-    grid-template-columns: 1.3fr 1.2fr 0.8fr;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr);
     gap: 8px;
 }
 
@@ -185,6 +185,24 @@ body {
     border: 1px solid rgba(52, 152, 219, 0.4);
 }
 
+.mode-badge.fast {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.mode-badge.powerful {
+    background: rgba(249, 115, 22, 0.2);
+    color: #fdba74;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.mode-badge.experimental {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c4b5fd;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
 .mode-badge.whisper {
     background: rgba(155, 89, 182, 0.2);
     color: #bb8fce;
@@ -217,7 +235,7 @@ body {
     font-size: 0.88em;
     line-height: 1.2;
     padding: 6px 10px;
-    min-width: 148px;
+    min-width: 124px;
     height: 32px;
     cursor: pointer;
 }
@@ -240,6 +258,41 @@ body {
 
 .chatbox-inline-btn:hover {
     background: rgba(242, 124, 17, 0.3);
+}
+
+.chatbox-focus-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(100, 100, 110, 0.4);
+    background: rgba(100, 100, 110, 0.2);
+    color: #888;
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.chatbox-focus-toggle:hover {
+    border-color: rgba(242, 124, 17, 0.45);
+    background: rgba(242, 124, 17, 0.14);
+    color: #f2f2f2;
+}
+
+.chatbox-focus-toggle.on {
+    background: rgba(46, 204, 113, 0.2);
+    color: #58d68d;
+    border-color: rgba(46, 204, 113, 0.4);
+}
+
+.chatbox-focus-toggle.off {
+    background: rgba(100, 100, 110, 0.2);
+    color: #888;
+    border-color: rgba(100, 100, 110, 0.4);
 }
 
 .toggle-indicator {
@@ -457,7 +510,7 @@ body {
 .focus-chatbox-panel {
     position: relative;
     z-index: 1;
-    width: min(820px, 90vw);
+    width: min(940px, 94vw);
     max-height: 75vh;
     display: flex;
     flex-direction: column;
