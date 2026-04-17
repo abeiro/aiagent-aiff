@@ -20,10 +20,13 @@
             <!-- General -->
             <div class="settings-group">
                 <h2 class="group-title">General</h2>
-                <div class="options-grid">
+                <div class="options-grid options-grid-half">
                     <button class="setting-btn" onclick="selectOption('open_ai_quest_manager')"
                             onmouseenter="showDescription('Open AI Quest Manager V1 with SNQE fields and controls')"
                             onmouseleave="clearDescription()">AI Quest Manager</button>
+                    <button class="setting-btn" onclick="selectOption('open_create_rumor')"
+                            onmouseenter="showDescription('Create a manual rumor and save it directly into the Background Life rumors table')"
+                            onmouseleave="clearDescription()">Create Rumor</button>
                 </div>
             </div>
             <!-- Mode Options -->
@@ -170,6 +173,56 @@
                             onmouseenter="showDescription('Upload current scene to CHIM Soulgaze gallery')"
                             onmouseleave="clearDescription()">Upload Image</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="rumor-modal-overlay" class="rumor-modal-overlay hidden" aria-hidden="true" onclick="if (event.target === this) closeRumorModal()">
+            <div class="rumor-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rumor-modal-title">
+                <div class="rumor-modal-header">
+                    <div class="rumor-modal-title-wrap">
+                        <h3 id="rumor-modal-title" class="rumor-modal-title">Create Rumor</h3>
+                        <p class="rumor-modal-subtitle">Add a rumor directly to Background Life without leaving Prisma.</p>
+                    </div>
+                    <button class="rumor-modal-close" type="button" onclick="closeRumorModal()" aria-label="Close create rumor modal">&times;</button>
+                </div>
+                <form id="rumor-create-form" class="rumor-form" onsubmit="submitRumorForm(event)">
+                    <div class="rumor-form-row">
+                        <div class="rumor-field">
+                            <label for="rumor-hold-select">Hold</label>
+                            <select id="rumor-hold-select" name="rumor_hold" required>
+                                <option value="">Select hold</option>
+                                <option value="Skyrim">Skyrim</option>
+                                <option value="Whiterun">Whiterun</option>
+                                <option value="Eastmarch">Eastmarch</option>
+                                <option value="Haafingar">Haafingar</option>
+                                <option value="The Reach">The Reach</option>
+                                <option value="Hjaalmarch">Hjaalmarch</option>
+                                <option value="The Pale">The Pale</option>
+                                <option value="Falkreath">Falkreath</option>
+                                <option value="The Rift">The Rift</option>
+                                <option value="Winterhold">Winterhold</option>
+                                <option value="Solstheim">Solstheim</option>
+                            </select>
+                        </div>
+                        <div class="rumor-field">
+                            <label for="rumor-type-input">Type</label>
+                            <input id="rumor-type-input" name="rumor_type" type="text" placeholder="General">
+                        </div>
+                        <div class="rumor-field">
+                            <label for="rumor-length-days-input">Rumor Length (Days)</label>
+                            <input id="rumor-length-days-input" name="rumor_length_days" type="number" min="1" step="1" value="7" placeholder="7">
+                        </div>
+                    </div>
+                    <div class="rumor-field">
+                        <label for="rumor-content-input">Content</label>
+                        <textarea id="rumor-content-input" name="rumor_content" rows="5" required placeholder="Write the rumor text here..."></textarea>
+                    </div>
+                    <div id="rumor-form-status" class="rumor-form-status" aria-live="polite"></div>
+                    <div class="rumor-form-actions">
+                        <button class="setting-btn rumor-cancel-btn" type="button" onclick="closeRumorModal()">Cancel</button>
+                        <button id="rumor-submit-btn" class="setting-btn rumor-submit-btn" type="submit">Create Rumor</button>
+                    </div>
+                </form>
             </div>
         </div>
 

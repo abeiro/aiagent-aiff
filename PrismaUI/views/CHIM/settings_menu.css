@@ -148,6 +148,10 @@ body {
     z-index: auto; /* Don't create new stacking context */
 }
 
+.options-grid.options-grid-half {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 /* Setting Buttons - compact for grid */
 .setting-btn {
     padding: 14px 18px;
@@ -221,6 +225,150 @@ body {
     opacity: 0.7;
     cursor: wait;
     transform: none;
+}
+
+.rumor-modal-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(9, 9, 12, 0.74);
+    backdrop-filter: blur(4px);
+    z-index: 12;
+}
+
+.rumor-modal-overlay.hidden {
+    display: none;
+}
+
+.rumor-modal-panel {
+    width: min(560px, 100%);
+    background: rgba(26, 26, 30, 0.98);
+    border: 1px solid rgba(242, 124, 17, 0.42);
+    border-radius: 10px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+
+.rumor-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid rgba(242, 124, 17, 0.24);
+    background: rgba(16, 16, 20, 0.9);
+}
+
+.rumor-modal-title {
+    margin: 0;
+    color: rgb(242, 124, 17);
+    font-size: 1.2em;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.rumor-modal-subtitle {
+    margin: 6px 0 0;
+    color: #aaa;
+    font-size: 0.92em;
+    line-height: 1.45;
+}
+
+.rumor-modal-close {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: #ddd;
+    font-size: 1.8em;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.rumor-modal-close:hover {
+    color: rgb(242, 124, 17);
+    transform: scale(1.06);
+}
+
+.rumor-form {
+    padding: 20px;
+}
+
+.rumor-form-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(150px, 0.8fr);
+    gap: 14px;
+}
+
+.rumor-field {
+    margin-bottom: 14px;
+}
+
+.rumor-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #f2c48f;
+    font-weight: 600;
+}
+
+.rumor-field select,
+.rumor-field input,
+.rumor-field textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(242, 124, 17, 0.24);
+    background: rgba(18, 18, 22, 0.96);
+    color: #f4f4f4;
+    font: inherit;
+}
+
+.rumor-field textarea {
+    resize: vertical;
+    min-height: 118px;
+}
+
+.rumor-field select:focus,
+.rumor-field input:focus,
+.rumor-field textarea:focus {
+    outline: none;
+    border-color: rgba(242, 124, 17, 0.75);
+    box-shadow: 0 0 0 2px rgba(242, 124, 17, 0.14);
+}
+
+.rumor-form-status {
+    min-height: 22px;
+    margin: 4px 0 12px;
+    color: #aaa;
+    font-size: 0.92em;
+}
+
+.rumor-form-status.is-error {
+    color: #ff8f8f;
+}
+
+.rumor-form-status.is-success {
+    color: #87d987;
+}
+
+.rumor-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.rumor-cancel-btn {
+    background: rgba(56, 56, 62, 0.9);
+    border-color: rgba(242, 124, 17, 0.22);
+}
+
+.rumor-submit-btn {
+    min-width: 150px;
 }
 
 /* Footer */
@@ -315,4 +463,11 @@ body {
     border-color: rgb(242, 124, 17);
     color: rgb(242, 124, 17);
     box-shadow: 0 0 8px rgba(242, 124, 17, 0.4);
+}
+
+@media (max-width: 760px) {
+    .options-grid.options-grid-half,
+    .rumor-form-row {
+        grid-template-columns: 1fr;
+    }
 }
