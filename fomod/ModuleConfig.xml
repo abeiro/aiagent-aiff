@@ -35,8 +35,11 @@
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="None/I USE DBVO">
+            <plugin name="None/I USE DBVO/I USED A CUSTOM INTERFACE">
               <description>Skips the patch for CHIM's player dialogue menu. If you choose this, the Player Dialogue TTS feature will not function in-game.</description>
+              <conditionFlags>
+                <flag name="skipDialogueMenuPatch">On</flag>
+              </conditionFlags>
               <typeDescriptor>
                 <type name="Optional" />
               </typeDescriptor>
