@@ -13,9 +13,9 @@
     <folder source="Textures" destination="Textures" priority="0" />
   </requiredInstallFiles>
   <installSteps order="Explicit">
-    <installStep name="Player Dialogue Menu">
+    <installStep name="CHIM Player Dialogue Menu">
       <optionalFileGroups order="Explicit">
-        <group name="Choose one (required for player dialogue TTS)" type="SelectExactlyOne">
+        <group name="Choose one for player dialogue menu patch" type="SelectExactlyOne">
           <plugins order="Explicit">
             <plugin name="Vanilla SE/AE Skyrim UI">
               <description>Installs the Skyrim SE/AE player dialogue menu overwrite. Required for in-game Player Dialogue TTS feature on Skyrim SE/AE.</description>
@@ -35,8 +35,8 @@
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="None (Disable Player Dialogue TTS)">
-              <description>Installs no Player Dialogue menu overwrite. If you choose this, the Player Dialogue TTS feature will not function in-game.</description>
+            <plugin name="None/I USE DBVO">
+              <description>Skips the patch for CHIM's player dialogue menu. If you choose this, the Player Dialogue TTS feature will not function in-game.</description>
               <typeDescriptor>
                 <type name="Optional" />
               </typeDescriptor>
