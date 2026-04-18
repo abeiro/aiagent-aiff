@@ -10,6 +10,7 @@ let activeNpcProfileLabel = '';
 let activeStateRefreshTimeouts = [];
 let rumorCreateInFlight = false;
 const DEFAULT_SERVER_BASE = 'http://127.0.0.1:8081/HerikaServer';
+let rawChimServerUrl = '';
 
 const MODE_ACTION_MAP = {
     STANDARD: 'mode_standard',
@@ -125,12 +126,36 @@ function setFallbackProfiles() {
 }
 
 function getServerBaseUrl() {
-    let base = window.chimServerUrl || DEFAULT_SERVER_BASE;
+    let base = rawChimServerUrl || DEFAULT_SERVER_BASE;
     base = String(base || '').replace(/\/+$/, '');
     if (!/\/HerikaServer$/i.test(base)) {
         base += '/HerikaServer';
     }
     return base;
+}
+
+function bindServerUrlUpdates() {
+    const currentValue = typeof window.chimServerUrl === 'string' ? window.chimServerUrl : rawChimServerUrl;
+    rawChimServerUrl = currentValue || '';
+
+    Object.defineProperty(window, 'chimServerUrl', {
+        configurable: true,
+        enumerable: true,
+        get() {
+            return rawChimServerUrl;
+        },
+        set(value) {
+            const nextValue = String(value || '').trim();
+            const changed = nextValue !== rawChimServerUrl;
+            rawChimServerUrl = nextValue;
+
+            if (changed) {
+                console.log('[CHIM Settings] Updated server URL:', getServerBaseUrl());
+                fetchProfilesInfo();
+                refreshActiveState();
+            }
+        }
+    });
 }
 
 function getRumorModalOverlay() {
@@ -663,10 +688,12 @@ function initLayoutPickers() {
 // Initialize on load
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
+        bindServerUrlUpdates();
         initSettingsMenu();
         initLayoutPickers();
     });
 } else {
+    bindServerUrlUpdates();
     initSettingsMenu();
     initLayoutPickers();
 }
