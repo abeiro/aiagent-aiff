@@ -11,7 +11,6 @@
         <!-- Tab Bar -->
         <div class="chatbox-tabs">
             <button class="tab-button active" data-tab="chat" onclick="switchTab('chat')">Chat</button>
-            <button class="tab-button" data-tab="system" onclick="switchTab('system')">System</button>
             <button class="btn-close" onclick="closeChat()" title="Close">&times;</button>
         </div>
         
@@ -20,15 +19,6 @@
             <!-- Chat Tab -->
             <div id="tab-chat" class="tab-pane active">
                 <div class="messages-container" id="chat-messages">
-                </div>
-            </div>
-            
-            <!-- System Tab -->
-            <div id="tab-system" class="tab-pane">
-                <div class="messages-container" id="system-messages">
-                    <div class="message-welcome">
-                        <span class="message-system">System logs will appear here.</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -111,7 +101,7 @@
                         <button class="focus-btn focus-btn-danger" type="button" onclick="clearFocusMessage()">Clear Text</button>
                         <button class="focus-btn" type="button" onclick="triggerContinueSpeaking()">Continue Speaking</button>
                         <button class="focus-btn focus-btn-stop" type="button" onclick="triggerStopAllDialogue()">Stop All Dialogue</button>
-                        <button class="focus-btn" type="button" onclick="triggerHaltAIActions()">Halt AI Actions</button>
+                        <button class="focus-btn focus-btn-stop" type="button" onclick="triggerHaltAIActions()">Halt AI Actions</button>
                     </div>
                 </div>
             </div>

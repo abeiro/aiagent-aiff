@@ -497,12 +497,17 @@ endEvent
 
 int function GetVersion()
 
-	return 64
+	return 65
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 65 && a_version > CurrentVersion)
+		; Version 65: Refresh Prisma CHIM Chat / Chatbox View labels and hotkey menu state
+		OnConfigInit()
+	endIf
 
 	if (a_version == 64 && a_version > CurrentVersion)
 		; Version 64: Reordered Prisma UI hotkeys and restored Dialogue History entry

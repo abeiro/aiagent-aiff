@@ -1,6 +1,6 @@
 /**
  * CHIM Chatbox JavaScript
- * Handles MMO-style chat interface with tabs and real-time updates
+ * Handles MMO-style chat interface and real-time updates
  * Focus text composition is handled by a centered modal
  */
 
@@ -9,7 +9,6 @@
 
     // DOM Elements
     const chatMessages = document.getElementById('chat-messages');
-    const systemMessages = document.getElementById('system-messages');
     const chatboxRoot = document.getElementById('chim-chatbox');
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -26,7 +25,6 @@
     // State
     let currentTab = 'chat';
     const maxMessages = 100;
-    let systemLogRefreshInterval = null;
     let isChatFocused = false;
     let quickChatMode = false;
     let isFocusChatEnabled = false;
@@ -35,6 +33,7 @@
     let currentTargetName = '';
     let currentTargetFormId = 0;
     let currentTargetOverrideActive = false;
+    let currentTargetOverrideMode = 'auto';
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
@@ -59,22 +58,12 @@
     };
 
     /**
-     * Switch between Chat and System tabs
+     * Switch between available chatbox tabs.
      */
     window.switchTab = function(tabName) {
         currentTab = tabName;
         tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabName));
         tabPanes.forEach(pane => pane.classList.toggle('active', pane.id === 'tab-' + tabName));
-
-        if (tabName === 'system') {
-            fetchSystemLogs();
-            if (!systemLogRefreshInterval) {
-                systemLogRefreshInterval = setInterval(fetchSystemLogs, 30000);
-            }
-        } else if (systemLogRefreshInterval) {
-            clearInterval(systemLogRefreshInterval);
-            systemLogRefreshInterval = null;
-        }
     };
 
     /**
@@ -120,60 +109,7 @@
      * Push a system log entry (called from C++ via Invoke)
      */
     window.pushSystemLog = function(level, message, timestamp) {
-        if (!message) return;
-        level = level || 'info';
-        timestamp = timestamp || getCurrentTime();
-
-        var logDiv = document.createElement('div');
-        logDiv.className = 'log-entry ' + level;
-
-        var timestampSpan = document.createElement('span');
-        timestampSpan.className = 'log-timestamp';
-        timestampSpan.textContent = timestamp;
-
-        var levelSpan = document.createElement('span');
-        levelSpan.className = 'log-level';
-        levelSpan.textContent = level;
-
-        var messageSpan = document.createElement('span');
-        messageSpan.className = 'log-message';
-        messageSpan.textContent = message;
-
-        logDiv.appendChild(timestampSpan);
-        logDiv.appendChild(levelSpan);
-        logDiv.appendChild(messageSpan);
-        systemMessages.appendChild(logDiv);
-
-        while (systemMessages.children.length > maxMessages) {
-            systemMessages.removeChild(systemMessages.firstChild);
-        }
-        systemMessages.scrollTop = systemMessages.scrollHeight;
-    };
-
-    /**
-     * Fetch system logs from server
-     */
-    async function fetchSystemLogs() {
-        try {
-            var response = await fetch(SERVER_URL + '/ui/api/chim_debugger_logs.php?type=chim&lines=50');
-            if (!response.ok) return;
-            var data = await response.json();
-            if (!data.success || !data.lines) return;
-
-            systemMessages.innerHTML = '';
-            data.lines.forEach(function(line) {
-                var text = line.text || '';
-                var type = line.type || 'info';
-                var match = text.match(/^\[(.*?)\]\s*\[(.*?)\]\s*(.*)$/);
-                if (match) {
-                    window.pushSystemLog(type, match[3], formatTimestamp(match[1]));
-                } else {
-                    window.pushSystemLog(type, text);
-                }
-            });
-        } catch (_err) {
-            // Network error, ignore
-        }
+        // System tab removed from chatbox view. Keep bridge hook as a harmless no-op.
     }
 
     /**
@@ -349,7 +285,13 @@
         if (!currentTargetElement) return;
         currentTargetName = name || '';
         const suffix = currentTargetOverrideActive ? '<span class="target-distance">(Override)</span>' : '';
-        if (name && name !== '') {
+        if (currentTargetOverrideMode === 'everyone') {
+            currentTargetElement.innerHTML = `
+                <span class="target-name">Everyone</span>
+                <span class="target-distance">(Broadcast)</span>
+                ${suffix}
+            `;
+        } else if (name && name !== '') {
             currentTargetElement.innerHTML = `
                 <span class="target-name">${escapeHtml(name)}</span>
                 <span class="target-distance">(${distance.toFixed(1)}m)</span>
@@ -372,6 +314,7 @@
 
         const targets = Array.isArray(payload.targets) ? payload.targets : [];
         currentTargetOverrideActive = !!payload.override_active;
+        currentTargetOverrideMode = payload.override_mode || 'auto';
         currentTargetFormId = Number(payload.active_form_id || 0);
         currentTargetName = payload.active_name || '';
 
@@ -383,6 +326,16 @@
                         <span class="chatbox-target-name">Auto</span>
                     </span>
                     <span class="chatbox-target-distance">Mode</span>
+                </button>
+            `);
+        }
+        if (payload.show_everyone) {
+            parts.push(`
+                <button class="chatbox-target-item everyone-target ${payload.everyone_active ? 'active' : ''}" type="button" data-everyone="true">
+                    <span class="chatbox-target-meta">
+                        <span class="chatbox-target-name">Everyone</span>
+                    </span>
+                    <span class="chatbox-target-distance">Broadcast</span>
                 </button>
             `);
         }
@@ -408,7 +361,7 @@
         }
 
         targetsListElement.innerHTML = parts.join('');
-        const activeTarget = targets.find(function(target) {
+        const activeTarget = currentTargetOverrideMode === 'everyone' ? null : targets.find(function(target) {
             return Number(target.form_id || 0) === currentTargetFormId || (target.name || '') === currentTargetName;
         });
         window.updateChatboxTarget(currentTargetName, Number(activeTarget ? activeTarget.distance || 0 : 0));
@@ -493,6 +446,10 @@
                 sendControlCommand('target_override_clear');
                 return;
             }
+            if (targetButton.dataset.everyone === 'true') {
+                sendControlCommand('target_override_everyone');
+                return;
+            }
 
             const formId = targetButton.dataset.formId || '0';
             const targetName = targetButton.dataset.targetName || '';
@@ -504,12 +461,6 @@
     updateFocusIndicator(isFocusChatEnabled);
     window.updateChatboxMode('STANDARD');
     window.updateChatboxModel('Standard');
-
-    window.addEventListener('beforeunload', function() {
-        if (systemLogRefreshInterval) {
-            clearInterval(systemLogRefreshInterval);
-        }
-    });
 
     // Apply corner placement via shared layout manager
     if (window.chimLayout) {
