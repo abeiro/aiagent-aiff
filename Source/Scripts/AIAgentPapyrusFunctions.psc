@@ -740,7 +740,7 @@ Function RegisterVrikGestureActions()
 		return
 	endif
 
-	RegisterVrikGestureAction(_vrikActionTextChat, "CHIM Text Chat")
+	RegisterVrikGestureAction(_vrikActionTextChat, "CHIM Chat")
 	RegisterVrikGestureAction(_vrikActionVoiceChat, "CHIM Voice Chat")
 	RegisterVrikGestureAction(_vrikActionMasterWheel, "CHIM Master Wheel")
 	RegisterVrikGestureAction(_vrikActionRoleplayWheel, "CHIM Roleplay Wheel")

@@ -22,18 +22,21 @@
                 <h2 class="group-title">Prisma UI Panels</h2>
                 <div class="prisma-panels-layout">
                     <div class="primary-actions-row">
+                        <button class="setting-btn primary-panel-btn" onclick="selectPanel('textchat')"
+                                onmouseenter="showDescription('Open CHIM Chat so you can type a line and send it immediately')"
+                                onmouseleave="clearDescription()">CHIM Chat</button>
                         <button class="setting-btn primary-panel-btn" onclick="selectPanel('chatbox')"
-                                onmouseenter="showDescription('Toggle Chat - MMO-style chat interface')"
-                                onmouseleave="clearDescription()">Chat</button>
-                        <button class="setting-btn primary-panel-btn" onclick="selectPanel('history')" 
-                                onmouseenter="showDescription('View conversation history with AI NPCs - pauses game')"
-                                onmouseleave="clearDescription()">Conversation History</button>
+                                onmouseenter="showDescription('Open Chatbox View - the MMO-style live chat panel')"
+                                onmouseleave="clearDescription()">Chatbox View</button>
                         <button class="setting-btn primary-panel-btn" onclick="selectPanel('settings')"
                                 onmouseenter="showDescription('Open CHIM Actions menu - centralized actions interface')"
                                 onmouseleave="clearDescription()">CHIM Actions</button>
                     </div>
 
                     <div class="secondary-actions-row">
+                        <button class="setting-btn" onclick="selectPanel('history')" 
+                                onmouseenter="showDescription('View conversation history with AI NPCs - pauses game')"
+                                onmouseleave="clearDescription()">Conversation History</button>
                         <button class="setting-btn" onclick="selectPanel('diaries')"
                                 onmouseenter="showDescription('Read diaries and memory logs - pauses game')"
                                 onmouseleave="clearDescription()">Diaries</button>
@@ -71,7 +74,7 @@
                     <div class="layout-dropdown" id="hud-layout-dropdown" hidden>
                         <div class="layout-grid-3x2">
                             <div class="layout-card">
-                                <div class="layout-label" onmouseenter="showDescription('ChatView panel corner placement')" onmouseleave="clearDescription()">ChatView</div>
+                                <div class="layout-label" onmouseenter="showDescription('Chatbox View panel corner placement')" onmouseleave="clearDescription()">Chatbox View</div>
                                 <div class="corner-picker" data-view="chatbox">
                                     <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('chatbox','top-left')">&#8598;</button>
                                     <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('chatbox','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>

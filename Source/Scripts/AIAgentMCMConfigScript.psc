@@ -637,7 +637,7 @@ event OnPageReset(string a_page)
 	
 	if (a_page=="Main" || a_page=="")
 		; === Communication Hotkeys ===
-		_keymapOID_K = AddKeyMapOption("Text Chat", _myKey)
+		_keymapOID_K = AddKeyMapOption("CHIM Chat", _myKey)
 		_keymapOID_K2 = AddKeyMapOption("Voice Chat", _myKey2)
 		
 		; === Master Wheel ===
@@ -747,8 +747,8 @@ event OnPageReset(string a_page)
 	if (a_page=="Prisma UI")
 		AddHeaderOption("Hotkeys")
 		_keymap_mastermenu = AddKeyMapOption("Master Menu", _mastermenu_key)
-		_keymap_chatbox_focus = AddKeyMapOption("Text Chat", _chatbox_focus_key)
-		_keymap_chatbox = AddKeyMapOption("Dialogue History", _chatbox_key)
+		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chat", _chatbox_focus_key)
+		_keymap_chatbox = AddKeyMapOption("Chatbox View", _chatbox_key)
 		_keymap_settingsmenu = AddKeyMapOption("Actions Menu", _settingsmenu_key)
 		_keymap_overlaystatus_cycle = AddKeyMapOption("Status, Minihud, Terminator Views", _overlaystatus_cycle_key)
 		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries", _historydiaries_cycle_key)
@@ -1352,7 +1352,7 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 
 	bool prismaChatHotkeyConflict = a_keyCode != -1 && ((a_option == _keymap_chatbox && a_keyCode == _chatbox_focus_key) || (a_option == _keymap_chatbox_focus && a_keyCode == _chatbox_key))
 	if (prismaChatHotkeyConflict)
-		ShowMessage("Text Chat and Dialogue History must use different hotkeys.")
+		ShowMessage("CHIM Chat and Chatbox View must use different hotkeys.")
 		return
 	endIf
 
@@ -2058,11 +2058,11 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_chatbox)
-		SetInfoText("Open the Dialogue History panel in Prisma UI. This shows recent AI dialogue and system chat history. Requires Prisma UI.")
+		SetInfoText("Open Chatbox View in Prisma UI. This is the MMO-style live chat panel that stays open while dialogue and system messages stream in. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_chatbox_focus)
-		SetInfoText("Open text chat input for Prisma UI so you can type and send a message, then return control to the game.")
+		SetInfoText("Open CHIM Chat input for Prisma UI so you can type and send a message, then return control to the game.")
 	endIf
 	
 	if (a_option == _keymap_settingsmenu)
