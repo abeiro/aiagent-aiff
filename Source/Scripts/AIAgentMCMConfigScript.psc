@@ -71,6 +71,9 @@ float		_timeout_int				= 60.0
 int			_toggleAnimation
 bool		_animationstate			= false
 
+int			_toggleAiQuestProgression
+bool		_aiQuestProgressionState		= false
+
 
 int			_toggle1OID_Rereg
 
@@ -249,6 +252,7 @@ float		_lip_resDefault					= 500.0
 float		_lip_intDefault					= 1.0
 float		_timeout_intDefault				= 30.0
 bool		_animationstateDefault			= false
+bool		_aiQuestProgressionStateDefault		= false
 bool		_enable3daudioplaybackstateDefault	= true
 bool		_invertheadingstateDefault		= false
 bool		_pauseDialogueStateDefault		= false
@@ -315,6 +319,15 @@ event OnPlayerLoadGame()
 		controlScript.setConf("_player_tts_traditional_dialogue", 1)
 	else
 		controlScript.setConf("_player_tts_traditional_dialogue", 0)
+	endIf
+
+	int aiQuestProgressionValue = AIAgentFunctions.get_conf_i("_ai_quest_progression")
+	if (aiQuestProgressionValue > 0)
+		_aiQuestProgressionState = true
+		controlScript.setConf("_ai_quest_progression", 1)
+	else
+		_aiQuestProgressionState = false
+		controlScript.setConf("_ai_quest_progression", 0)
 	endIf
 
 	if (_enable3daudioplaybackstate)
@@ -428,6 +441,15 @@ event OnConfigInit()
 		controlScript.setConf("_player_tts_traditional_dialogue", 0)
 	endIf
 
+	int aiQuestProgressionValue = AIAgentFunctions.get_conf_i("_ai_quest_progression")
+	if (aiQuestProgressionValue > 0)
+		_aiQuestProgressionState = true
+		controlScript.setConf("_ai_quest_progression", 1)
+	else
+		_aiQuestProgressionState = false
+		controlScript.setConf("_ai_quest_progression", 0)
+	endIf
+
 	; Load spatial hearing distance settings
 	int spatialHearingInsideValue = AIAgentFunctions.get_conf_i("_spatial_hearing_inside")
 	if (spatialHearingInsideValue > 0)
@@ -497,12 +519,17 @@ endEvent
 
 int function GetVersion()
 
-	return 65
+	return 66
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 66 && a_version > CurrentVersion)
+		; Version 66: Added AI Quest Progression toggle to the main MCM page
+		OnConfigInit()
+	endIf
 
 	if (a_version == 65 && a_version > CurrentVersion)
 		; Version 65: Refresh Prisma CHIM Chat / Chatbox View labels and hotkey menu state
@@ -661,6 +688,7 @@ event OnPageReset(string a_page)
 		; === Settings ===
 		_toggle1OID_C		= AddToggleOption("Enable AI Actions", _toggleState2)
 		_toggleAnimation		= AddToggleOption("Enable Animations", _animationstate)
+		_toggleAiQuestProgression = AddToggleOption("Enable AI Quest Progression", _aiQuestProgressionState)
 		_togglePlayerTtsTraditionalDialogue = AddToggleOption("Player TTS for Traditional Dialogue", _playerTtsTraditionalDialogueState)
 		_toggle1OID_E		= AddToggleOption("Soulgaze HD Mode", _toggleState7)
 		_slider_timeout	= AddSliderOption("Connection Timeout (seconds)",_timeout_int,"{1}" )
@@ -1139,6 +1167,12 @@ event OnGameReload()
 	else
 		a=controlScript.setConf("_animations",0)
 	endif
+
+	if (_aiQuestProgressionState)
+		a=controlScript.setConf("_ai_quest_progression",1)
+	else
+		a=controlScript.setConf("_ai_quest_progression",0)
+	endif
 	
 	if (_pauseDialogueState)
 		a=controlScript.setConf("_pause_dialogue_when_menu_open",1)
@@ -1255,6 +1289,15 @@ event OnOptionDefault(int a_option)
 	elseif (a_option == _toggleAnimation)
 		_animationstate = _animationstateDefault
 		SetToggleOptionValue(a_option, _animationstate)
+
+	elseif (a_option == _toggleAiQuestProgression)
+		_aiQuestProgressionState = _aiQuestProgressionStateDefault
+		if (_aiQuestProgressionState)
+			controlScript.setConf("_ai_quest_progression", 1)
+		else
+			controlScript.setConf("_ai_quest_progression", 0)
+		endif
+		SetToggleOptionValue(a_option, _aiQuestProgressionState)
 
 	elseif (a_option == _toggle1OID_E)
 		_toggleState7 = _toggleState7Default
@@ -1593,6 +1636,17 @@ event OnOptionSelect(int a_option)
 		endif
 		
 		SetToggleOptionValue(a_option, _animationstate)
+	endIf
+	if (a_option == _toggleAiQuestProgression)
+		_aiQuestProgressionState = !_aiQuestProgressionState
+		
+		if (_aiQuestProgressionState)
+			controlScript.setConf("_ai_quest_progression",1)
+		else
+			controlScript.setConf("_ai_quest_progression",0)
+		endif
+		
+		SetToggleOptionValue(a_option, _aiQuestProgressionState)
 	endIf
 	if (a_option == _toggle1OID_Rereg)
 		ConsoleUtil.ExecuteCommand("SetStage SKI_ConfigManagerInstance 1")
@@ -1964,6 +2018,10 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _toggleAnimation)
 		SetInfoText("Enable AI NPCs to perform animations during interactions.")
+	endIf
+
+	if (a_option == _toggleAiQuestProgression)
+		SetInfoText("Enables CHIM quest-aware conversation progression. Turn this off to disable AI quest context, trigger evaluation, and quest action execution.")
 	endIf
 	
 	if (a_option == _toggle1OID_Rereg)
