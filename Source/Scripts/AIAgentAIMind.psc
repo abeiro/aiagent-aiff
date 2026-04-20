@@ -62,12 +62,6 @@ function ResetPackages(Actor npc) global
 
 endFunction
 
-function PlayerFollowStart() global
-
-
-
-endFunction
-
 function MoveToTarget(Actor npc, ObjectReference akTarget, int intent) global
 	
 	ResetPackages(npc);

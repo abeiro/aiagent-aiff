@@ -20,38 +20,44 @@
             <!-- General -->
             <div class="settings-group">
                 <h2 class="group-title">General</h2>
-                <div class="options-grid">
+                <div class="options-grid options-grid-half">
                     <button class="setting-btn" onclick="selectOption('open_ai_quest_manager')"
                             onmouseenter="showDescription('Open AI Quest Manager V1 with SNQE fields and controls')"
                             onmouseleave="clearDescription()">AI Quest Manager</button>
+                    <button class="setting-btn" onclick="selectOption('open_create_rumor')"
+                            onmouseenter="showDescription('Create a manual rumor and save it directly into the Background Life rumors table')"
+                            onmouseleave="clearDescription()">Create Rumor</button>
                 </div>
             </div>
             <!-- Mode Options -->
             <div class="settings-group">
                 <h2 class="group-title">Mode</h2>
                 <div class="options-grid">
-                    <button class="setting-btn" onclick="selectOption('mode_standard')" 
+                    <button class="setting-btn" data-option="mode_standard" onclick="selectOption('mode_standard')" 
                             onmouseenter="showDescription('Normal conversation mode with roleplay and event injection support')"
                             onmouseleave="clearDescription()">Standard Chat</button>
-                    <button class="setting-btn" onclick="selectOption('mode_whisper')"
+                    <button class="setting-btn" data-option="mode_whisper" onclick="selectOption('mode_whisper')"
                             onmouseenter="showDescription('Private conversation mode - only nearby NPCs (4 meters) can hear and respond')"
                             onmouseleave="clearDescription()">Whisper Chat</button>
-                    <button class="setting-btn" onclick="selectOption('mode_director')"
+                    <button class="setting-btn" data-option="mode_narrator" onclick="selectOption('mode_narrator')"
+                            onmouseenter="showDescription('Private narrator mode - when you speak, only The Narrator hears the conversation and nearby NPCs do not')"
+                            onmouseleave="clearDescription()">Narrator Mode</button>
+                    <button class="setting-btn" data-option="mode_director" onclick="selectOption('mode_director')"
                             onmouseenter="showDescription('Give direct instructions to NPCs as game director')"
                             onmouseleave="clearDescription()">Director Mode</button>
-                    <button class="setting-btn" onclick="selectOption('mode_spawn')"
+                    <button class="setting-btn" data-option="mode_spawn" onclick="selectOption('mode_spawn')"
                             onmouseenter="showDescription('Spawn new characters by describing them')"
                             onmouseleave="clearDescription()">Spawn NPC</button>
-                    <button class="setting-btn" onclick="selectOption('mode_cheat')"
+                    <button class="setting-btn" data-option="mode_cheat" onclick="selectOption('mode_cheat')"
                             onmouseenter="showDescription('All input processed as cheat commands - NPCs will execute any request')"
                             onmouseleave="clearDescription()">Cheat Mode</button>
-                    <button class="setting-btn" onclick="selectOption('mode_autochat')"
+                    <button class="setting-btn" data-option="mode_autochat" onclick="selectOption('mode_autochat')"
                             onmouseenter="showDescription('Speaks for you using your Player Bio and Speech Style. Makes 2 LLM calls: first rewrites your input into in-character dialogue (fast model), then the NPC responds.')"
                             onmouseleave="clearDescription()">Auto Chat</button>
-                    <button class="setting-btn" onclick="selectOption('mode_inject_log')"
+                    <button class="setting-btn" data-option="mode_inject_log" onclick="selectOption('mode_inject_log')"
                             onmouseenter="showDescription('Add events to NPC memory without triggering responses')"
                             onmouseleave="clearDescription()">Inject Event</button>
-                    <button class="setting-btn" onclick="selectOption('mode_inject_chat')"
+                    <button class="setting-btn" data-option="mode_inject_chat" onclick="selectOption('mode_inject_chat')"
                             onmouseenter="showDescription('Add events to NPC memory and get a response')"
                             onmouseleave="clearDescription()">Inject & Chat</button>
                 </div>
@@ -61,16 +67,16 @@
             <div class="settings-group">
                 <h2 class="group-title">LLM Profiles</h2>
                 <div class="options-grid">
-                    <button class="setting-btn" onclick="selectOption('llm_standard')"
+                    <button class="setting-btn" data-option="llm_standard" onclick="selectOption('llm_standard')"
                             onmouseenter="showDescription('Balanced speed and quality for general conversations')"
                             onmouseleave="clearDescription()">Standard LLM</button>
-                    <button class="setting-btn" onclick="selectOption('llm_fast')"
+                    <button class="setting-btn" data-option="llm_fast" onclick="selectOption('llm_fast')"
                             onmouseenter="showDescription('Faster responses with lighter model')"
                             onmouseleave="clearDescription()">Fast LLM</button>
-                    <button class="setting-btn" onclick="selectOption('llm_powerful')"
+                    <button class="setting-btn" data-option="llm_powerful" onclick="selectOption('llm_powerful')"
                             onmouseenter="showDescription('Best quality responses with heavier model')"
                             onmouseleave="clearDescription()">Powerful LLM</button>
-                    <button class="setting-btn" onclick="selectOption('llm_experimental')"
+                    <button class="setting-btn" data-option="llm_experimental" onclick="selectOption('llm_experimental')"
                             onmouseenter="showDescription('Experimental features and cutting-edge models')"
                             onmouseleave="clearDescription()">Experimental LLM</button>
                     <button class="setting-btn" onclick="selectOption('llm_focus')"
@@ -83,22 +89,22 @@
             <div id="npc-settings" class="settings-group" style="display: none;">
                 <h2 class="group-title">Assign Profile to <span id="npc-name" class="npc-highlight">NPC</span></h2>
                 <div class="options-grid">
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_1')" 
+                    <button class="setting-btn profile-btn" data-option="profile_1" onclick="selectOption('profile_1')" 
                             onmouseenter="showDescription('Assign Profile 1 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-1-name">Profile 1</div>
                     </button>
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_2')"
+                    <button class="setting-btn profile-btn" data-option="profile_2" onclick="selectOption('profile_2')"
                             onmouseenter="showDescription('Assign Profile 2 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-2-name">Profile 2</div>
                     </button>
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_3')"
+                    <button class="setting-btn profile-btn" data-option="profile_3" onclick="selectOption('profile_3')"
                             onmouseenter="showDescription('Assign Profile 3 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-3-name">Profile 3</div>
                     </button>
-                    <button class="setting-btn profile-btn" onclick="selectOption('profile_4')"
+                    <button class="setting-btn profile-btn" data-option="profile_4" onclick="selectOption('profile_4')"
                             onmouseenter="showDescription('Assign Profile 4 to this NPC')"
                             onmouseleave="clearDescription()">
                         <div class="profile-name" id="profile-4-name">Profile 4</div>
@@ -139,11 +145,14 @@
                             onmouseenter="showDescription('Command this NPC to follow you')"
                             onmouseleave="clearDescription()">Follow Me</button>
                     <button class="setting-btn" onclick="selectOption('rp_rename')"
-                            onmouseenter="showDescription('Rename this NPC or add them to background lore')"
-                            onmouseleave="clearDescription()">Rename / Add to BgL</button>
+                            onmouseenter="showDescription('Add this NPC to Background Life')"
+                            onmouseleave="clearDescription()">Add to Background Life</button>
                     <button class="setting-btn" onclick="selectOption('continue_chat')"
-                            onmouseenter="showDescription('Ask this NPC to continue the conversation')"
-                            onmouseleave="clearDescription()">Continue Chat</button>
+                            onmouseenter="showDescription('Ask this NPC to continue speaking naturally')"
+                            onmouseleave="clearDescription()">Continue Speaking</button>
+                    <button id="ai-generate-profile-btn" class="setting-btn" onclick="selectOption('rp_ai_generate_profile')"
+                            onmouseenter="showDescription('Generate or refresh this NPC\\'s CHIM profile using up to the last 100 usable events')"
+                            onmouseleave="clearDescription()">AI Generate Profile</button>
                 </div>
             </div>
 
@@ -164,6 +173,56 @@
                             onmouseenter="showDescription('Upload current scene to CHIM Soulgaze gallery')"
                             onmouseleave="clearDescription()">Upload Image</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="rumor-modal-overlay" class="rumor-modal-overlay hidden" aria-hidden="true" onclick="if (event.target === this) closeRumorModal()">
+            <div class="rumor-modal-panel" role="dialog" aria-modal="true" aria-labelledby="rumor-modal-title">
+                <div class="rumor-modal-header">
+                    <div class="rumor-modal-title-wrap">
+                        <h3 id="rumor-modal-title" class="rumor-modal-title">Create Rumor</h3>
+                        <p class="rumor-modal-subtitle">Add a rumor directly to Background Life without leaving Prisma.</p>
+                    </div>
+                    <button class="rumor-modal-close" type="button" onclick="closeRumorModal()" aria-label="Close create rumor modal">&times;</button>
+                </div>
+                <form id="rumor-create-form" class="rumor-form" onsubmit="submitRumorForm(event)">
+                    <div class="rumor-form-row">
+                        <div class="rumor-field">
+                            <label for="rumor-hold-select">Hold</label>
+                            <select id="rumor-hold-select" name="rumor_hold" required>
+                                <option value="">Select hold</option>
+                                <option value="Skyrim">Skyrim</option>
+                                <option value="Whiterun">Whiterun</option>
+                                <option value="Eastmarch">Eastmarch</option>
+                                <option value="Haafingar">Haafingar</option>
+                                <option value="The Reach">The Reach</option>
+                                <option value="Hjaalmarch">Hjaalmarch</option>
+                                <option value="The Pale">The Pale</option>
+                                <option value="Falkreath">Falkreath</option>
+                                <option value="The Rift">The Rift</option>
+                                <option value="Winterhold">Winterhold</option>
+                                <option value="Solstheim">Solstheim</option>
+                            </select>
+                        </div>
+                        <div class="rumor-field">
+                            <label for="rumor-type-input">Type</label>
+                            <input id="rumor-type-input" name="rumor_type" type="text" placeholder="General">
+                        </div>
+                        <div class="rumor-field">
+                            <label for="rumor-length-days-input">Rumor Length (Days)</label>
+                            <input id="rumor-length-days-input" name="rumor_length_days" type="number" min="1" step="1" value="7" placeholder="7">
+                        </div>
+                    </div>
+                    <div class="rumor-field">
+                        <label for="rumor-content-input">Content</label>
+                        <textarea id="rumor-content-input" name="rumor_content" rows="5" required placeholder="Write the rumor text here..."></textarea>
+                    </div>
+                    <div id="rumor-form-status" class="rumor-form-status" aria-live="polite"></div>
+                    <div class="rumor-form-actions">
+                        <button class="setting-btn rumor-cancel-btn" type="button" onclick="closeRumorModal()">Cancel</button>
+                        <button id="rumor-submit-btn" class="setting-btn rumor-submit-btn" type="submit">Create Rumor</button>
+                    </div>
+                </form>
             </div>
         </div>
 

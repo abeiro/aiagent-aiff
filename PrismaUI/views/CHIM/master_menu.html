@@ -20,37 +20,42 @@
             <!-- Prisma UI Panels -->
             <div class="settings-group">
                 <h2 class="group-title">Prisma UI Panels</h2>
-                <div class="options-grid">
-                    <button class="setting-btn" onclick="selectPanel('history')" 
-                            onmouseenter="showDescription('View conversation history with AI NPCs - pauses game')"
-                            onmouseleave="clearDescription()">Conversation History</button>
-                    <button class="setting-btn" onclick="selectPanel('diaries')"
-                            onmouseenter="showDescription('Read diaries and memory logs - pauses game')"
-                            onmouseleave="clearDescription()">Diaries</button>
-                    <button class="setting-btn" onclick="selectPanel('overlay')"
-                            onmouseenter="showDescription('Display CHIM Status Bar with current mode and settings')"
-                            onmouseleave="clearDescription()">Status Bar</button>
-                    <button class="setting-btn" onclick="selectPanel('statushud')"
-                            onmouseenter="showDescription('Show MiniHUD with nearby NPCs and their states')"
-                            onmouseleave="clearDescription()">MiniHUD</button>
-                    <button class="setting-btn" onclick="selectPanel('aiview')"
-                            onmouseenter="showDescription('View detailed Terminator View profile of targeted NPC')"
-                            onmouseleave="clearDescription()">Terminator View</button>
-                    <button class="setting-btn" onclick="selectPanel('browser')"
-                            onmouseenter="showDescription('Open CHIM Browser (Beta) - full web interface in-game')"
-                            onmouseleave="clearDescription()">CHIM Browser (Beta)</button>
-                    <button class="setting-btn" onclick="selectPanel('debugger')"
-                            onmouseenter="showDescription('Open CHIM Logs View (Beta) - server logs and diagnostics')"
-                            onmouseleave="clearDescription()">CHIM Logs View (Beta)</button>
-                    <button class="setting-btn" onclick="selectPanel('chatbox')"
-                            onmouseenter="showDescription('Toggle ChatView - MMO-style chat interface')"
-                            onmouseleave="clearDescription()">ChatView</button>
-                    <button class="setting-btn" onclick="selectPanel('settings')"
-                            onmouseenter="showDescription('Open CHIM Actions menu - centralized actions interface')"
-                            onmouseleave="clearDescription()">CHIM Actions</button>
-                    <button class="setting-btn" onclick="selectPanel('questmanager')"
-                            onmouseenter="showDescription('Open AI Quest Manager V1 - Prisma-native quest generation panel')"
-                            onmouseleave="clearDescription()">AI Quest Manager</button>
+                <div class="prisma-panels-layout">
+                    <div class="primary-actions-row">
+                        <button class="setting-btn primary-panel-btn" onclick="selectPanel('textchat')"
+                                onmouseenter="showDescription('Open CHIM Chat so you can type a line and send it immediately')"
+                                onmouseleave="clearDescription()">CHIM Chat</button>
+                        <button class="setting-btn primary-panel-btn" onclick="selectPanel('chatbox')"
+                                onmouseenter="showDescription('Open Chatbox View - the MMO-style live chat panel')"
+                                onmouseleave="clearDescription()">Chatbox View</button>
+                        <button class="setting-btn primary-panel-btn" onclick="selectPanel('settings')"
+                                onmouseenter="showDescription('Open CHIM Actions menu - centralized actions interface')"
+                                onmouseleave="clearDescription()">CHIM Actions</button>
+                    </div>
+
+                    <div class="secondary-actions-row">
+                        <button class="setting-btn" onclick="selectPanel('history')" 
+                                onmouseenter="showDescription('View conversation history with AI NPCs - pauses game')"
+                                onmouseleave="clearDescription()">Conversation History</button>
+                        <button class="setting-btn" onclick="selectPanel('diaries')"
+                                onmouseenter="showDescription('Read diaries and memory logs - pauses game')"
+                                onmouseleave="clearDescription()">Diaries</button>
+                        <button class="setting-btn" onclick="selectPanel('overlay')"
+                                onmouseenter="showDescription('Display CHIM Status Bar with current mode and settings')"
+                                onmouseleave="clearDescription()">Status Bar</button>
+                        <button class="setting-btn" onclick="selectPanel('statushud')"
+                                onmouseenter="showDescription('Show MiniHUD with nearby NPCs and their states')"
+                                onmouseleave="clearDescription()">MiniHUD</button>
+                        <button class="setting-btn" onclick="selectPanel('aiview')"
+                                onmouseenter="showDescription('View detailed Terminator View profile of targeted NPC')"
+                                onmouseleave="clearDescription()">Terminator View</button>
+                        <button class="setting-btn" onclick="selectPanel('questmanager')"
+                                onmouseenter="showDescription('Open AI Quest Manager V1 - Prisma-native quest generation panel')"
+                                onmouseleave="clearDescription()">AI Quest Manager</button>
+                        <button class="setting-btn" onclick="selectPanel('browser')"
+                                onmouseenter="showDescription('Open CHIM Browser (Beta) - full web interface in-game')"
+                                onmouseleave="clearDescription()">CHIM Browser (Beta)</button>
+                    </div>
                 </div>
 
                 <div class="layout-collapsible">
@@ -66,7 +71,7 @@
                     <div class="layout-dropdown" id="hud-layout-dropdown" hidden>
                         <div class="layout-grid-3x2">
                             <div class="layout-card">
-                                <div class="layout-label" onmouseenter="showDescription('ChatView panel corner placement')" onmouseleave="clearDescription()">ChatView</div>
+                                <div class="layout-label" onmouseenter="showDescription('Chatbox View panel corner placement')" onmouseleave="clearDescription()">Chatbox View</div>
                                 <div class="corner-picker" data-view="chatbox">
                                     <button type="button" class="corner-btn" data-corner="top-left" onclick="setViewCorner('chatbox','top-left')">&#8598;</button>
                                     <button type="button" class="corner-btn" data-corner="top-right" onclick="setViewCorner('chatbox','top-right')"><span class="corner-arrow corner-arrow-tr">&#8598;</span></button>

@@ -4,6 +4,192 @@ let serverBase = DEFAULT_SERVER_BASE;
 let snqeSelf = `${DEFAULT_SERVER_BASE}/ui/addons/snqe/index.php`;
 let agent0Url = `${DEFAULT_SERVER_BASE}/ui/addons/snqe/cmd/agent0.php`;
 let refreshTimer = null;
+let focusRetryTimers = [];
+let questManagerPanelFocused = false;
+
+function isEditableTextField(node) {
+    if (!node || !node.tagName || node.disabled || node.readOnly) {
+        return false;
+    }
+
+    const tag = node.tagName.toUpperCase();
+    if (tag === "TEXTAREA") {
+        return true;
+    }
+
+    if (tag === "INPUT") {
+        const type = String(node.type || "").toLowerCase();
+        return !["button", "submit", "reset", "checkbox", "radio", "range", "color", "file", "hidden", "image"].includes(type);
+    }
+
+    return false;
+}
+
+function normalizeTextKey(event) {
+    if (!event) {
+        return null;
+    }
+
+    const legacyKey = event.which || event.keyCode || 0;
+    if (event.code === "Space" || event.key === " " || event.key === "Space" || event.key === "Spacebar" || legacyKey === 32) {
+        return " ";
+    }
+
+    return typeof event.key === "string" && event.key.length === 1 ? event.key : null;
+}
+
+function dispatchBeforeInput(doc, target, inputType, data) {
+    try {
+        if (doc && doc.defaultView && typeof doc.defaultView.InputEvent === "function") {
+            const beforeEvent = new doc.defaultView.InputEvent("beforeinput", {
+                bubbles: true,
+                cancelable: true,
+                data,
+                inputType
+            });
+            return target.dispatchEvent(beforeEvent);
+        }
+    } catch (error) {
+    }
+
+    try {
+        const fallbackEvent = doc.createEvent("Event");
+        fallbackEvent.initEvent("beforeinput", true, true);
+        fallbackEvent.data = data;
+        fallbackEvent.inputType = inputType;
+        return target.dispatchEvent(fallbackEvent);
+    } catch (error) {
+    }
+
+    return true;
+}
+
+function dispatchInput(doc, target, inputType, data) {
+    try {
+        if (doc && doc.defaultView && typeof doc.defaultView.InputEvent === "function") {
+            const inputEvent = new doc.defaultView.InputEvent("input", {
+                bubbles: true,
+                data,
+                inputType
+            });
+            target.dispatchEvent(inputEvent);
+            return;
+        }
+    } catch (error) {
+    }
+
+    try {
+        const fallbackEvent = doc.createEvent("Event");
+        fallbackEvent.initEvent("input", true, false);
+        fallbackEvent.data = data;
+        fallbackEvent.inputType = inputType;
+        target.dispatchEvent(fallbackEvent);
+    } catch (error) {
+    }
+}
+
+function applyTextControlEdit(target, event) {
+    const value = typeof target.value === "string" ? target.value : "";
+    let start = typeof target.selectionStart === "number" ? target.selectionStart : value.length;
+    let end = typeof target.selectionEnd === "number" ? target.selectionEnd : value.length;
+    let nextValue = value;
+    let nextCaret = start;
+    let inputType = "";
+    let data = null;
+    let handled = false;
+    const textKey = normalizeTextKey(event);
+
+    if (event.key === "Backspace") {
+        if (start === end && start > 0) {
+            start -= 1;
+        }
+        nextValue = value.slice(0, start) + value.slice(end);
+        nextCaret = start;
+        inputType = "deleteContentBackward";
+        handled = start !== end || nextValue !== value;
+    } else if (event.key === "Delete") {
+        if (start === end && end < value.length) {
+            end += 1;
+        }
+        nextValue = value.slice(0, start) + value.slice(end);
+        nextCaret = start;
+        inputType = "deleteContentForward";
+        handled = start !== end || nextValue !== value;
+    } else if (textKey !== null) {
+        data = textKey;
+        const maxLength = typeof target.maxLength === "number" ? target.maxLength : -1;
+        if (maxLength >= 0) {
+            const room = maxLength - (value.length - (end - start));
+            if (room <= 0) {
+                return false;
+            }
+            data = data.slice(0, room);
+        }
+        if (!data) {
+            return false;
+        }
+        nextValue = value.slice(0, start) + data + value.slice(end);
+        nextCaret = start + data.length;
+        inputType = "insertText";
+        handled = true;
+    } else if (event.key === "Enter" && target.tagName && target.tagName.toUpperCase() === "TEXTAREA") {
+        data = "\n";
+        nextValue = value.slice(0, start) + data + value.slice(end);
+        nextCaret = start + data.length;
+        inputType = "insertLineBreak";
+        handled = true;
+    }
+
+    if (!handled) {
+        return false;
+    }
+
+    if (!dispatchBeforeInput(target.ownerDocument, target, inputType, data)) {
+        return false;
+    }
+
+    target.value = nextValue;
+    if (typeof target.setSelectionRange === "function") {
+        target.setSelectionRange(nextCaret, nextCaret);
+    }
+    dispatchInput(target.ownerDocument, target, inputType, data);
+    return true;
+}
+
+function resolveEditableTarget(target) {
+    if (isEditableTextField(target)) {
+        return target;
+    }
+
+    const doc = target && target.ownerDocument ? target.ownerDocument : document;
+    const active = doc && doc.activeElement ? doc.activeElement : null;
+    return isEditableTextField(active) ? active : null;
+}
+
+function shouldShimTextKey(event, target) {
+    if (!isEditableTextField(target) || event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey) {
+        return false;
+    }
+
+    if (event.key === "Backspace" || event.key === "Delete") {
+        return true;
+    }
+
+    if (event.key === "Enter") {
+        return !!(target.tagName && target.tagName.toUpperCase() === "TEXTAREA");
+    }
+
+    return normalizeTextKey(event) !== null;
+}
+
+function applyQuestManagerTextInputFallback(event) {
+    const editableTarget = resolveEditableTarget(event.target);
+    if (!editableTarget || !shouldShimTextKey(event, editableTarget)) {
+        return false;
+    }
+
+    return applyTextControlEdit(editableTarget, event);
+}
 
 function normalizeBase(url) {
     if (!url || typeof url !== "string") {
@@ -16,6 +202,103 @@ function setServerBase(url) {
     serverBase = normalizeBase(url);
     snqeSelf = `${serverBase}/ui/addons/snqe/index.php`;
     agent0Url = `${serverBase}/ui/addons/snqe/cmd/agent0.php`;
+}
+
+function getPrimaryEditableField() {
+    const preferredIds = ["suggested", "userprompt"];
+    for (const id of preferredIds) {
+        const element = document.getElementById(id);
+        if (element && !element.disabled && !element.readOnly) {
+            return element;
+        }
+    }
+
+    return document.querySelector("textarea:not([readonly]):not([disabled]), input:not([readonly]):not([disabled]):not([type='hidden'])");
+}
+
+function focusEditableField(reason) {
+    const field = getPrimaryEditableField();
+    if (!field) {
+        return false;
+    }
+
+    try {
+        window.focus();
+    } catch (error) {
+    }
+
+    try {
+        field.focus({ preventScroll: true });
+    } catch (error) {
+        try {
+            field.focus();
+        } catch (focusError) {
+            return false;
+        }
+    }
+
+    try {
+        if (typeof field.value === "string" && typeof field.setSelectionRange === "function") {
+            const cursorPos = field.value.length;
+            field.setSelectionRange(cursorPos, cursorPos);
+        }
+    } catch (error) {
+    }
+
+    console.debug("[QuestManager] Focus request:", reason, "active=", document.activeElement && document.activeElement.id);
+    return document.activeElement === field;
+}
+
+function requestQuestManagerFocus(reason) {
+    if (focusRetryTimers.length > 0) {
+        focusRetryTimers.forEach((timerId) => clearTimeout(timerId));
+        focusRetryTimers = [];
+    }
+
+    focusEditableField(reason || "request");
+
+    const retryDelays = [50, 150, 350];
+    retryDelays.forEach((delay, index) => {
+        const timerId = setTimeout(() => {
+            focusEditableField(`${reason || "request"}_${delay}ms`);
+            if (index === retryDelays.length - 1) {
+                focusRetryTimers = [];
+            }
+        }, delay);
+        focusRetryTimers.push(timerId);
+    });
+}
+
+function installEditableInputGuards() {
+    const form = document.getElementById("snqeForm");
+    if (!form) {
+        return;
+    }
+
+    const editableSelector = "textarea:not([readonly]), input:not([readonly]):not([disabled]):not([type='hidden'])";
+
+    form.addEventListener("pointerdown", (event) => {
+        if (event.target && event.target.closest(editableSelector)) {
+            setTimeout(() => requestQuestManagerFocus("pointerdown"), 0);
+        }
+    }, true);
+
+    form.addEventListener("focusin", (event) => {
+        if (event.target && event.target.closest(editableSelector)) {
+            requestQuestManagerFocus("focusin");
+        }
+    }, true);
+
+    form.addEventListener("keydown", (event) => {
+        if (event.target && event.target.closest(editableSelector)) {
+            if (applyQuestManagerTextInputFallback(event)) {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+            event.stopPropagation();
+        }
+    }, true);
 }
 
 function setLoading(message, active) {
@@ -394,11 +677,21 @@ function closePanel() {
     }
 }
 
+window.onQuestManagerFocused = function() {
+    questManagerPanelFocused = true;
+    requestQuestManagerFocus("onQuestManagerFocused");
+};
+
+window.onQuestManagerUnfocused = function() {
+    questManagerPanelFocused = false;
+};
+
 window.focusFirstInput = function() {
-    const input = document.getElementById("suggested");
-    if (input && !input.classList.contains("hidden")) {
-        input.focus();
-    }
+    requestQuestManagerFocus("focusFirstInput");
+};
+
+window.requestQuestManagerFocus = function(reason) {
+    requestQuestManagerFocus(reason || "native");
 };
 
 window.initQuestManager = function(serverUrl) {
@@ -408,6 +701,7 @@ window.initQuestManager = function(serverUrl) {
     refreshLogs();
     startAutoRefresh();
     setLoading("Connected to CHIM server.", false);
+    requestQuestManagerFocus("initQuestManager");
 };
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -421,4 +715,18 @@ window.addEventListener("DOMContentLoaded", () => {
     restoreLocalState();
     refreshRunningQuests();
     startAutoRefresh();
+    installEditableInputGuards();
+    requestQuestManagerFocus("dom_ready");
+});
+
+window.addEventListener("focus", () => {
+    if (questManagerPanelFocused) {
+        requestQuestManagerFocus("window_focus");
+    }
+});
+
+document.addEventListener("visibilitychange", () => {
+    if (questManagerPanelFocused && !document.hidden) {
+        requestQuestManagerFocus("visibilitychange");
+    }
 });

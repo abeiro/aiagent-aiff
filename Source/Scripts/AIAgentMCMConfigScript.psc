@@ -74,6 +74,8 @@ bool		_animationstate			= false
 
 int			_toggle1OID_Rereg
 
+int			_toggleEnable3DAudioPlayback
+bool		_enable3daudioplaybackstate		= true
 
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
@@ -148,6 +150,8 @@ float		_openmic_enddelay				= 1.0
 
 int			_keymap_openmic_mute
 int			_openmic_mute_key				= -1
+
+int			_text_current_recording_device
 
 
 int			_keymap_godmode
@@ -245,6 +249,7 @@ float		_lip_resDefault					= 500.0
 float		_lip_intDefault					= 1.0
 float		_timeout_intDefault				= 30.0
 bool		_animationstateDefault			= false
+bool		_enable3daudioplaybackstateDefault	= true
 bool		_invertheadingstateDefault		= false
 bool		_pauseDialogueStateDefault		= false
 bool		_playerTtsTraditionalDialogueStateDefault = false
@@ -311,7 +316,12 @@ event OnPlayerLoadGame()
 	else
 		controlScript.setConf("_player_tts_traditional_dialogue", 0)
 	endIf
-	
+
+	if (_enable3daudioplaybackstate)
+		controlScript.setConf("_enable_3d_audio_playback", 1)
+	else
+		controlScript.setConf("_enable_3d_audio_playback", 0)
+	endIf
 
 endEvent
 
@@ -365,6 +375,10 @@ event OnConfigInit()
 	
 	if (CurrentVersion<43)
 		_dynamic_profile_period=20
+	endIf
+
+	if (CurrentVersion<59)
+		_enable3daudioplaybackstate = true
 	endIf
 	
 	; Load combat dialogue settings
@@ -447,6 +461,12 @@ event OnConfigInit()
 		_playback_dropoff_outside = 70.0
 	endIf
 	controlScript.setConf("_playback_dropoff_outside", _playback_dropoff_outside)
+
+	if (_enable3daudioplaybackstate)
+		controlScript.setConf("_enable_3d_audio_playback", 1)
+	else
+		controlScript.setConf("_enable_3d_audio_playback", 0)
+	endIf
 	
 	if (CurrentVersion<38)
 		_toggle_autofocus_on_sit=0
@@ -478,12 +498,47 @@ endEvent
 
 int function GetVersion()
 
-	return 58
+	return 65
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 65 && a_version > CurrentVersion)
+		; Version 65: Refresh Prisma CHIM Chat / Chatbox View labels and hotkey menu state
+		OnConfigInit()
+	endIf
+
+	if (a_version == 64 && a_version > CurrentVersion)
+		; Version 64: Reordered Prisma UI hotkeys and restored Dialogue History entry
+		OnConfigInit()
+	endIf
+
+	if (a_version == 63 && a_version > CurrentVersion)
+		; Version 63: Simplified Prisma UI hotkeys and updated Prisma labels
+		OnConfigInit()
+	endIf
+
+	if (a_version == 62 && a_version > CurrentVersion)
+		; Version 62: Moved Recording Device section below Open Mic Settings
+		OnConfigInit()
+	endIf
+
+	if (a_version == 61 && a_version > CurrentVersion)
+		; Version 61: Renamed Recording Device row to Current Device for clearer MCM display
+		OnConfigInit()
+	endIf
+
+	if (a_version == 60 && a_version > CurrentVersion)
+		; Version 60: Added dedicated Recording Device section to the Sound page
+		OnConfigInit()
+	endIf
+
+	if (a_version == 59 && a_version > CurrentVersion)
+		; Version 59: Added player-facing 3D audio playback toggle
+		OnConfigInit()
+	endIf
 
 	if (a_version == 58 && a_version > CurrentVersion)
 		; Version 58: Added optional Player TTS for traditional dialogue toggle
@@ -588,7 +643,7 @@ event OnPageReset(string a_page)
 	
 	if (a_page=="Main" || a_page=="")
 		; === Communication Hotkeys ===
-		_keymapOID_K = AddKeyMapOption("Text Chat", _myKey)
+		_keymapOID_K = AddKeyMapOption("CHIM Chat", _myKey)
 		_keymapOID_K2 = AddKeyMapOption("Voice Chat", _myKey2)
 		
 		; === Master Wheel ===
@@ -665,6 +720,7 @@ event OnPageReset(string a_page)
 		_slider_ds			= AddSliderOption("AI Voice Distance Scale",_sound_ds,"{1}" )
 		_slider_playback_dropoff_inside = AddSliderOption("Interior Playback Dropoff (%)", _playback_dropoff_inside, "{0}")
 		_slider_playback_dropoff_outside = AddSliderOption("Exterior Playback Dropoff (%)", _playback_dropoff_outside, "{0}")
+		_toggleEnable3DAudioPlayback = AddToggleOption("Enable 3D Audio Playback", _enable3daudioplaybackstate)
 		
 		AddEmptyOption()
 		AddHeaderOption("Advanced")
@@ -687,22 +743,23 @@ event OnPageReset(string a_page)
 		_slider_openmic_enddelay = AddSliderOption("End of Sentence Delay (seconds)", _openmic_enddelay, "{1}")
 		_keymap_openmic_mute = AddKeyMapOption("Mute Open Mic", _openmic_mute_key)
 
+		AddEmptyOption()
+		AddHeaderOption("Recording Device")
+		_text_current_recording_device = AddTextOption("Current Device", AIAgentFunctions.getCurrentRecordingDeviceName())
+
 	
 	endif
 	
 	if (a_page=="Prisma UI")
-		AddHeaderOption("View Cycling Hotkeys")
-		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries Cycle", _historydiaries_cycle_key)
-		_keymap_overlaystatus_cycle = AddKeyMapOption("Overlay/Status/AI View Cycle", _overlaystatus_cycle_key)
-		
-		AddEmptyOption()
-		AddHeaderOption("Panel Hotkeys")
+		AddHeaderOption("Hotkeys")
 		_keymap_mastermenu = AddKeyMapOption("Master Menu", _mastermenu_key)
+		_keymap_chatbox_focus = AddKeyMapOption("CHIM Chat", _chatbox_focus_key)
+		_keymap_chatbox = AddKeyMapOption("Chatbox View", _chatbox_key)
+		_keymap_settingsmenu = AddKeyMapOption("Actions Menu", _settingsmenu_key)
+		_keymap_overlaystatus_cycle = AddKeyMapOption("Status, Minihud, Terminator Views", _overlaystatus_cycle_key)
+		_keymap_historydiaries_cycle = AddKeyMapOption("History/Diaries", _historydiaries_cycle_key)
 		_keymap_browser = AddKeyMapOption("Browser (Beta)", _browser_key)
 		_keymap_debugger = AddKeyMapOption("Logs View (Beta)", _debugger_key)
-		_keymap_chatbox = AddKeyMapOption("Chatbox", _chatbox_key)
-		_keymap_chatbox_focus = AddKeyMapOption("Chatbox Type Message", _chatbox_focus_key)
-		_keymap_settingsmenu = AddKeyMapOption("Settings Menu", _settingsmenu_key)
 	endif
 	
 	if (a_page=="AI Agents")
@@ -802,14 +859,14 @@ event OnOptionSliderOpen(int a_option)
 		SetSliderDialogInterval(2)
 	endIf
 	if (a_option == _slider_ds)
-		if (_sound_ds < 1.0)
-			_sound_ds = 1.0
-		elseif (_sound_ds > 5.0)
-			_sound_ds = 5.0
+		if (_sound_ds < 0.1)
+			_sound_ds = 0.1
+		elseif (_sound_ds > 11.0)
+			_sound_ds = 11.0
 		endIf
 		SetSliderDialogStartValue(_sound_ds)
 		SetSliderDialogDefaultValue(1)
-		SetSliderDialogRange(1.0, 5.0)
+		SetSliderDialogRange(0.1, 11.0)
 		SetSliderDialogInterval(0.1)
 	endIf
 	if (a_option == _slider_playback_dropoff_inside)
@@ -1036,14 +1093,19 @@ event OnGameReload()
 	a=controlScript.setConf("_sound_postclip",_sound_postclip)
 	a=controlScript.setConf("_sound_preclip",_sound_preclip)
 	a=controlScript.setConf("_sound_volume",_sound_volume)
-	if (_sound_ds < 1.0)
-		_sound_ds = 1.0
-	elseif (_sound_ds > 5.0)
-		_sound_ds = 5.0
+	if (_sound_ds < 0.1)
+		_sound_ds = 0.1
+	elseif (_sound_ds > 11.0)
+		_sound_ds = 11.0
 	endIf
 	a=controlScript.setConf("_sound_ds",_sound_ds)
 	a=controlScript.setConf("_playback_dropoff_inside",_playback_dropoff_inside)
 	a=controlScript.setConf("_playback_dropoff_outside",_playback_dropoff_outside)
+	if (_enable3daudioplaybackstate)
+		a=controlScript.setConf("_enable_3d_audio_playback",1)
+	else
+		a=controlScript.setConf("_enable_3d_audio_playback",0)
+	endif
 	a=controlScript.setConf("_lip_int",_lip_int)
 	a=controlScript.setConf("_lip_res",_lip_res)
 	a=controlScript.setConf("_timeout",_timeout_int)
@@ -1239,6 +1301,15 @@ event OnOptionDefault(int a_option)
 		_lip_int = _lip_intDefault
 		SetSliderOptionValue(a_option, _lip_int, "{1}")
 
+	elseif (a_option == _toggleEnable3DAudioPlayback)
+		_enable3daudioplaybackstate = _enable3daudioplaybackstateDefault
+		if (_enable3daudioplaybackstate)
+			controlScript.setConf("_enable_3d_audio_playback", 1)
+		else
+			controlScript.setConf("_enable_3d_audio_playback", 0)
+		endif
+		SetToggleOptionValue(a_option, _enable3daudioplaybackstate)
+
 	elseif (a_option == _toggleInvertHeading)
 		_invertheadingstate = _invertheadingstateDefault
 		SetToggleOptionValue(a_option, _invertheadingstate)
@@ -1291,6 +1362,12 @@ event OnOptionKeyMapChange(int a_option, int a_keyCode, string a_conflictControl
 	; clear if escape key
 	if (a_keyCode == 1)
 		a_keyCode = -1
+	endIf
+
+	bool prismaChatHotkeyConflict = a_keyCode != -1 && ((a_option == _keymap_chatbox && a_keyCode == _chatbox_focus_key) || (a_option == _keymap_chatbox_focus && a_keyCode == _chatbox_key))
+	if (prismaChatHotkeyConflict)
+		ShowMessage("CHIM Chat and Chatbox View must use different hotkeys.")
+		return
 	endIf
 
 	if (continue)
@@ -1529,6 +1606,18 @@ event OnOptionSelect(int a_option)
 	if (a_option == _toggle1OID_Rereg)
 		ConsoleUtil.ExecuteCommand("SetStage SKI_ConfigManagerInstance 1")
 		ShowMessage("Close menu")
+	endIf
+
+	if (a_option == _toggleEnable3DAudioPlayback)
+		_enable3daudioplaybackstate = !_enable3daudioplaybackstate
+
+		if (_enable3daudioplaybackstate)
+			controlScript.setConf("_enable_3d_audio_playback",1)
+		else
+			controlScript.setConf("_enable_3d_audio_playback",0)
+		endif
+
+		SetToggleOptionValue(a_option, _enable3daudioplaybackstate)
 	endIf
 	
 	if (a_option == _toggleInvertHeading)
@@ -1822,7 +1911,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Enables Text-to-Speech for AI NPCs.")
 	endIf
 	if (a_option == _keymapOID_K2)
-		SetInfoText("Push-to-Talk: Speak with AI NPCs or summarize open books. Ensure your microphone is set as default recording device in Windows.")
+		SetInfoText("Push-to-Talk: Speak with AI NPCs or summarize open books. CHIM records from the current Windows default recording device shown below.")
 	endIf
 	if (a_option == _toggle1OID_C)
 		SetInfoText("Enable AI to perform actions.")
@@ -1834,7 +1923,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Settings Wheel - Looking at NPC: Assign profiles (1-4). Not looking: Switch LLM models, toggle focus chat.")
 	endIf
 	if (a_option == _keymapOID_K4)
-		SetInfoText("Roleplay Wheel - Write Diary, Gather NPCs, Follow NPC, Update NPC, Wait/Follow, Stop All AI, Add to BgL. Hold it for nearby NPCs to write diary entries.")
+		SetInfoText("Roleplay Wheel - Write Diary, Gather NPCs, Update NPC, Wait/Follow, Stop All AI, Add to BgL. Hold it for nearby NPCs to write diary entries.")
 	endIf
 	if (a_option == _keymapOID_K5)
 		SetInfoText("Change AI/LLM Connector.")
@@ -1855,13 +1944,16 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Skips specified millisecods at end of a sentence. Some TTS services add some silence at the end of audio clips.")
 	endIf
 	if (a_option == _slider_ds)
-		SetInfoText("Adjust AI NPC volume at distance. Range: 1.0 to 5.0.")
+		SetInfoText("Adjust AI NPC volume at distance. Range: 0.1 to 11.0.")
 	endIf
 	if (a_option == _slider_playback_dropoff_inside)
 		SetInfoText("Indoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
 	endIf
 	if (a_option == _slider_playback_dropoff_outside)
 		SetInfoText("Outdoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
+	endIf
+	if (a_option == _toggleEnable3DAudioPlayback)
+		SetInfoText("Controls player-heard 3D voice playback only. Disabling this keeps spatial dialogue awareness for who can hear speech, but plays voices back in flat 2D.")
 	endIf
 	if (a_option == _toggle1OID_E)
 		SetInfoText("Enable HD mode for Soulgaze (DirectX backbuffer access, server compression). Disable for in-game screenshots (VR users should disable).")
@@ -1888,7 +1980,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _toggleInvertHeading)
-		SetInfoText("When using 3D sound, it will try inverting the heading. This may resolve issues where NPCs in the front are heard at a lower volume.")
+		SetInfoText("When 3D audio playback is enabled, it will try inverting the heading. This may resolve issues where NPCs in the front are heard at a lower volume.")
 	endIf
 
 	if (a_option == _togglePauseDialogue)
@@ -1968,7 +2060,7 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_overlaystatus_cycle)
-		SetInfoText("Cycle through CHIM UI states: Press once for Overlay, press again for Status HUD, press again for AI View, press again to close. Convenient single-key access to all info panels. Requires Prisma UI.")
+		SetInfoText("Cycle through the Prisma status views: Status, Minihud, and Terminator. Press again to close. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_browser)
@@ -1980,15 +2072,15 @@ event OnOptionHighlight(int a_option)
 	endIf
 	
 	if (a_option == _keymap_chatbox)
-		SetInfoText("Toggle the CHIM Chatbox. MMO-style chat interface with Chat tab for AI dialogue and System tab for DLL errors. Type messages to communicate with AI agents. Requires Prisma UI.")
+		SetInfoText("Open Chatbox View in Prisma UI. This is the MMO-style live chat panel that stays open while dialogue and system messages stream in. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_chatbox_focus)
-		SetInfoText("Focus/Unfocus the CHIM Chatbox. When chatbox is visible but unfocused, press to enable typing. When focused, press to send message and return control to game.")
+		SetInfoText("Open CHIM Chat input for Prisma UI so you can type and send a message, then return control to the game.")
 	endIf
 	
 	if (a_option == _keymap_settingsmenu)
-		SetInfoText("Open the CHIM Settings Menu. Central interface for all in-game settings from the 4 wheels, including Quest Creator (AI Quest Manager V1). Game pauses when open, press hotkey again to close. Requires Prisma UI.")
+		SetInfoText("Open the Actions Menu. This is the Prisma UI action panel for in-game AI interactions and commands. Requires Prisma UI.")
 	endIf
 	
 	if (a_option == _keymap_mastermenu)
@@ -2025,6 +2117,9 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _keymap_openmic_mute)
 		SetInfoText("Key to temporarily mute open microphone.")
+	endIf
+	if (a_option == _text_current_recording_device)
+		SetInfoText("Read-only display of the Windows recording device currently resolved by CHIM's voice capture path.")
 	endIf
 	
 

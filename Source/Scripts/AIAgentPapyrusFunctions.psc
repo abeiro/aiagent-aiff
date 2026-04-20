@@ -4,7 +4,6 @@ ReferenceAlias Property PlayerRefAlias  Auto
 
 
 Spell Property IntimacySpell  Auto  
-AIAgentFollowNPCQuestScript Property FollowNPCQuestScript Auto
 
 
 int			_currentKey = 0x52
@@ -28,10 +27,21 @@ int 		_currentSettingsMenuKey
 int 		_currentMasterMenuKey
 bool property _currentGodmodeStatus  auto
 bool		currentTTSStatus= false
-bool		followingHerika= false
 bool		_diaryKeyPressed= false ; Track if diary key is currently pressed
 bool		_chatboxFocusHotkeySuppressed = false
 bool		_playerMenuTTSPending = false
+bool		_vrikVoiceRecordingActive = false
+
+; VRIK gesture actions mirror the Main page CHIM hotkeys.
+String		_vrikActionTextChat = "CHIM_VRIK_TextChat"
+String		_vrikActionVoiceChat = "CHIM_VRIK_VoiceChat"
+String		_vrikActionMasterWheel = "CHIM_VRIK_MasterWheel"
+String		_vrikActionRoleplayWheel = "CHIM_VRIK_RoleplayWheel"
+String		_vrikActionSettingsWheel = "CHIM_VRIK_SettingsWheel"
+String		_vrikActionModeWheel = "CHIM_VRIK_ModeWheel"
+String		_vrikActionSoulgazeWheel = "CHIM_VRIK_SoulgazeWheel"
+String		_vrikActionManualAIActivate = "CHIM_VRIK_ManualAIActivate"
+String		_vrikActionHaltAI = "CHIM_VRIK_HaltAI"
 
 int		_nativeSoulGaze= 1
 
@@ -40,7 +50,6 @@ int _currentModeIndex = 0
 float storedMusicVolValue 
 
 
-Actor	currentPlayerFollowTarget;
 Actor	currentPlayerHorse;
 
 
@@ -215,6 +224,7 @@ Event OnKeyUp(int keyCode, float holdTime)
 			else
 				AIAgentFunctions.stopRecording(_currentKeyVoice)
 			endif
+			_vrikVoiceRecordingActive = false
 			;WebSocketSTT.StopRecordVoice(_currentKeyVoice);
 			Debug.Notification("[CHIM] Recording end");
 		endif
@@ -285,7 +295,8 @@ Event OnKeyDown(int keyCode)
 		else
 			AIAgentFunctions.recordSoundEx(_currentKeyVoice)
 		endif
-        
+		_vrikVoiceRecordingActive = true
+         
 		;WebSocketSTT.StartRecordVoice(_currentKeyVoice);
 		Debug.Notification("[CHIM] recording....");
 	endif
@@ -409,53 +420,22 @@ Event OnKeyDown(int keyCode)
 	AIAgentFunctions.cycleHistoryDiariesPanels()
   EndIf
   
-  If(keyCode == _currentChatboxKey)
-	AIAgentFunctions.toggleChatboxPanel()
-  EndIf
-  
   If(keyCode == _currentChatboxFocusKey)
 	if (_chatboxFocusHotkeySuppressed)
 		_chatboxFocusHotkeySuppressed = false
 	else
-		; Type Message hotkey: opens modal-only quick message mode when panel is hidden.
-		; If already focused, it unfocuses/closes.
-		if (AIAgentFunctions.isChatboxPanelFocused() == 1)
-			AIAgentFunctions.unfocusChatboxPanel()
-		else
-			int focusResult = AIAgentFunctions.focusChatboxPanel()
-			if (keyCode == 28) && (focusResult == 1) ; Enter key
-				_chatboxFocusHotkeySuppressed = true
-			endif
-		endif
+		ToggleChatboxFocusAction(keyCode)
 	endif
+  ElseIf(keyCode == _currentChatboxKey)
+	AIAgentFunctions.toggleChatboxPanel()
   EndIf
   
   If(keyCode == _currentSettingsMenuKey)
-	; Allow in menu mode since the settings menu itself pauses the game
-	; This allows the hotkey to close the menu when it's open
-	If (!UI.IsMenuOpen("Console")) \
-	&& (!UI.IsMenuOpen("Crafting Menu")) \
-	&& (!UI.IsMenuOpen("RaceSex Menu"))
-		; Ensure polling is started (in case quest was reloaded without OnInit)
-		RegisterForSingleUpdate(0.1)
-		
-		; Toggle the menu
-		AIAgentFunctions.toggleSettingsMenu()
-	EndIf
+	ToggleSettingsMenuAction()
   EndIf
   
   If(keyCode == _currentMasterMenuKey)
-	; Allow in menu mode since the master menu itself pauses the game
-	; This allows the hotkey to close the menu when it's open
-	If (!UI.IsMenuOpen("Console")) \
-	&& (!UI.IsMenuOpen("Crafting Menu")) \
-	&& (!UI.IsMenuOpen("RaceSex Menu"))
-		; Ensure polling is started for master menu tool actions too
-		RegisterForSingleUpdate(0.1)
-		
-		; Toggle the menu
-		AIAgentFunctions.toggleMasterMenu()
-	EndIf
+	ToggleMasterMenuAction()
   EndIf
   
 EndEvent
@@ -471,6 +451,116 @@ Event OnUpdate()
 	; Continue polling
 	RegisterForSingleUpdate(0.1)
 Endevent
+
+Function TriggerTextChatAction()
+	If !SafeProcess()
+		Return
+	EndIf
+
+	AIAgentAIMind.resetCam()
+	UIExtensions.OpenMenu("UITextEntryMenu")
+	string messageText = UIExtensions.GetMenuResultString("UITextEntryMenu")
+
+	If messageText != ""
+		if (Input.IsKeyPressed(29)) ; Left Shift
+			Debug.Trace("[CHIM] Shift modifier, will cast intimacy bubble")
+			IntimacySpell.cast(Game.GetPlayer())
+		endif
+		AIAgentFunctions.sendMessage(messageText,"")
+	EndIf
+EndFunction
+
+Function TriggerVoiceChatAction()
+	if (UI.IsMenuOpen("Book Menu"))
+		AIAgentFunctions.sendMessage("Please, summarize this book i've just found.","chatnf_book")
+		Return
+	endif
+
+	int externalSTTactive = StorageUtil.GetIntValue(None, "AIAgentWebSockeSTT")
+	if (_vrikVoiceRecordingActive)
+		if (externalSTTactive > 0)
+			AIAgentSTTExternal.stopRecording(_currentKeyVoice)
+		else
+			AIAgentFunctions.stopRecording(_currentKeyVoice)
+		endif
+		_vrikVoiceRecordingActive = false
+		Debug.Notification("[CHIM] Recording end")
+	elseif SafeProcess()
+		if (externalSTTactive > 0)
+			AIAgentSTTExternal.recordSoundEx(_currentKeyVoice)
+		else
+			AIAgentFunctions.recordSoundEx(_currentKeyVoice)
+		endif
+		_vrikVoiceRecordingActive = true
+		Debug.Notification("[CHIM] recording....")
+	endif
+EndFunction
+
+Function TriggerManualAIActivateAction()
+	If !SafeProcess()
+		Return
+	EndIf
+
+	ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+	If (crosshairRef)
+		Actor targetActor = crosshairRef as Actor
+		if (targetActor)
+			Debug.Trace("[CHIM] NPC under cursor: " + targetActor.GetDisplayName())
+			AIAgentFunctions.setDrivenByAIA(targetActor,false)
+		else
+			Debug.Trace("[CHIM] NO NPC under cursor")
+		endif
+	else
+		AIAgentFunctions.setDrivenByAI()
+	EndIf
+EndFunction
+
+Function TriggerHaltAction()
+	Debug.Notification("[CHIM] Stopping AI actions")
+
+	ObjectReference crosshairRef = Game.GetCurrentCrosshairRef()
+	Actor crActor = crosshairRef as Actor
+	if (crActor)
+		AIAgentAIMind.StopCurrent(crActor)
+	else
+		HaltAllNearbyAgents()
+	endif
+EndFunction
+
+Function ToggleChatboxFocusAction(int keyCode = -1)
+	; Type Message hotkey: opens modal-only quick message mode when panel is hidden.
+	; If already focused, it unfocuses/closes.
+	if (AIAgentFunctions.isChatboxPanelFocused() == 1)
+		AIAgentFunctions.unfocusChatboxPanel()
+	else
+		int focusResult = AIAgentFunctions.focusChatboxPanel()
+		if (keyCode == 28) && (focusResult == 1) ; Enter key
+			_chatboxFocusHotkeySuppressed = true
+		endif
+	endif
+EndFunction
+
+Function ToggleSettingsMenuAction()
+	; Allow in menu mode since the settings menu itself pauses the game.
+	; This allows the same action to close the menu when it is already open.
+	If (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		RegisterForSingleUpdate(0.1)
+		AIAgentFunctions.toggleSettingsMenu()
+	EndIf
+EndFunction
+
+Function ToggleMasterMenuAction()
+	; Allow in menu mode since the master menu itself pauses the game.
+	; This allows the same action to close the menu when it is already open.
+	If (!UI.IsMenuOpen("Console")) \
+	&& (!UI.IsMenuOpen("Crafting Menu")) \
+	&& (!UI.IsMenuOpen("RaceSex Menu"))
+		RegisterForSingleUpdate(0.1)
+		AIAgentFunctions.toggleMasterMenu()
+	EndIf
+EndFunction
 
 Function removeBinding(int keycode) 
 	UnregisterForKey(keycode)
@@ -598,11 +688,6 @@ bool Function setNewActionMode( int mode)
 	
 
 	; Removed action mode notifications - no longer displayed on save load
-	
-	if (!FollowNPCQuestScript)
-		Quest source =  Game.GetFormFromFile(0x2a3e4,"AIAgent.esp") as Quest;
-		FollowNPCQuestScript = source as AIAgentFollowNPCQuestScript
-	endif
 		
 	InitTSE();	
 	a=thirdPartyInit();	
@@ -635,9 +720,73 @@ bool Function thirdPartyInit()
 	; Re-registering the Papyrus bridge here can resume the held topic twice.
 	UnRegisterForModEvent("PlayMenuTopic")
 	UnRegisterForModEvent("AIAgent_PlayerMenuTTSFinished")
+	RegisterVrikGestureActions()
 	PlayerRefAlias.ForceRefTo(Game.GetPlayer());
 	
 EndFunction
+
+Bool Function IsVrikLoaded()
+	return Game.GetModByName("vrik.esp") != 255
+EndFunction
+
+Function RegisterVrikGestureAction(String modEventName, String menuLabel)
+	UnRegisterForModEvent(modEventName)
+	RegisterForModEvent(modEventName, "OnVrikGestureAction")
+	VRIK.VrikAddGestureAction(modEventName, menuLabel)
+EndFunction
+
+Function RegisterVrikGestureActions()
+	if (!IsVrikLoaded())
+		return
+	endif
+
+	RegisterVrikGestureAction(_vrikActionTextChat, "CHIM Chat")
+	RegisterVrikGestureAction(_vrikActionVoiceChat, "CHIM Voice Chat")
+	RegisterVrikGestureAction(_vrikActionMasterWheel, "CHIM Master Wheel")
+	RegisterVrikGestureAction(_vrikActionRoleplayWheel, "CHIM Roleplay Wheel")
+	RegisterVrikGestureAction(_vrikActionSettingsWheel, "CHIM Settings Wheel")
+	RegisterVrikGestureAction(_vrikActionModeWheel, "CHIM Mode Wheel")
+	RegisterVrikGestureAction(_vrikActionSoulgazeWheel, "CHIM Soulgaze Wheel")
+	RegisterVrikGestureAction(_vrikActionManualAIActivate, "CHIM Manual AI Activate")
+	RegisterVrikGestureAction(_vrikActionHaltAI, "CHIM Halt AI Actions")
+EndFunction
+
+Event OnVrikGestureAction(String eventName, String strArg, Float numArg, Form sender)
+	Debug.Trace("[CHIM] VRIK gesture action: " + eventName)
+
+	if (eventName == _vrikActionTextChat)
+		TriggerTextChatAction()
+	elseif (eventName == _vrikActionVoiceChat)
+		TriggerVoiceChatAction()
+	elseif (eventName == _vrikActionMasterWheel)
+		AIAgentAIMind.resetCam()
+		OpenMasterWheel()
+	elseif (eventName == _vrikActionRoleplayWheel)
+		If !SafeProcess()
+			Return
+		EndIf
+		OpenRoleplayWheel()
+	elseif (eventName == _vrikActionSettingsWheel)
+		If !SafeProcess()
+			Return
+		EndIf
+		OpenSettingsWheel()
+	elseif (eventName == _vrikActionModeWheel)
+		If !SafeProcess()
+			Return
+		EndIf
+		OpenModeToggleWheel(0.0)
+	elseif (eventName == _vrikActionSoulgazeWheel)
+		If !SafeProcess()
+			Return
+		EndIf
+		OpenSoulgazeWheel()
+	elseif (eventName == _vrikActionManualAIActivate)
+		TriggerManualAIActivateAction()
+	elseif (eventName == _vrikActionHaltAI)
+		TriggerHaltAction()
+	endif
+EndEvent
 
 Event OnPlayerMenuTopicSelected(String eventName, String strArg, Float numArg, Form sender)
 	_playerMenuTTSPending = false
@@ -826,32 +975,30 @@ Function OpenRoleplayWheel()
 		leader = crosshairRef as Actor
 	EndIf
 	
-	String[] _modes = new String[8]
+	String[] _modes = new String[7]
 	_modes[0] = "Write Diary"
 	_modes[1] = "GATHER"
-	_modes[2] = "FOLLOW_NPC"
-	_modes[3] = "UPDATE_NPC"
-	_modes[4] = "WAIT"
-	_modes[5] = "FOLLOW"
-	_modes[6] = "HALT"
-	_modes[7] = "RENAME"
+	_modes[2] = "UPDATE_NPC"
+	_modes[3] = "WAIT"
+	_modes[4] = "FOLLOW"
+	_modes[5] = "HALT"
+	_modes[6] = "RENAME"
 	
-	String[] _label = new String[8]
+	String[] _label = new String[7]
 	_label[0] = "Write Diary"
 	_label[1] = "Gather friends"
-	_label[2] = "Follow NPC"
-	_label[3] = "Update NPC"
-	_label[4] = "Wait Here"
-	_label[5] = "Follow Me"
-	_label[6] = "Stop All AI"
-	_label[7] = "Add to BgL"
+	_label[2] = "Update NPC"
+	_label[3] = "Wait Here"
+	_label[4] = "Follow Me"
+	_label[5] = "Stop All AI"
+	_label[6] = "Add to BgL"
 
 	if leader
 		if leader.GetrelationShipRank(Game.GetPlayer()) < 0
-			_label[4] = "Force Wait"
-			_label[5] = "Force Follow"
+			_label[3] = "Force Wait"
+			_label[4] = "Force Follow"
 		elseif leader.GetrelationShipRank(Game.GetPlayer()) < 1
-			_label[5] = "Force Follow"
+			_label[4] = "Force Follow"
 		endif
 	endif
 	
@@ -880,40 +1027,9 @@ Function OpenRoleplayWheel()
 			; No target - check if looking up for Narrator diary
 			Debug.Trace("[CHIM] Diary with no target - routing to handler for camera pitch detection")
 			AIAgentFunctions.requestMessageForActor("Please, update your diary","diary","")
-		EndIf
+	EndIf
 	ElseIf ( currentMode ==  "GATHER")
 		AIAgentAIMind.GatherAround()
-	ElseIf ( currentMode ==  "FOLLOW_NPC")
-		If (leader)
-			if (!followingHerika)
-				followingHerika=true
-				Actor player=Game.GetPlayer()
-				Game.SetPlayerAiDriven(true)
-				currentPlayerFollowTarget = leader
-				Game.DisablePlayerControls(1, 1, 0, 0, 1, 0, 1)
-				
-				Debug.Notification("[CHIM] "+player.GetDisplayName()+" is following "+leader.GetDisplayName())
-			else
-				Actor player=Game.GetPlayer()
-				player.ClearKeepOffsetFromActor()
-				Game.SetPlayerAiDriven(false)
-				Game.EnablePlayerControls()
-				FollowNPCQuestScript.stopFollowing(leader);
-				followingHerika=false
-			endif
-		Else
-			if (followingHerika)
-				Actor player=Game.GetPlayer()
-				player.ClearKeepOffsetFromActor()
-				Game.SetPlayerAiDriven(false)
-				Game.EnablePlayerControls()
-				
-				FollowNPCQuestScript.stopFollowing(leader);
-				followingHerika=false
-			else
-				Debug.Notification("[CHIM] You must look at a target to use this")
-			endif
-		EndIf
 	ElseIf ( currentMode ==  "UPDATE_NPC")
 		If (leader)
 			Debug.Trace("[CHIM] Updating dynamic profile for "+leader.GetDisplayName())
