@@ -267,7 +267,7 @@ int			_historydiaries_cycle_keyDefault = -1
 
 event OnPlayerLoadGame()
 	; Re-apply combat settings on every game load since C++ plugin doesn't persist them
-	
+	Debug.Trace("[CHIM] OnPlayerLoadGame")
 	int combatDialogueValue = AIAgentFunctions.get_conf_i("_combat_dialogue")
 	if (combatDialogueValue > 0)
 		_toggle_combatdialogue_state = true
@@ -311,6 +311,8 @@ event OnPlayerLoadGame()
 	else
 		controlScript.setConf("_player_tts_traditional_dialogue", 0)
 	endIf
+	
+
 endEvent
 
 event OnConfigInit()
@@ -1018,6 +1020,7 @@ endEvent
 	
 	
 event OnGameReload()
+	Debug.Trace("[CHIM] OnGameReload")
 	parent.OnGameReload()
 	bool a; to avoid warnings on runtime
 	if (_toggleState1)
@@ -1136,6 +1139,13 @@ event OnGameReload()
 	endif
 	
 	a=controlScript.setConf("_combat_barks_period",_combat_barks_period)
+	
+	if (_toggle_restrict_onscene == 1 )
+		a=controlScript.setConf("_restrict_onscene",1)
+	else
+		a=controlScript.setConf("_restrict_onscene",0)
+	endif
+
 endEvent
 
 event OnOptionDefault(int a_option)

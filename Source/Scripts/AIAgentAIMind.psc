@@ -3609,6 +3609,12 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			endif
 
 			int retFnc=AIAgentFunctions.logMessage(akTarget.GetDisplayName()+"/"+x+"/"+y+"/"+z+"/"+name,"util_location_npc")
+			Actor randomActor=PO3_SKSEFunctions.GetClosestActorFromRef(aktarget,true);
+			if (randomActor)
+				Debug.Trace("[CHIM] BackgroundCmd, "+randomActor.GetDisplayName()+" randomActor actor around "+x+","+y+","+z);
+			else
+				Debug.Trace("[CHIM] BackgroundCmd, No randomActor actor around "+x+","+y+","+z);
+			endif
 		elseif 	(cmd[0] == "FindNPC") 
 			Int locrefId=HexToInt(cmd[1])
 			ObjectReference destinationRef = Game.GetFormEx(locrefId) as ObjectReference;
