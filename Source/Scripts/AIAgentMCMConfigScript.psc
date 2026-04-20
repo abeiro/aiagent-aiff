@@ -1202,7 +1202,7 @@ event OnGameReload()
 	
 	a=controlScript.setConf("_combat_barks_period",_combat_barks_period)
 	
-	if (_toggle_restrict_onscene == 1 )
+	if (_toggle_restrict_onscene_state)
 		a=controlScript.setConf("_restrict_onscene",1)
 	else
 		a=controlScript.setConf("_restrict_onscene",0)
