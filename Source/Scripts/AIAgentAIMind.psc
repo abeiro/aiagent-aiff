@@ -708,14 +708,20 @@ function TravelToTargetEnd(Actor npc) global
 		Form dest=destination.GetBaseObject()
 		if (dest.GetType()==43) ; NPC
 			Actor destinationActor=StorageUtil.GetFormValue(npc, "LastTravelToLocation") as Actor
-			if (destinationActor.IsDead()); Inspecting a dead body
-				Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " inspects "+destinationActor.getDisplayName())
-				LookAt(npc,destinationActor)
-				Debug.SendAnimationEvent(npc,"IdleKneeling")
-				Utility.wait(3)
-				Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
+			if (npc.Is3DLoaded())
+				if (destinationActor.IsDead()); Inspecting a dead body
+					Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " inspects "+destinationActor.getDisplayName())
+					LookAt(npc,destinationActor)
+					Debug.SendAnimationEvent(npc,"IdleKneeling")
+					Utility.wait(3)
+					Debug.SendAnimationEvent(npc,"IdleForceDefaultState")
+				endif
+			else 
+				; backgroundaction, NPC not present, should sandbox at location
+				stayAtPlace(npc,0,"");
 			endif
-			Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+			Debug.Trace("[CHIM] TravelToTargetEnd: "+npc.GetDisplayName()+". Travel destination was an actor "+destinationActor.GetName()+" "+destinationActor.GetFormId()+" "+destinationActor.GetType())
+			
 			;stayAtPlace(npc,0,"");
 		elseif (dest.GetType()==34) ; Static
 					; TravelToLocation case?
@@ -1224,6 +1230,8 @@ function PlayIdle(Actor npc,int animation) global
 endFunction
 
 Function GetIntoConversation(Actor npc,ObjectReference reference) global
+
+	BackgroundCmd(npc,"Track")
 
 	int isActive=StorageUtil.GetIntValue(None, "AIAgentNpcWalkNear",1);
 	if (isActive==0)
@@ -2337,7 +2345,6 @@ int Function Sandbox(Actor npc,String taskid) global
 endFunction
 
 
-
 int Function CombatPlayer(Actor npc) global
 	Debug.Trace("CombatPlayer "+npc.GetDisplayName())
 	
@@ -3386,6 +3393,60 @@ String Function DecToHex(Int n) global
     return result
 EndFunction
 
+Int Function HexToInt(String hex) global
+    ; Remove optional 0x prefix
+    if StringUtil.Substring(hex, 0, 2) == "0x"
+        hex = StringUtil.Substring(hex, 2)
+    endif
+
+    Int result = 0
+    Int i = 0
+    Int len = StringUtil.GetLength(hex)
+
+    while i < len
+        String char = StringUtil.Substring(hex, i, 1)
+        Int value = 0
+
+        if char == "0"
+            value = 0
+        elseif char == "1"
+            value = 1
+        elseif char == "2"
+            value = 2
+        elseif char == "3"
+            value = 3
+        elseif char == "4"
+            value = 4
+        elseif char == "5"
+            value = 5
+        elseif char == "6"
+            value = 6
+        elseif char == "7"
+            value = 7
+        elseif char == "8"
+            value = 8
+        elseif char == "9"
+            value = 9
+        elseif char == "A" || char == "a"
+            value = 10
+        elseif char == "B" || char == "b"
+            value = 11
+        elseif char == "C" || char == "c"
+            value = 12
+        elseif char == "D" || char == "d"
+            value = 13
+        elseif char == "E" || char == "e"
+            value = 14
+        elseif char == "F" || char == "f"
+            value = 15
+        endif
+
+        result = result * 16 + value
+        i += 1
+    endwhile
+
+    return result
+EndFunction
 
 bool Function BackgroundCmd(Form actorForm,string command) global
 
@@ -3469,6 +3530,14 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 		elseif 	(cmd[0] == "SeekAndKillPlayer") 
 			; TO-DO select a better package here
 			MoveToPlayer(akTarget,"snqe",9)		
+		elseif 	(cmd[0] == "MoveTo") 
+			Int locrefId=HexToInt(cmd[1])
+			ObjectReference destinationRef = Game.GetFormEx(locrefId) as ObjectReference;
+			if (destinationRef)
+				TravelToLocation(akTarget,destinationRef,destinationRef.GetDisplayName())
+			else
+				Debug.Trace("[CHIM] BackgroundCmd->MoveTo Couldn't find destination for formId: "+DecToHex(locrefId)+ " "+cmd[1])
+			endif
 			
 		elseif 	(cmd[0] == "Track") 
 			float x = 0;
@@ -3534,6 +3603,79 @@ bool Function BackgroundCmd(Form actorForm,string command) global
 			endif
 
 			int retFnc=AIAgentFunctions.logMessage(akTarget.GetDisplayName()+"/"+x+"/"+y+"/"+z+"/"+name,"util_location_npc")
+			Actor randomActor=PO3_SKSEFunctions.GetClosestActorFromRef(aktarget,true);
+			if (randomActor)
+				Debug.Trace("[CHIM] BackgroundCmd, "+randomActor.GetDisplayName()+" randomActor actor around "+x+","+y+","+z);
+			else
+				Debug.Trace("[CHIM] BackgroundCmd, No randomActor actor around "+x+","+y+","+z);
+			endif
+		elseif 	(cmd[0] == "FindNPC") 
+			Int locrefId=HexToInt(cmd[1])
+			ObjectReference destinationRef = Game.GetFormEx(locrefId) as ObjectReference;
+			if (destinationRef)
+				float x = 0;
+				float y = 0
+				float z = 0
+				string name
+				
+				Location loc= destinationRef.GetCurrentLocation()
+				Location currParentLvl1=PO3_SKSEFunctions.GetParentLocation(loc)
+				Location currParentLvl2=PO3_SKSEFunctions.GetParentLocation(currParentLvl1)
+				string lvl1s = ""
+				string lvl2s = ""
+				if currParentLvl1
+					lvl1s = currParentLvl1.GetName()
+				endif
+				if currParentLvl2
+					lvl2s = currParentLvl2.GetName()
+				endif
+
+				bool useRawCoords= false
+				Worldspace cws= destinationRef.GetWorldSpace()
+				
+				if (cws)
+					Debug.Trace("[CHIM] "+destinationRef.GetDisplayName()+"/"+loc.GetName()+"/"+lvl1s+"/"+lvl2s+" worldspace "+cws.GetName())
+					if (cws.GetName() == "Skyrim" || cws.GetName() == "")
+						if !destinationRef.IsInInterior() 
+							useRawCoords = true
+						endif
+					endif
+				else
+					Debug.Trace("[CHIM] "+destinationRef.GetDisplayName()+"/"+loc.GetName()+"/"+lvl1s+"/"+lvl2s+" worldspace null")
+				endif;
+				
+				if (useRawCoords)
+					x=akTarget.GetPositionX();
+					y=akTarget.GetPositionY();
+					z=akTarget.GetPositionZ();
+					name=loc.GetName();
+					Debug.Trace("[CHIM] BackgroundCmd, "+destinationRef.GetDisplayName()+",Not interior, akTarget.GetPosition, Track: "+x+","+y+","+z);
+				else
+					ObjectReference destMarker=AIAgentFunctions.getWorldLocationMarkerFor(loc);
+					if (!destMarker)
+						destMarker=AIAgentFunctions.getWorldLocationMarkerFor(currParentLvl1);
+						Debug.Trace("[CHIM] BackgroundCmd, "+destinationRef.GetDisplayName()+" loc.parent.GetPosition , Track: "+currParentLvl1.GetName()+ ": "+x+","+y+","+z);
+					endif;
+					if (destMarker)
+						
+						x=destMarker.GetPositionX();
+						y=destMarker.GetPositionY();
+						z=destMarker.GetPositionZ();
+						Debug.Trace("[CHIM] BackgroundCmd, "+destinationRef.GetDisplayName()+" loc.GetPosition, Track: "+loc.GetName()+ ": "+x+","+y+","+z);
+						name=loc.GetName()
+					else
+						x=akTarget.GetPositionX();
+						y=akTarget.GetPositionY();
+						z=akTarget.GetPositionZ();
+						name=loc.GetName();
+						Debug.Trace("[CHIM] BackgroundCmd, "+destinationRef.GetDisplayName()+" akTarget.GetPosition, Track: "+x+","+y+","+z);
+					endif
+				endif
+
+				if (loc.IsSameLocation(akTarget.GetCurrentLocation()))
+					int retFnc=AIAgentFunctions.logMessage(destinationRef.GetDisplayName()+"/"+x+"/"+y+"/"+z+"/"+name,"util_location_npc")
+				endif
+			endif
 		endif
 	endif
 	
