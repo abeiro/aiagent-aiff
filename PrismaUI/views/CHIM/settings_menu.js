@@ -31,6 +31,16 @@ const MODEL_ACTION_MAP = {
     4: 'llm_experimental'
 };
 
+function updatePlayerDiaryButtonLabel(playerName) {
+    const labelElement = document.getElementById('player-diary-button-label');
+    if (!labelElement) {
+        return;
+    }
+
+    const resolvedName = String(playerName || '').trim() || 'Player';
+    labelElement.textContent = `Write ${resolvedName} Diary`;
+}
+
 // Show description in footer
 window.showDescription = function(text) {
     const descElement = document.getElementById('hover-description');
@@ -372,6 +382,7 @@ async function fetchOverlayState() {
         const modeKey = overlay.mode ? String(overlay.mode).toUpperCase().trim() : 'STANDARD';
         activeModeAction = MODE_ACTION_MAP[modeKey] || 'mode_standard';
         activeModelAction = MODEL_ACTION_MAP[Number(overlay.active_model_slot)] || 'llm_standard';
+        updatePlayerDiaryButtonLabel(overlay.player_name);
         updateActiveHighlights();
     } catch (error) {
         console.error('[CHIM Settings] Error fetching overlay state:', error);

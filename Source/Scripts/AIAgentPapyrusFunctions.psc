@@ -157,8 +157,22 @@ Function ProcessPendingSettingsAction()
 		Debug.Notification("[CHIM] Diary: Nearby NPCs are writing diary entries")
 		AIAgentFunctions.sendMessage("Please, update your diary", "diary_nearby")
 	elseif (actionId == "rp_diary_narrator")
-		Debug.Notification("[CHIM] Requesting diary entry from The Narrator")
+		Debug.Notification("[CHIM] Writing diary entry for The Narrator")
 		AIAgentFunctions.logMessage("The Narrator", "diary_narrator")
+	elseif (actionId == "rp_diary_player")
+		Actor playerActor = Game.GetPlayer()
+		String playerName = ""
+		if (playerActor)
+			playerName = playerActor.GetDisplayName()
+			if (playerName == "")
+				playerName = playerActor.GetName()
+			endif
+		endif
+		if (playerName == "")
+			playerName = "Player"
+		endif
+		Debug.Notification("[CHIM] Writing diary entry for " + playerName)
+		AIAgentFunctions.logMessage(playerName, "diary_player")
 	elseif (actionId == "rp_update_nearby_profiles")
 		Actor[] actors = AIAgentFunctions.findAllNearbyAgents()
 		String npcList = ""
