@@ -156,6 +156,32 @@ Function ProcessPendingSettingsAction()
 	elseif (actionId == "rp_diary_all")
 		Debug.Notification("[CHIM] Diary: Nearby NPCs are writing diary entries")
 		AIAgentFunctions.sendMessage("Please, update your diary", "diary_nearby")
+	elseif (actionId == "rp_diary_narrator")
+		Debug.Notification("[CHIM] Requesting diary entry from The Narrator")
+		AIAgentFunctions.logMessage("The Narrator", "diary_narrator")
+	elseif (actionId == "rp_update_nearby_profiles")
+		Actor[] actors = AIAgentFunctions.findAllNearbyAgents()
+		String npcList = ""
+		int nearbyIndex = 0
+		while nearbyIndex < actors.Length
+			String actorName = actors[nearbyIndex].GetDisplayName()
+			if (actorName != "")
+				if (npcList != "")
+					npcList += ","
+				endif
+				npcList += actorName
+			endif
+			nearbyIndex += 1
+		endwhile
+		if (npcList != "")
+			Debug.Notification("[CHIM] Updating dynamic profiles for nearby NPCs")
+			AIAgentFunctions.logMessage(npcList, "updateprofiles_batch_async")
+		else
+			Debug.Notification("[CHIM] No nearby AI NPCs found")
+		endif
+	elseif (actionId == "rp_update_narrator")
+		Debug.Notification("[CHIM] Updating dynamic profile for The Narrator")
+		AIAgentFunctions.logMessage("The Narrator", "updateprofile_narrator")
 	elseif (actionId == "rp_write_diary" && targetActor)
 		Debug.Notification("[CHIM] " + targetActor.GetDisplayName() + " is writing diary entry")
 		AIAgentFunctions.requestMessageForActor("Please, update your diary", "diary", targetActor.GetDisplayName())
