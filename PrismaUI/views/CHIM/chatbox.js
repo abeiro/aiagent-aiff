@@ -1,7 +1,7 @@
 /**
  * CHIM Chatbox JavaScript
  * Handles MMO-style chat interface and real-time updates
- * Focus text composition is handled by a centered modal
+ * Focus text composition is handled by a movable modal
  */
 
 (function() {
@@ -21,15 +21,19 @@
     const currentModelElement = document.getElementById('chatbox-current-model');
     const modelSelectElement = document.getElementById('chatbox-model-select');
     const focusToggleButton = document.getElementById('chatbox-focus-toggle');
+    const focusPositionSelect = document.getElementById('chatbox-position-select');
 
     // State
     let currentTab = 'chat';
     const maxMessages = 100;
+    const focusPositionStorageKey = 'chim_focus_chat_position';
+    const focusPositionClasses = ['focus-position-center', 'focus-position-top', 'focus-position-bottom'];
     let isChatFocused = false;
     let quickChatMode = false;
     let isFocusChatEnabled = false;
     let currentModeAction = 'mode_standard';
     let currentModelAction = 'llm_standard';
+    let currentFocusPosition = 'center';
     let currentTargetName = '';
     let currentTargetFormId = 0;
     let currentTargetOverrideActive = false;
@@ -144,6 +148,45 @@
         focusToggleButton.title = enabled ? 'Disable Focus Chat' : 'Enable Focus Chat';
     }
 
+    function normalizeFocusPosition(position) {
+        if (position === 'top' || position === 'bottom') {
+            return position;
+        }
+        return 'center';
+    }
+
+    function loadFocusPosition() {
+        try {
+            const storedPosition = localStorage.getItem(focusPositionStorageKey);
+            if (storedPosition === null) {
+                return currentFocusPosition;
+            }
+            return normalizeFocusPosition(storedPosition);
+        } catch (_err) {
+            return currentFocusPosition;
+        }
+    }
+
+    function saveFocusPosition(position) {
+        try {
+            localStorage.setItem(focusPositionStorageKey, position);
+        } catch (_err) {
+            // Ignore storage failures and fall back to the in-memory selection.
+        }
+    }
+
+    function applyFocusPosition(position) {
+        if (!focusModal) return;
+        currentFocusPosition = normalizeFocusPosition(position);
+        focusPositionClasses.forEach(function(className) {
+            focusModal.classList.remove(className);
+        });
+        focusModal.classList.add('focus-position-' + currentFocusPosition);
+        if (focusPositionSelect) {
+            focusPositionSelect.value = currentFocusPosition;
+        }
+    }
+
     /**
      * Close chatbox
      */
@@ -176,10 +219,11 @@
     };
 
     /**
-     * Open centered focus chat modal
+     * Open focus chat modal
      */
     window.openFocusChatbox = function() {
         if (!focusModal || !focusInput) return;
+        applyFocusPosition(loadFocusPosition());
         focusModal.classList.remove('hidden');
         focusModal.setAttribute('aria-hidden', 'false');
         focusInput.value = '';
@@ -191,7 +235,7 @@
     };
 
     /**
-     * Close centered focus chat modal
+     * Close focus chat modal
      */
     window.closeFocusChatbox = function(notifyBridge) {
         if (!focusModal || !focusInput) return;
@@ -437,6 +481,13 @@
         });
     }
 
+    if (focusPositionSelect) {
+        focusPositionSelect.addEventListener('change', function() {
+            applyFocusPosition(focusPositionSelect.value);
+            saveFocusPosition(currentFocusPosition);
+        });
+    }
+
     if (targetsListElement) {
         targetsListElement.addEventListener('click', function(e) {
             const targetButton = e.target.closest('.chatbox-target-item');
@@ -461,6 +512,7 @@
     updateFocusIndicator(isFocusChatEnabled);
     window.updateChatboxMode('STANDARD');
     window.updateChatboxModel('Standard');
+    applyFocusPosition(loadFocusPosition());
 
     // Apply corner placement via shared layout manager
     if (window.chimLayout) {

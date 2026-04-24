@@ -537,6 +537,24 @@ body {
     display: none;
 }
 
+.focus-chatbox-modal.focus-position-center {
+    align-items: center;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.focus-chatbox-modal.focus-position-top {
+    align-items: flex-start;
+    padding-top: 20px;
+    padding-bottom: 0;
+}
+
+.focus-chatbox-modal.focus-position-bottom {
+    align-items: flex-end;
+    padding-top: 0;
+    padding-bottom: 20px;
+}
+
 .focus-chatbox-backdrop {
     position: absolute;
     inset: 0;
@@ -721,9 +739,30 @@ body {
 .focus-chatbox-actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
+    align-items: flex-end;
     justify-content: flex-end;
     padding: 10px 14px 14px 14px;
     border-top: 1px solid rgba(242, 124, 17, 0.22);
+}
+
+.focus-chatbox-position-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-right: auto;
+    min-width: 140px;
+}
+
+.focus-chatbox-position-label {
+    font-size: 0.72em;
+    color: #a7a7b0;
+    text-transform: uppercase;
+    letter-spacing: 0.45px;
+}
+
+.focus-chatbox-position-select {
+    min-width: 140px;
 }
 
 @media (max-width: 920px) {
@@ -739,6 +778,15 @@ body {
     }
 
     .focus-chatbox-panel {
+        width: 100%;
+    }
+
+    .focus-chatbox-position-picker {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .focus-chatbox-position-select {
         width: 100%;
     }
 }
