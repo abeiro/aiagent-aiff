@@ -78,7 +78,8 @@ body {
 }
 
 .target-race,
-.target-refid {
+.target-refid,
+.target-status {
     padding: 3px 8px;
     background: rgba(30, 30, 40, 0.7);
     border-radius: 3px;

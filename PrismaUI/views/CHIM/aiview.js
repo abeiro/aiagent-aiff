@@ -59,7 +59,7 @@
             currentNpc = data;
             
             // Update target bar
-            updateTargetBar(data.npc_name, data.race, data.refid);
+            updateTargetBar(data.npc_name, data.race, data.refid, data.activity_status);
             
             // Update all sections
             updateProfile(data.profile);
@@ -86,7 +86,7 @@
     /**
      * Update target bar at top of screen
      */
-    function updateTargetBar(npcName, race, refid) {
+    function updateTargetBar(npcName, race, refid, activityStatus) {
         if (npcName) {
             targetNameElement.textContent = npcName;
             targetNameElement.classList.remove('no-target');
@@ -98,6 +98,10 @@
             }
             if (refid) {
                 metadata += `<span class="target-refid">RefID: ${escapeHtml(refid)}</span>`;
+            }
+            const activityLabel = formatActivityStatus(activityStatus);
+            if (activityLabel) {
+                metadata += `<span class="target-status">${escapeHtml(activityLabel)}</span>`;
             }
             targetMetadataElement.innerHTML = metadata;
         } else {
@@ -154,6 +158,7 @@
         document.getElementById('npc-base').textContent = data.base || 'N/A';
         document.getElementById('npc-refid').textContent = data.refid || 'N/A';
         document.getElementById('npc-voiceid').textContent = data.voiceid || 'N/A';
+        document.getElementById('npc-activity').textContent = formatActivityStatus(data.activity_status) || 'Unknown';
         document.getElementById('npc-oghma').textContent = data.oghma_tags || 'None';
     }
 
@@ -271,6 +276,19 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function formatActivityStatus(activityStatus) {
+        if (!activityStatus || !activityStatus.summary) {
+            return '';
+        }
+
+        const summary = activityStatus.summary.charAt(0).toUpperCase() + activityStatus.summary.slice(1);
+        if (activityStatus.fresh === false) {
+            return `Last known: ${summary}`;
+        }
+
+        return summary;
     }
 
     /**
