@@ -1194,6 +1194,26 @@ function ShowTopLeftNotification(String text) global
 	ShowDebugNotification(text)
 endFunction
 
+function ConsumeItemFeedback(Actor npc, String text) global
+	ShowDebugNotification(text)
+
+	if !npc
+		return
+	endif
+
+	if npc.IsBleedingOut()
+		return
+	elseif npc.IsInCombat()
+		return
+	elseif npc.IsSneaking()
+		return
+	elseif npc.GetCurrentScene()
+		return
+	endif
+
+	Debug.SendAnimationEvent(npc, "IdlePickup")
+endFunction
+
 function SayToPlayer(Actor npc) global
 	Debug.Notification("[CHIM] Use new queue mode")
 	;Topic fixedTopic=Game.GetFormFromFile(0x00638E, "AddDiagToReplace.esp") as Topic ; AASPGQuestDialogue2Topic1B1Topic
