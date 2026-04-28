@@ -655,7 +655,7 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 	StorageUtil.SetStringValue(npc, "LastTravelToLocationName",place);
 	Debug.Trace("[CHIM] TravelToLocation "+npc.GetDisplayName()+ " starts travel to "+place+" reference "+DecToHex(akTarget.GetFormId()));
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
+	ShowDebugNotification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
 endFunction
 
 ;Travel to reference
@@ -686,7 +686,7 @@ function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 		place="a Unknown Place";
 		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has left the place","infoaction",npc.GetDisplayName())
 	endif;
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
+	ShowDebugNotification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 	Debug.Trace("[CHHIM] TravelToTarget called: "+npc.GetDisplayName()+" "+place+ ", actor"+akTarget.GetDisplayName())
 endFunction
 
@@ -1174,6 +1174,25 @@ function SendExternalEventChat(String npcname,String text) global
 
 endFunction
 
+function ShowDebugNotification(String text) global
+	if text == ""
+		return
+	endif
+
+	int safety = 0
+	while UI.IsMenuOpen("Dialogue Menu") && safety < 40
+		Utility.WaitMenuMode(0.1)
+		safety += 1
+	endwhile
+
+	Utility.WaitMenuMode(0.05)
+
+	Debug.Notification(text)
+endFunction
+
+function ShowTopLeftNotification(String text) global
+	ShowDebugNotification(text)
+endFunction
 
 function SayToPlayer(Actor npc) global
 	Debug.Notification("[CHIM] Use new queue mode")
