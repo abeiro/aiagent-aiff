@@ -134,15 +134,6 @@ Scriptname AIAgentScriptProxy
 
 ; === ActorUtil (400–499) ===
 ; 400 = AddPackageOverride
-; 402 = CHIM-NFF RecruitFollower
-; 403 = CHIM-NFF WaitHere
-; 404 = CHIM-NFF FollowMe
-; 405 = CHIM-NFF BehindMe
-; 406 = CHIM-NFF StartAutoLoot
-; 407 = CHIM-NFF SetRole
-; 408 = CHIM-NFF SetFollowDistance
-; 409 = CHIM-NFF OpenSatchel
-; 410 = CHIM-NFF OpenPlayerChest
 
 ; === Faction (500–599) ===
 ; 500 = CanPayCrimeGold
@@ -1323,21 +1314,6 @@ Function ExecuteCommandActorUtil(int cmdID, string jsonString) global
 		else
 			Debug.Trace("[CHIM] AIProxy: UNKNOWN ExecuteCommandActorUtil SetLinkedRef refname: " + asref)
 		endif
-	elseif cmdID >= 402 && cmdID <= 410 ; CHIM-NFF bridge commands
-        Actor akActor = AIAgentFunctions.jsonGetActor("akActor", jsonString)
-        string asRole = AIAgentFunctions.jsonGetString("asRole", jsonString)
-        string asDistance = AIAgentFunctions.jsonGetString("asDistance", jsonString)
-        string actorName = "<none>"
-        if akActor
-            actorName = akActor.GetDisplayName()
-        endif
-
-        bool success = CHIMNFF.Execute(cmdID, akActor, asRole, asDistance)
-        if success
-            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> CHIM-NFF bridge SUCCESS cmdID=" + cmdID + " actor=" + actorName)
-        else
-            Debug.Trace("[CHIM] AIProxy: ExecuteCommandActorUtil -> CHIM-NFF bridge FAILED cmdID=" + cmdID + " actor=" + actorName)
-        endif
 	elseif cmdID == 490 ; Spawn a teleport door
         
 		Door sourceObject = Game.GetFormFromFile(0x031ab2, "AIAgent.esp") as Door
