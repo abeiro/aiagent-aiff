@@ -2744,7 +2744,7 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 	Debug.Trace("MoveInventoryItem start");
 	if (akItemToRemove.GetFormID()==0xf)
 	
-		string result = SkyMessage.Show(target.GetDisplayName()+ " wants to take "+amount+" gold from you. Allow?", "No, thanks", "Yes, please!")
+		string result = SkyMessage.Show(source.GetDisplayName()+ " wants to give you "+amount+" gold. Accept?", "No, thanks", "Yes, please!")
 
 		if result == "Yes, please!"
 			source.RemoveItem(akItemToRemove, amount)
@@ -2755,8 +2755,8 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 		endif	
 		
 	else
-		source.RemoveItem(akItemToRemove, 1, false, target)
-		Debug.Notification(source.GetDisplayName()+ " has give you "+realName);
+		source.RemoveItem(akItemToRemove, amount, false, target)
+		Debug.Notification(source.GetDisplayName()+ " gives you "+amount+" "+realName);
 		;TESCOntainerEvent will take care of the transaction
 	endif
 	Debug.Trace("MoveInventoryItem end");
