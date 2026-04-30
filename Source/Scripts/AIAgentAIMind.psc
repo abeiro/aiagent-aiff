@@ -3086,6 +3086,29 @@ Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount,
 	endif
 EndFunction
 
+Function SpawnAndGiveItemToActor(Actor targetActor, Form itemForm, int amount, string itemName, string targetDisplayName = "") global
+	if (!targetActor || !itemForm)
+		return
+	endif
+
+	if (amount <= 0)
+		amount = 1
+	endif
+
+	if (targetDisplayName == "")
+		targetDisplayName = targetActor.GetDisplayName()
+	endif
+
+	targetActor.AddItem(itemForm, amount, true)
+
+	if (targetActor != Game.GetPlayer())
+		Debug.SendAnimationEvent(targetActor, "IdleGive")
+	endif
+
+	ShowDebugNotification("[CHIM] " + targetDisplayName + " receives " + amount + " " + itemName)
+	Debug.Trace("[CHIM] SpawnAndGiveItemToActor " + targetDisplayName + " receives " + amount + " " + itemName)
+EndFunction
+
 Function PickupItemFromWorld(Actor npc, ObjectReference itemRef, string itemName) global
 	if (!npc || !itemRef)
 		return
@@ -3836,6 +3859,65 @@ function CastConstantSpell(Actor caster, int spellFormId, int targetFormId) glob
 	
 	; Log the spell cast event
 	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+endFunction
+
+function TeleportActorToLocation(Actor targetActor, ObjectReference akTarget, String place, String targetDisplayName = "") global
+	if !targetActor || !akTarget
+		return
+	endif
+
+	if (targetDisplayName == "")
+		targetDisplayName = targetActor.GetDisplayName()
+	endif
+
+	if (akTarget.GetBaseObject().GetType() == 29) ; Door
+		ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(akTarget)
+		if (doorDest)
+			akTarget = doorDest
+		endif
+	endif
+
+	if targetActor == Game.GetPlayer()
+		Actor[] followers = PO3_SKSEFunctions.GetPlayerFollowers()
+		int i = 0
+		while i < followers.length
+			if followers[i]
+				followers[i].MoveTo(akTarget)
+			endif
+			i += 1
+		endwhile
+	endif
+
+	targetActor.MoveTo(akTarget)
+	targetActor.EvaluatePackage()
+
+	ShowDebugNotification("[CHIM] " + targetDisplayName + " teleports to " + place)
+	Debug.Trace("[CHIM] TeleportActorToLocation " + targetDisplayName + " teleports to " + place + " reference " + DecToHex(akTarget.GetFormId()))
+endFunction
+
+function KillActorTarget(Actor targetActor, String targetDisplayName = "", String narratorActorName = "The Narrator") global
+	if !targetActor
+		return
+	endif
+
+	if (targetDisplayName == "")
+		targetDisplayName = targetActor.GetDisplayName()
+	endif
+
+	targetActor.Kill()
+	Utility.Wait(0.2)
+
+	string resultText = ""
+	if targetActor.IsDead()
+		resultText = targetDisplayName + " is killed."
+	else
+		resultText = "Could not kill " + targetDisplayName + "."
+	endif
+
+	ShowDebugNotification("[CHIM] " + resultText)
+	Debug.Trace("[CHIM] KillActorTarget " + resultText)
+	AIAgentFunctions.logMessageForActor(resultText, "infoaction", narratorActorName)
+	AIAgentFunctions.logMessageForActor("command@KillTarget@" + targetDisplayName + "@" + resultText, "funcret", narratorActorName)
 endFunction
 
 function ChimTeleportDoorActivated(ObjectReference portal) global
