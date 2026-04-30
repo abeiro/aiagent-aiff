@@ -3109,6 +3109,96 @@ Function SpawnAndGiveItemToActor(Actor targetActor, Form itemForm, int amount, s
 	Debug.Trace("[CHIM] SpawnAndGiveItemToActor " + targetDisplayName + " receives " + amount + " " + itemName)
 EndFunction
 
+float Function GetSpawnNpcOffsetX(int spawnIndex) global
+	int ring = (spawnIndex / 8) + 1
+	int slot = spawnIndex % 8
+	float base = 140.0 * ring
+	float diagonal = 100.0 * ring
+
+	if slot == 0
+		return base
+	elseif slot == 1
+		return -base
+	elseif slot == 2
+		return 0.0
+	elseif slot == 3
+		return 0.0
+	elseif slot == 4
+		return diagonal
+	elseif slot == 5
+		return -diagonal
+	elseif slot == 6
+		return diagonal
+	endif
+
+	return -diagonal
+EndFunction
+
+float Function GetSpawnNpcOffsetY(int spawnIndex) global
+	int ring = (spawnIndex / 8) + 1
+	int slot = spawnIndex % 8
+	float base = 140.0 * ring
+	float diagonal = 100.0 * ring
+
+	if slot == 0
+		return 0.0
+	elseif slot == 1
+		return 0.0
+	elseif slot == 2
+		return base
+	elseif slot == 3
+		return -base
+	elseif slot == 4
+		return diagonal
+	elseif slot == 5
+		return diagonal
+	elseif slot == 6
+		return -diagonal
+	endif
+
+	return -diagonal
+EndFunction
+
+Function SpawnNpcTemplateNearPlayer(Form npcTemplateForm, int amount, string templateLabel, string narratorActorName = "The Narrator", string playerName = "Player") global
+	if !npcTemplateForm
+		return
+	endif
+
+	if amount <= 0
+		amount = 1
+	elseif amount > 10
+		amount = 10
+	endif
+
+	Actor playerRef = Game.GetPlayer()
+	int spawnedCount = 0
+	int i = 0
+	while i < amount
+		ObjectReference spawnedRef = playerRef.PlaceAtMe(npcTemplateForm, 1, false, false)
+		if spawnedRef
+			Actor spawnedActor = spawnedRef as Actor
+			if spawnedActor
+				spawnedActor.EnableNoWait()
+				spawnedActor.EvaluatePackage()
+				spawnedCount += 1
+			endif
+		endif
+		i += 1
+	endwhile
+
+	string resultText = ""
+	if spawnedCount > 0
+		resultText = "Spawned " + spawnedCount + " " + templateLabel + " near " + playerName + "."
+	else
+		resultText = "Could not spawn " + templateLabel + "."
+	endif
+
+	ShowDebugNotification("[CHIM] " + resultText)
+	Debug.Trace("[CHIM] SpawnNpcTemplateNearPlayer " + resultText)
+	AIAgentFunctions.logMessageForActor(resultText, "infoaction", narratorActorName)
+	AIAgentFunctions.logMessageForActor("command@SpawnNPC@" + templateLabel + "@" + resultText, "funcret", narratorActorName)
+EndFunction
+
 Function PickupItemFromWorld(Actor npc, ObjectReference itemRef, string itemName) global
 	if (!npc || !itemRef)
 		return
