@@ -738,12 +738,25 @@ body {
 
 .focus-chatbox-actions {
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 14px 14px 14px;
+    border-top: 1px solid rgba(242, 124, 17, 0.22);
+}
+
+.focus-chatbox-actions-row {
+    display: flex;
     gap: 8px;
     flex-wrap: wrap;
     align-items: flex-end;
+}
+
+.focus-chatbox-actions-row-primary {
     justify-content: flex-end;
-    padding: 10px 14px 14px 14px;
-    border-top: 1px solid rgba(242, 124, 17, 0.22);
+}
+
+.focus-chatbox-actions-row-secondary {
+    justify-content: flex-end;
 }
 
 .focus-chatbox-position-picker {
@@ -752,6 +765,22 @@ body {
     gap: 4px;
     margin-right: auto;
     min-width: 140px;
+}
+
+.focus-chatbox-event-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.focus-btn-delete-events {
+    min-width: 88px;
+}
+
+.focus-btn-delete-events[disabled] {
+    opacity: 0.55;
+    cursor: wait;
 }
 
 .focus-chatbox-position-label {
@@ -787,6 +816,12 @@ body {
     }
 
     .focus-chatbox-position-select {
+        width: 100%;
+    }
+
+    .focus-chatbox-actions-row-primary,
+    .focus-chatbox-actions-row-secondary,
+    .focus-chatbox-event-buttons {
         width: 100%;
     }
 }
