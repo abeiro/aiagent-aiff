@@ -44,7 +44,7 @@ int			_slider_postclip
 float		_sound_postclip				= 100.0
 
 int			_slider_ds
-float		_sound_ds				= 8.0
+float		_sound_ds				= 10.0
 
 int			_slider_playback_dropoff_inside
 float		_playback_dropoff_inside		= 70.0
@@ -244,7 +244,7 @@ bool		_toggleState2Default			= false
 float		_sound_volumeDefault			= 75.0
 float		_sound_preclipDefault			= 100.0
 float		_sound_postclipDefault			= 0.0
-float		_sound_dsDefault				= 8.0
+float		_sound_dsDefault				= 10.0
 float		_playback_dropoff_insideDefault		= 70.0
 float		_playback_dropoff_outsideDefault	= 70.0
 bool		_toggleState7Default			= true
@@ -355,7 +355,7 @@ event OnConfigInit()
 	_lip_res				= 500.0
 	_lip_int				= 1.0
 	if (CurrentVersion>1)
-		_sound_ds					= 8.0
+		_sound_ds					= 10.0
 	endIf
 	if (CurrentVersion<25)
 		_toggleState7= true
