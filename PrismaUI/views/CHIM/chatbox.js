@@ -47,6 +47,7 @@
 
     const modeConfig = {
         STANDARD: { label: 'Standard', class: 'standard', action: 'mode_standard' },
+        SHOUT: { label: 'Shout', class: 'shout', action: 'mode_shout' },
         WHISPER: { label: 'Whisper', class: 'whisper', action: 'mode_whisper' },
         NARRATOR: { label: 'Narrator', class: 'narrator', action: 'mode_narrator' },
         DIRECTOR: { label: 'Director', class: 'director', action: 'mode_director' },

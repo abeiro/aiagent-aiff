@@ -201,6 +201,12 @@ body {
     border: 1px solid rgba(52, 152, 219, 0.4);
 }
 
+.mode-badge.shout {
+    background: rgba(231, 76, 60, 0.2);
+    color: #f1948a;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
 .mode-badge.fast {
     background: rgba(34, 197, 94, 0.2);
     color: #86efac;

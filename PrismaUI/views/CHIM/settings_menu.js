@@ -14,6 +14,7 @@ let rawChimServerUrl = '';
 
 const MODE_ACTION_MAP = {
     STANDARD: 'mode_standard',
+    SHOUT: 'mode_shout',
     WHISPER: 'mode_whisper',
     NARRATOR: 'mode_narrator',
     DIRECTOR: 'mode_director',
