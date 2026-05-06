@@ -22,6 +22,7 @@
     const modelSelectElement = document.getElementById('chatbox-model-select');
     const focusToggleButton = document.getElementById('chatbox-focus-toggle');
     const focusPositionSelect = document.getElementById('chatbox-position-select');
+    const deleteEventButtons = document.querySelectorAll('.focus-btn-delete-events');
 
     // State
     let currentTab = 'chat';
@@ -38,6 +39,8 @@
     let currentTargetFormId = 0;
     let currentTargetOverrideActive = false;
     let currentTargetOverrideMode = 'auto';
+    let pendingDeleteConfirmButton = null;
+    let pendingDeleteConfirmTimeoutId = null;
     
     // Server URL
     const SERVER_URL = window.CHIM_SERVER_URL || 'http://192.168.169.218:8081/HerikaServer';
@@ -132,6 +135,16 @@
         }
     }
 
+    function showInGameDebugNotification(message) {
+        if (!message || !message.trim()) return;
+        sendControlCommand('debug_notify|' + message);
+    }
+
+    function pushChatboxSystemMessage(message) {
+        if (!message || !message.trim()) return;
+        window.pushChatMessage('CHIM', message, getCurrentTime(), 'system');
+    }
+
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -185,6 +198,37 @@
         if (focusPositionSelect) {
             focusPositionSelect.value = currentFocusPosition;
         }
+    }
+
+    function setDeleteEventButtonsBusy(isBusy) {
+        deleteEventButtons.forEach(function(button) {
+            button.disabled = !!isBusy;
+        });
+    }
+
+    function clearPendingDeleteConfirmation() {
+        if (pendingDeleteConfirmTimeoutId) {
+            window.clearTimeout(pendingDeleteConfirmTimeoutId);
+            pendingDeleteConfirmTimeoutId = null;
+        }
+
+        if (pendingDeleteConfirmButton) {
+            pendingDeleteConfirmButton.textContent = pendingDeleteConfirmButton.dataset.defaultLabel || pendingDeleteConfirmButton.textContent;
+            pendingDeleteConfirmButton.removeAttribute('data-confirm-armed');
+            pendingDeleteConfirmButton = null;
+        }
+    }
+
+    function armDeleteConfirmation(button, deleteCount) {
+        clearPendingDeleteConfirmation();
+        button.dataset.defaultLabel = button.dataset.defaultLabel || button.textContent;
+        button.textContent = `Confirm Delete ${deleteCount}`;
+        button.setAttribute('data-confirm-armed', 'true');
+        pendingDeleteConfirmButton = button;
+        pushChatboxSystemMessage(`Click the button again within 5 seconds to delete the last ${deleteCount} visible events.`);
+        pendingDeleteConfirmTimeoutId = window.setTimeout(function() {
+            clearPendingDeleteConfirmation();
+        }, 5000);
     }
 
     /**
@@ -288,6 +332,59 @@
     window.triggerHaltAIActions = function() {
         sendControlCommand('halt_ai_actions');
     };
+
+    window.deleteRecentEvents = async function(count) {
+        const deleteCount = Number(count || 0);
+        if (![20, 50, 100].includes(deleteCount)) return;
+
+        setDeleteEventButtonsBusy(true);
+        try {
+            const formData = new FormData();
+            formData.append('count', String(deleteCount));
+
+            const response = await fetch(`${SERVER_URL}/ui/cmd/action_delete_recent_events.php`, {
+                method: 'POST',
+                body: formData,
+                cache: 'no-store'
+            });
+
+            let result = null;
+            try {
+                result = await response.json();
+            } catch (_err) {
+                result = null;
+            }
+
+            if (!response.ok || !result || !result.ok) {
+                const errorMessage = (result && result.message) ? result.message : `Failed to delete the last ${deleteCount} events.`;
+                pushChatboxSystemMessage(errorMessage);
+                return;
+            }
+
+            const deletedCount = Number(result.deleted_count || 0);
+            pushChatboxSystemMessage(`Deleted ${deletedCount} latest visible event${deletedCount === 1 ? '' : 's'}.`);
+            showInGameDebugNotification(`Deleted last ${deletedCount} events`);
+        } catch (_err) {
+            pushChatboxSystemMessage(`Failed to delete the last ${deleteCount} events.`);
+        } finally {
+            setDeleteEventButtonsBusy(false);
+            clearPendingDeleteConfirmation();
+        }
+    };
+
+    deleteEventButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const deleteCount = Number(button.dataset.deleteCount || 0);
+            if (![20, 50, 100].includes(deleteCount)) return;
+
+            if (pendingDeleteConfirmButton === button && button.getAttribute('data-confirm-armed') === 'true') {
+                window.deleteRecentEvents(deleteCount);
+                return;
+            }
+
+            armDeleteConfirmation(button, deleteCount);
+        });
+    });
 
     if (focusInput) {
         focusInput.addEventListener('keydown', function(e) {

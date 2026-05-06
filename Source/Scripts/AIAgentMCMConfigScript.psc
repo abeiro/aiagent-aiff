@@ -44,7 +44,7 @@ int			_slider_postclip
 float		_sound_postclip				= 100.0
 
 int			_slider_ds
-float		_sound_ds				= 1.0
+float		_sound_ds				= 10.0
 
 int			_slider_playback_dropoff_inside
 float		_playback_dropoff_inside		= 70.0
@@ -76,6 +76,9 @@ int			_toggle1OID_Rereg
 
 int			_toggleEnable3DAudioPlayback
 bool		_enable3daudioplaybackstate		= true
+
+int			_toggleCameraBasedAudio
+bool		_camera_based_audio_state		= false
 
 int			_toggleInvertHeading
 bool		_invertheadingstate			= false
@@ -111,7 +114,7 @@ int			_slider_dynamic_profile_period
 float		_dynamic_profile_period		= 20.0
 
 int 		_toggleRechat_policy_asap
-bool  		_rechat_policy_asap = false
+bool  		_rechat_policy_asap = true
 
 int 		_toggle_npc_go_near
 bool  		_toggle_npc_go_near_state = true
@@ -202,15 +205,15 @@ int			_actionSendVoices
 
 ; combat dialogue
 int			_toggle_combatdialogue
-bool		_toggle_combatdialogue_state		= false
+bool		_toggle_combatdialogue_state		= true
 
 ; Cancel dialogue on combat entry
 int			_toggle_cancel_dialogue_on_combat
-bool		_toggle_cancel_dialogue_on_combat_state		= false
+bool		_toggle_cancel_dialogue_on_combat_state		= true
 
 ; Combat barks
 int			_toggle_combat_barks
-bool		_toggle_combat_barks_state		= false
+bool		_toggle_combat_barks_state		= true
 
 int			_slider_combat_barks_period
 float		_combat_barks_period			= 30.0
@@ -241,7 +244,7 @@ bool		_toggleState2Default			= false
 float		_sound_volumeDefault			= 75.0
 float		_sound_preclipDefault			= 100.0
 float		_sound_postclipDefault			= 0.0
-float		_sound_dsDefault				= 1.0
+float		_sound_dsDefault				= 10.0
 float		_playback_dropoff_insideDefault		= 70.0
 float		_playback_dropoff_outsideDefault	= 70.0
 bool		_toggleState7Default			= true
@@ -250,6 +253,7 @@ float		_lip_intDefault					= 1.0
 float		_timeout_intDefault				= 30.0
 bool		_animationstateDefault			= false
 bool		_enable3daudioplaybackstateDefault	= true
+bool		_camera_based_audio_stateDefault	= false
 bool		_invertheadingstateDefault		= false
 bool		_pauseDialogueStateDefault		= false
 bool		_playerTtsTraditionalDialogueStateDefault = false
@@ -258,8 +262,8 @@ bool		_toggle_openmic_stateDefault	= false
 float		_openmic_sensitivityDefault		= 1000.0
 float		_openmic_enddelayDefault		= 1.0
 int			_openmic_mute_keyDefault		= -1
-bool		_toggle_cancel_dialogue_on_combat_stateDefault = false
-bool		_toggle_combat_barks_stateDefault	= false
+bool		_toggle_cancel_dialogue_on_combat_stateDefault = true
+bool		_toggle_combat_barks_stateDefault	= true
 float		_combat_barks_periodDefault		= 30.0
 
 int			_halt_keyDefault				= -1
@@ -323,6 +327,12 @@ event OnPlayerLoadGame()
 		controlScript.setConf("_enable_3d_audio_playback", 0)
 	endIf
 
+	if (_camera_based_audio_state)
+		controlScript.setConf("_camera_based_audio", 1)
+	else
+		controlScript.setConf("_camera_based_audio", 0)
+	endIf
+
 endEvent
 
 event OnConfigInit()
@@ -345,7 +355,7 @@ event OnConfigInit()
 	_lip_res				= 500.0
 	_lip_int				= 1.0
 	if (CurrentVersion>1)
-		_sound_ds					= 1.0
+		_sound_ds					= 10.0
 	endIf
 	if (CurrentVersion<25)
 		_toggleState7= true
@@ -363,8 +373,8 @@ event OnConfigInit()
 	endIf
 	
 	if (CurrentVersion<35)
-		controlScript.setConf("_rechat_policy_asap",1); Note , this is inverted. 0 means slow smart rechat (new), 1 shoud be legacy behavior
-		_rechat_policy_asap=false
+		controlScript.setConf("_rechat_policy_asap",0); Smart rechat is always on
+		_rechat_policy_asap=true
 	endIf
 	
 	if (CurrentVersion<37)
@@ -379,6 +389,10 @@ event OnConfigInit()
 
 	if (CurrentVersion<59)
 		_enable3daudioplaybackstate = true
+	endIf
+
+	if (CurrentVersion<66)
+		_camera_based_audio_state = false
 	endIf
 	
 	; Load combat dialogue settings
@@ -467,6 +481,12 @@ event OnConfigInit()
 	else
 		controlScript.setConf("_enable_3d_audio_playback", 0)
 	endIf
+
+	if (_camera_based_audio_state)
+		controlScript.setConf("_camera_based_audio", 1)
+	else
+		controlScript.setConf("_camera_based_audio", 0)
+	endIf
 	
 	if (CurrentVersion<38)
 		_toggle_autofocus_on_sit=0
@@ -498,12 +518,17 @@ endEvent
 
 int function GetVersion()
 
-	return 65
+	return 66
 
 endFunction
 
 event OnVersionUpdate(int a_version)
 	; a_version is the new version, CurrentVersion is the old version
+
+	if (a_version == 66 && a_version > CurrentVersion)
+		; Version 66: Add camera-based audio heading option
+		OnConfigInit()
+	endIf
 
 	if (a_version == 65 && a_version > CurrentVersion)
 		; Version 65: Refresh Prisma CHIM Chat / Chatbox View labels and hotkey menu state
@@ -688,7 +713,6 @@ event OnPageReset(string a_page)
 	if (a_page=="Behavior")
 		_slider_bored_period	= AddSliderOption("Bored Event Timer (seconds)",_bored_period,"{0}" )
 		_slider_dynamic_profile_period	= AddSliderOption("Dynamic Profile Timer (minutes)",_dynamic_profile_period,"{0}" )
-		_toggleRechat_policy_asap	= AddToggleOption("Smart Rechat", _rechat_policy_asap)
 		
 		AddEmptyOption()
 		AddHeaderOption("NPC Behavior")
@@ -721,7 +745,8 @@ event OnPageReset(string a_page)
 		_slider_playback_dropoff_inside = AddSliderOption("Interior Playback Dropoff (%)", _playback_dropoff_inside, "{0}")
 		_slider_playback_dropoff_outside = AddSliderOption("Exterior Playback Dropoff (%)", _playback_dropoff_outside, "{0}")
 		_toggleEnable3DAudioPlayback = AddToggleOption("Enable 3D Audio Playback", _enable3daudioplaybackstate)
-		
+		_toggleCameraBasedAudio = AddToggleOption("Camera Based Audio", _camera_based_audio_state)
+
 		AddEmptyOption()
 		AddHeaderOption("Advanced")
 		AddEmptyOption()
@@ -861,12 +886,12 @@ event OnOptionSliderOpen(int a_option)
 	if (a_option == _slider_ds)
 		if (_sound_ds < 0.1)
 			_sound_ds = 0.1
-		elseif (_sound_ds > 11.0)
-			_sound_ds = 11.0
+		elseif (_sound_ds > 20.0)
+			_sound_ds = 20.0
 		endIf
 		SetSliderDialogStartValue(_sound_ds)
-		SetSliderDialogDefaultValue(1)
-		SetSliderDialogRange(0.1, 11.0)
+		SetSliderDialogDefaultValue(8)
+		SetSliderDialogRange(0.1, 20.0)
 		SetSliderDialogInterval(0.1)
 	endIf
 	if (a_option == _slider_playback_dropoff_inside)
@@ -1095,8 +1120,8 @@ event OnGameReload()
 	a=controlScript.setConf("_sound_volume",_sound_volume)
 	if (_sound_ds < 0.1)
 		_sound_ds = 0.1
-	elseif (_sound_ds > 11.0)
-		_sound_ds = 11.0
+	elseif (_sound_ds > 20.0)
+		_sound_ds = 20.0
 	endIf
 	a=controlScript.setConf("_sound_ds",_sound_ds)
 	a=controlScript.setConf("_playback_dropoff_inside",_playback_dropoff_inside)
@@ -1105,6 +1130,12 @@ event OnGameReload()
 		a=controlScript.setConf("_enable_3d_audio_playback",1)
 	else
 		a=controlScript.setConf("_enable_3d_audio_playback",0)
+	endif
+
+	if (_camera_based_audio_state)
+		a=controlScript.setConf("_camera_based_audio",1)
+	else
+		a=controlScript.setConf("_camera_based_audio",0)
 	endif
 	a=controlScript.setConf("_lip_int",_lip_int)
 	a=controlScript.setConf("_lip_res",_lip_res)
@@ -1129,11 +1160,8 @@ event OnGameReload()
 		a=controlScript.setConf("_toggleAddAllNPC",0)
 	endif
 
-	if (_rechat_policy_asap)
-		a=controlScript.setConf("_rechat_policy_asap",0); Inverted
-	else
-		a=controlScript.setConf("_rechat_policy_asap",1); Inverted
-	endif
+	_rechat_policy_asap = true
+	a=controlScript.setConf("_rechat_policy_asap",0)
 
 	
 	if (_animationstate)
@@ -1275,7 +1303,31 @@ event OnOptionDefault(int a_option)
 
 	elseif (a_option == _slider_ds)
 		_sound_ds = _sound_dsDefault
+		controlScript.setConf("_sound_ds", _sound_ds)
 		SetSliderOptionValue(a_option, _sound_ds, "{1}")
+
+	elseif (a_option == _toggle_combatdialogue)
+		_toggle_combatdialogue_state = true
+		controlScript.setConf("_combat_dialogue", 1)
+		SetToggleOptionValue(a_option, _toggle_combatdialogue_state)
+
+	elseif (a_option == _toggle_cancel_dialogue_on_combat)
+		_toggle_cancel_dialogue_on_combat_state = _toggle_cancel_dialogue_on_combat_stateDefault
+		if (_toggle_cancel_dialogue_on_combat_state)
+			controlScript.setConf("_cancel_dialogue_on_combat", 1)
+		else
+			controlScript.setConf("_cancel_dialogue_on_combat", 0)
+		endif
+		SetToggleOptionValue(a_option, _toggle_cancel_dialogue_on_combat_state)
+
+	elseif (a_option == _toggle_combat_barks)
+		_toggle_combat_barks_state = _toggle_combat_barks_stateDefault
+		if (_toggle_combat_barks_state)
+			controlScript.setConf("_combat_barks", 1)
+		else
+			controlScript.setConf("_combat_barks", 0)
+		endif
+		SetToggleOptionValue(a_option, _toggle_combat_barks_state)
 
 	elseif (a_option == _slider_playback_dropoff_inside)
 		_playback_dropoff_inside = _playback_dropoff_insideDefault
@@ -1309,6 +1361,15 @@ event OnOptionDefault(int a_option)
 			controlScript.setConf("_enable_3d_audio_playback", 0)
 		endif
 		SetToggleOptionValue(a_option, _enable3daudioplaybackstate)
+
+	elseif (a_option == _toggleCameraBasedAudio)
+		_camera_based_audio_state = _camera_based_audio_stateDefault
+		if (_camera_based_audio_state)
+			controlScript.setConf("_camera_based_audio", 1)
+		else
+			controlScript.setConf("_camera_based_audio", 0)
+		endif
+		SetToggleOptionValue(a_option, _camera_based_audio_state)
 
 	elseif (a_option == _toggleInvertHeading)
 		_invertheadingstate = _invertheadingstateDefault
@@ -1610,16 +1671,28 @@ event OnOptionSelect(int a_option)
 
 	if (a_option == _toggleEnable3DAudioPlayback)
 		_enable3daudioplaybackstate = !_enable3daudioplaybackstate
-
+		
 		if (_enable3daudioplaybackstate)
 			controlScript.setConf("_enable_3d_audio_playback",1)
 		else
 			controlScript.setConf("_enable_3d_audio_playback",0)
 		endif
-
+		
 		SetToggleOptionValue(a_option, _enable3daudioplaybackstate)
 	endIf
-	
+
+	if (a_option == _toggleCameraBasedAudio)
+		_camera_based_audio_state = !_camera_based_audio_state
+		
+		if (_camera_based_audio_state)
+			controlScript.setConf("_camera_based_audio",1)
+		else
+			controlScript.setConf("_camera_based_audio",0)
+		endif
+		
+		SetToggleOptionValue(a_option, _camera_based_audio_state)
+	endIf
+
 	if (a_option == _toggleInvertHeading)
 		_invertheadingstate = !_invertheadingstate
 		
@@ -1655,18 +1728,6 @@ event OnOptionSelect(int a_option)
 		
 		SetToggleOptionValue(a_option, _playerTtsTraditionalDialogueState)
 	endIf
-	
-	if (a_option == _toggleRechat_policy_asap)
-		_rechat_policy_asap = !_rechat_policy_asap
-		if (_rechat_policy_asap)
-			controlScript.setConf("_rechat_policy_asap",0)
-		else
-			controlScript.setConf("_rechat_policy_asap",1)
-		endif
-		SetToggleOptionValue(a_option, _rechat_policy_asap)
-
-	endif
-	
 	
 	if (a_option == _toggle_npc_go_near)
 		_toggle_npc_go_near_state = !_toggle_npc_go_near_state
@@ -1944,7 +2005,7 @@ event OnOptionHighlight(int a_option)
 		SetInfoText("Skips specified millisecods at end of a sentence. Some TTS services add some silence at the end of audio clips.")
 	endIf
 	if (a_option == _slider_ds)
-		SetInfoText("Adjust AI NPC volume at distance. Range: 0.1 to 11.0.")
+		SetInfoText("Adjust AI NPC volume at distance. Range: 0.1 to 20.0.")
 	endIf
 	if (a_option == _slider_playback_dropoff_inside)
 		SetInfoText("Indoor playback dropoff aggressiveness. 100 = current behavior. Lower values are less aggressive (default 70).")
@@ -1954,6 +2015,9 @@ event OnOptionHighlight(int a_option)
 	endIf
 	if (a_option == _toggleEnable3DAudioPlayback)
 		SetInfoText("Controls player-heard 3D voice playback only. Disabling this keeps spatial dialogue awareness for who can hear speech, but plays voices back in flat 2D.")
+	endIf
+	if (a_option == _toggleCameraBasedAudio)
+		SetInfoText("When enabled, 3D voice direction follows the camera facing instead of the player actor heading. Off by default.")
 	endIf
 	if (a_option == _toggle1OID_E)
 		SetInfoText("Enable HD mode for Soulgaze (DirectX backbuffer access, server compression). Disable for in-game screenshots (VR users should disable).")
@@ -2017,10 +2081,6 @@ event OnOptionHighlight(int a_option)
 	
 	if (a_option == _slider_dynamic_profile_period)
 		SetInfoText("Timer for automatic dynamic profile updates. Updates NPC personalities based on recent events.")
-	endIf
-	
-	if (a_option == _toggleRechat_policy_asap)
-		SetInfoText("When enabled, will send more context to a responding NPC during a Rechat event.")
 	endIf
 	
 	if (a_option == _toggle_npc_go_near)

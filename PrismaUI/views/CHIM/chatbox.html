@@ -97,19 +97,28 @@
                         placeholder="Type your message here. Enter sends, Shift+Enter adds a new line."
                         spellcheck="false"></textarea>
                     <div class="focus-chatbox-actions">
-                        <div class="focus-chatbox-position-picker">
-                            <label class="focus-chatbox-position-label" for="chatbox-position-select">Position</label>
-                            <select id="chatbox-position-select" class="chatbox-mode-select focus-chatbox-position-select" title="Choose chatbox position">
-                                <option value="center">Center</option>
-                                <option value="bottom">Bottom</option>
-                                <option value="top">Top</option>
-                            </select>
+                        <div class="focus-chatbox-actions-row focus-chatbox-actions-row-primary">
+                            <div class="focus-chatbox-position-picker">
+                                <label class="focus-chatbox-position-label" for="chatbox-position-select">Position</label>
+                                <select id="chatbox-position-select" class="chatbox-mode-select focus-chatbox-position-select" title="Choose chatbox position">
+                                    <option value="center">Center</option>
+                                    <option value="bottom">Bottom</option>
+                                    <option value="top">Top</option>
+                                </select>
+                            </div>
+                            <button class="focus-btn focus-btn-primary" type="button" onclick="sendFocusMessage()">Send</button>
+                            <button class="focus-btn focus-btn-danger" type="button" onclick="clearFocusMessage()">Clear Text</button>
+                            <button class="focus-btn" type="button" onclick="triggerContinueSpeaking()">Continue Speaking</button>
+                            <button class="focus-btn focus-btn-stop" type="button" onclick="triggerStopAllDialogue()">Stop All Dialogue</button>
+                            <button class="focus-btn focus-btn-stop" type="button" onclick="triggerHaltAIActions()">Halt AI Actions</button>
                         </div>
-                        <button class="focus-btn focus-btn-primary" type="button" onclick="sendFocusMessage()">Send</button>
-                        <button class="focus-btn focus-btn-danger" type="button" onclick="clearFocusMessage()">Clear Text</button>
-                        <button class="focus-btn" type="button" onclick="triggerContinueSpeaking()">Continue Speaking</button>
-                        <button class="focus-btn focus-btn-stop" type="button" onclick="triggerStopAllDialogue()">Stop All Dialogue</button>
-                        <button class="focus-btn focus-btn-stop" type="button" onclick="triggerHaltAIActions()">Halt AI Actions</button>
+                        <div class="focus-chatbox-actions-row focus-chatbox-actions-row-secondary">
+                            <div class="focus-chatbox-event-buttons">
+                                <button class="focus-btn focus-btn-danger focus-btn-delete-events" type="button" data-delete-count="20">Delete 20 Events</button>
+                                <button class="focus-btn focus-btn-danger focus-btn-delete-events" type="button" data-delete-count="50">Delete 50</button>
+                                <button class="focus-btn focus-btn-danger focus-btn-delete-events" type="button" data-delete-count="100">Delete 100</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

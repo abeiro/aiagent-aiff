@@ -655,7 +655,7 @@ function TravelToLocation(Actor npc, ObjectReference akTarget,String place) glob
 	StorageUtil.SetStringValue(npc, "LastTravelToLocationName",place);
 	Debug.Trace("[CHIM] TravelToLocation "+npc.GetDisplayName()+ " starts travel to "+place+" reference "+DecToHex(akTarget.GetFormId()));
 	;Debug.Notification("Mission MoveToTarget start")
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
+	ShowDebugNotification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place)
 endFunction
 
 ;Travel to reference
@@ -686,7 +686,7 @@ function TravelToTarget(Actor npc, ObjectReference akTarget,String place) global
 		place="a Unknown Place";
 		AIAgentFunctions.logMessageForActor(npc.GetDisplayName()+" has left the place","infoaction",npc.GetDisplayName())
 	endif;
-	Debug.Notification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
+	ShowDebugNotification("[CHIM] "+npc.GetDisplayName()+ " starts travel to "+place);
 	Debug.Trace("[CHHIM] TravelToTarget called: "+npc.GetDisplayName()+" "+place+ ", actor"+akTarget.GetDisplayName())
 endFunction
 
@@ -1174,6 +1174,45 @@ function SendExternalEventChat(String npcname,String text) global
 
 endFunction
 
+function ShowDebugNotification(String text) global
+	if text == ""
+		return
+	endif
+
+	int safety = 0
+	while UI.IsMenuOpen("Dialogue Menu") && safety < 40
+		Utility.WaitMenuMode(0.1)
+		safety += 1
+	endwhile
+
+	Utility.WaitMenuMode(0.05)
+
+	Debug.Notification(text)
+endFunction
+
+function ShowTopLeftNotification(String text) global
+	ShowDebugNotification(text)
+endFunction
+
+function ConsumeItemFeedback(Actor npc, String text) global
+	ShowDebugNotification(text)
+
+	if !npc
+		return
+	endif
+
+	if npc.IsBleedingOut()
+		return
+	elseif npc.IsInCombat()
+		return
+	elseif npc.IsSneaking()
+		return
+	elseif npc.GetCurrentScene()
+		return
+	endif
+
+	Debug.SendAnimationEvent(npc, "IdlePickup")
+endFunction
 
 function SayToPlayer(Actor npc) global
 	Debug.Notification("[CHIM] Use new queue mode")
@@ -2705,7 +2744,7 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 	Debug.Trace("MoveInventoryItem start");
 	if (akItemToRemove.GetFormID()==0xf)
 	
-		string result = SkyMessage.Show(target.GetDisplayName()+ " wants to take "+amount+" gold from you. Allow?", "No, thanks", "Yes, please!")
+		string result = SkyMessage.Show(source.GetDisplayName()+ " wants to give you "+amount+" gold. Accept?", "No, thanks", "Yes, please!")
 
 		if result == "Yes, please!"
 			source.RemoveItem(akItemToRemove, amount)
@@ -2716,8 +2755,8 @@ Function MoveInventoryItem(Actor source, Actor target, Form akItemToRemove,int a
 		endif	
 		
 	else
-		source.RemoveItem(akItemToRemove, 1, false, target)
-		Debug.Notification(source.GetDisplayName()+ " has give you "+realName);
+		source.RemoveItem(akItemToRemove, amount, false, target)
+		Debug.Notification(source.GetDisplayName()+ " gives you "+amount+" "+realName);
 		;TESCOntainerEvent will take care of the transaction
 	endif
 	Debug.Trace("MoveInventoryItem end");
@@ -3045,6 +3084,119 @@ Function GiveItemToTarget(Actor source, Actor target, Form itemForm, int amount,
 		; Make the NPC walk to the target
 		MoveToTarget(source, target as ObjectReference, 1)
 	endif
+EndFunction
+
+Function SpawnAndGiveItemToActor(Actor targetActor, Form itemForm, int amount, string itemName, string targetDisplayName = "") global
+	if (!targetActor || !itemForm)
+		return
+	endif
+
+	if (amount <= 0)
+		amount = 1
+	endif
+
+	if (targetDisplayName == "")
+		targetDisplayName = targetActor.GetDisplayName()
+	endif
+
+	targetActor.AddItem(itemForm, amount, true)
+
+	if (targetActor != Game.GetPlayer())
+		Debug.SendAnimationEvent(targetActor, "IdleGive")
+	endif
+
+	ShowDebugNotification("[CHIM] " + targetDisplayName + " receives " + amount + " " + itemName)
+	Debug.Trace("[CHIM] SpawnAndGiveItemToActor " + targetDisplayName + " receives " + amount + " " + itemName)
+EndFunction
+
+float Function GetSpawnNpcOffsetX(int spawnIndex) global
+	int ring = (spawnIndex / 8) + 1
+	int slot = spawnIndex % 8
+	float base = 140.0 * ring
+	float diagonal = 100.0 * ring
+
+	if slot == 0
+		return base
+	elseif slot == 1
+		return -base
+	elseif slot == 2
+		return 0.0
+	elseif slot == 3
+		return 0.0
+	elseif slot == 4
+		return diagonal
+	elseif slot == 5
+		return -diagonal
+	elseif slot == 6
+		return diagonal
+	endif
+
+	return -diagonal
+EndFunction
+
+float Function GetSpawnNpcOffsetY(int spawnIndex) global
+	int ring = (spawnIndex / 8) + 1
+	int slot = spawnIndex % 8
+	float base = 140.0 * ring
+	float diagonal = 100.0 * ring
+
+	if slot == 0
+		return 0.0
+	elseif slot == 1
+		return 0.0
+	elseif slot == 2
+		return base
+	elseif slot == 3
+		return -base
+	elseif slot == 4
+		return diagonal
+	elseif slot == 5
+		return diagonal
+	elseif slot == 6
+		return -diagonal
+	endif
+
+	return -diagonal
+EndFunction
+
+Function SpawnNpcTemplateNearPlayer(Form npcTemplateForm, int amount, string templateLabel, string narratorActorName = "The Narrator", string playerName = "Player") global
+	if !npcTemplateForm
+		return
+	endif
+
+	if amount <= 0
+		amount = 1
+	elseif amount > 10
+		amount = 10
+	endif
+
+	Actor playerRef = Game.GetPlayer()
+	int spawnedCount = 0
+	int i = 0
+	while i < amount
+		ObjectReference spawnedRef = playerRef.PlaceAtMe(npcTemplateForm, 1, false, false)
+		if spawnedRef
+			Actor spawnedActor = spawnedRef as Actor
+			if spawnedActor
+				spawnedActor.EnableNoWait()
+				spawnedActor.EvaluatePackage()
+				spawnedCount += 1
+			endif
+		endif
+		i += 1
+	endwhile
+
+	string resultText = ""
+	if spawnedCount > 0
+		resultText = "Spawned " + spawnedCount + " " + templateLabel + " near " + playerName + "."
+	else
+		resultText = "Could not spawn " + templateLabel + "."
+	endif
+
+	ShowDebugNotification("[CHIM] " + resultText)
+	Debug.Trace("[CHIM] SpawnNpcTemplateNearPlayer " + resultText)
+	AIAgentFunctions.logMessageForActor(resultText, "infoaction", narratorActorName)
+	AIAgentFunctions.logMessageForActor("command@SpawnNPC@" + templateLabel + "@" + resultText, "funcret", narratorActorName)
 EndFunction
 
 Function PickupItemFromWorld(Actor npc, ObjectReference itemRef, string itemName) global
@@ -3797,6 +3949,65 @@ function CastConstantSpell(Actor caster, int spellFormId, int targetFormId) glob
 	
 	; Log the spell cast event
 	AIAgentFunctions.logMessageForActor(caster.GetDisplayName() + " casts " + spellToCast.GetName(), "npcspellcast", caster.GetDisplayName())
+endFunction
+
+function TeleportActorToLocation(Actor targetActor, ObjectReference akTarget, String place, String targetDisplayName = "") global
+	if !targetActor || !akTarget
+		return
+	endif
+
+	if (targetDisplayName == "")
+		targetDisplayName = targetActor.GetDisplayName()
+	endif
+
+	if (akTarget.GetBaseObject().GetType() == 29) ; Door
+		ObjectReference doorDest = PO3_SKSEFunctions.GetDoorDestination(akTarget)
+		if (doorDest)
+			akTarget = doorDest
+		endif
+	endif
+
+	if targetActor == Game.GetPlayer()
+		Actor[] followers = PO3_SKSEFunctions.GetPlayerFollowers()
+		int i = 0
+		while i < followers.length
+			if followers[i]
+				followers[i].MoveTo(akTarget)
+			endif
+			i += 1
+		endwhile
+	endif
+
+	targetActor.MoveTo(akTarget)
+	targetActor.EvaluatePackage()
+
+	ShowDebugNotification("[CHIM] " + targetDisplayName + " teleports to " + place)
+	Debug.Trace("[CHIM] TeleportActorToLocation " + targetDisplayName + " teleports to " + place + " reference " + DecToHex(akTarget.GetFormId()))
+endFunction
+
+function KillActorTarget(Actor targetActor, String targetDisplayName = "", String narratorActorName = "The Narrator") global
+	if !targetActor
+		return
+	endif
+
+	if (targetDisplayName == "")
+		targetDisplayName = targetActor.GetDisplayName()
+	endif
+
+	targetActor.Kill()
+	Utility.Wait(0.2)
+
+	string resultText = ""
+	if targetActor.IsDead()
+		resultText = targetDisplayName + " is killed."
+	else
+		resultText = "Could not kill " + targetDisplayName + "."
+	endif
+
+	ShowDebugNotification("[CHIM] " + resultText)
+	Debug.Trace("[CHIM] KillActorTarget " + resultText)
+	AIAgentFunctions.logMessageForActor(resultText, "infoaction", narratorActorName)
+	AIAgentFunctions.logMessageForActor("command@KillTarget@" + targetDisplayName + "@" + resultText, "funcret", narratorActorName)
 endFunction
 
 function ChimTeleportDoorActivated(ObjectReference portal) global
