@@ -121,41 +121,14 @@ body {
 .left-panel.chim-corner-bottom-right { bottom: 20px !important; right: 20px !important; top: auto !important;    left: auto !important;  }
 
 /* =========================
-   LEFT PANEL - Identity & Profile
+   LEFT PANEL - Config
    ========================= */
 .left-panel {
     position: fixed;
     top: 20px;
     left: 20px;
-    width: 340px;
+    width: 390px;
     max-height: calc(100vh - 90px);
-    background: rgba(10, 10, 15, 0.93);
-    border: 1px solid rgba(242, 124, 17, 0.5);
-    border-radius: 6px;
-    box-shadow: 
-        0 2px 15px rgba(0, 0, 0, 0.8),
-        0 0 20px rgba(242, 124, 17, 0.2);
-    backdrop-filter: blur(10px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-/* right-panel: default top-right */
-.right-panel.chim-corner-top-left     { top: 20px !important;    left: 20px !important;  bottom: auto !important; right: auto !important; }
-.right-panel.chim-corner-top-right    { top: 20px !important;    right: 20px !important; bottom: auto !important; left: auto !important;  }
-.right-panel.chim-corner-bottom-left  { bottom: 20px !important; left: 20px !important;  top: auto !important;    right: auto !important; }
-.right-panel.chim-corner-bottom-right { bottom: 20px !important; right: 20px !important; top: auto !important;    left: auto !important;  }
-
-/* =========================
-   RIGHT PANEL - Settings Only (Wider)
-   ========================= */
-.right-panel {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 320px;
-    max-height: 400px;
     background: rgba(10, 10, 15, 0.93);
     border: 1px solid rgba(242, 124, 17, 0.5);
     border-radius: 6px;
@@ -179,10 +152,11 @@ body {
    ========================= */
 .bio-panel {
     position: fixed;
-    bottom: 20px;
+    bottom: 12px;
     right: 20px;
-    width: 1200px;
-    max-height: calc(60vh - 40px);
+    width: calc(100vw - 430px);
+    max-width: calc(100vw - 430px);
+    max-height: calc(58vh - 24px);
     background: rgba(10, 10, 15, 0.93);
     border: 1px solid rgba(242, 124, 17, 0.5);
     border-radius: 6px;
@@ -198,7 +172,7 @@ body {
 .bio-content {
     flex: 1;
     overflow-y: auto;
-    padding: 12px;
+    padding: 14px;
 }
 
 .bio-columns {
@@ -323,6 +297,15 @@ body {
     padding: 12px;
 }
 
+.section-header-compact {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.section-content-compact {
+    padding: 10px;
+}
+
 /* Info Grid */
 .info-grid {
     display: grid;
@@ -406,6 +389,12 @@ body {
     gap: 8px;
 }
 
+.compact-toggle-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
 .toggle-item {
     display: flex;
     justify-content: space-between;
@@ -431,6 +420,23 @@ body {
     letter-spacing: 0.5px;
     min-width: 60px;
     text-align: center;
+}
+
+.compact-toggle-item {
+    min-height: 0;
+    padding: 7px 9px;
+    gap: 10px;
+}
+
+.compact-toggle-item .toggle-label {
+    font-size: 0.78em;
+    line-height: 1.2;
+}
+
+.compact-toggle-item .toggle-value {
+    min-width: 54px;
+    font-size: 0.74em;
+    padding: 4px 8px;
 }
 
 .toggle-value.on {
@@ -493,7 +499,7 @@ body {
 /* =========================
    RELATIONSHIPS & AFFINITY
    ========================= */
-.relationship-text {
+.roleplay-info-text {
     font-size: 0.85em;
     color: #ccc;
     line-height: 1.5;
@@ -503,25 +509,43 @@ body {
     border-radius: 4px;
 }
 
+.roleplay-info-text:empty {
+    display: none;
+}
+
 .affinity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
 }
 
 .affinity-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 6px 10px;
+    align-items: flex-start;
+    padding: 8px 10px;
     background: rgba(30, 30, 40, 0.6);
     border-left: 2px solid rgba(242, 124, 17, 0.5);
     border-radius: 3px;
 }
 
+.affinity-copy {
+    min-width: 0;
+    flex: 1;
+    padding-right: 12px;
+}
+
 .affinity-npc {
-    font-size: 0.85em;
+    font-size: 0.84em;
     color: #ddd;
+    font-weight: 600;
+}
+
+.affinity-description {
+    margin-top: 4px;
+    font-size: 0.76em;
+    line-height: 1.35;
+    color: #9ca3af;
 }
 
 .affinity-value {
@@ -551,13 +575,33 @@ body {
     border: 1px solid rgba(100, 100, 110, 0.4);
 }
 
+.affinity-empty {
+    grid-column: 1 / -1;
+    color: #666;
+    font-style: italic;
+    padding: 8px;
+    text-align: center;
+}
+
 /* =========================
    RESPONSIVE ADJUSTMENTS
    ========================= */
 @media (max-width: 1400px) {
-    .left-panel,
-    .right-panel {
-        width: 300px;
+    .left-panel {
+        width: 350px;
+    }
+
+    .bio-panel {
+        width: calc(100vw - 390px);
+        max-width: calc(100vw - 390px);
+    }
+}
+
+@media (max-width: 1180px) {
+    .affinity-list,
+    .compact-toggle-list,
+    .bio-columns {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -566,9 +610,13 @@ body {
         top: 10px;
     }
     
-    .left-panel,
-    .right-panel {
+    .left-panel {
         top: 60px;
         max-height: calc(100vh - 75px);
+    }
+
+    .bio-panel {
+        bottom: 10px;
+        max-height: calc(60vh - 20px);
     }
 }

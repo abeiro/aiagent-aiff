@@ -19,9 +19,9 @@
             </div>
         </div>
 
-        <!-- Left Panel - Identity & Profile -->
+        <!-- Left Panel - Config -->
         <div class="left-panel" id="left-panel">
-            <div class="panel-section-header">Identity & Profile</div>
+            <div class="panel-section-header">Config</div>
             <div class="panel-content">
                 <!-- Loading State -->
                 <div id="loading-indicator-left" class="loading-section">
@@ -88,49 +88,32 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Right Panel - Settings -->
-        <div class="right-panel" id="right-panel">
-            <div class="panel-section-header">Settings</div>
-            <div class="panel-content">
-                <!-- Loading State -->
-                <div id="loading-indicator-right" class="loading-section">
-                    <div class="loading-spinner"></div>
-                    <div>Loading...</div>
-                </div>
-
-                <!-- Empty State -->
-                <div id="empty-message-right" class="hidden">
-                    <p>Target an AI-enabled NPC</p>
-                </div>
-
-                <!-- Content -->
-                <div id="content-right" class="hidden">
                     <!-- Settings Section -->
-                    <div class="info-section">
-                        <div class="section-content" id="section-settings">
-                            <div class="toggle-list">
-                                <div class="toggle-item">
-                                    <span class="toggle-label">Dynamic Profile:</span>
+                    <div class="info-section info-section-compact">
+                        <div class="section-header section-header-compact">
+                            <span class="section-title">Settings</span>
+                        </div>
+                        <div class="section-content section-content-compact" id="section-settings">
+                            <div class="toggle-list compact-toggle-list">
+                                <div class="toggle-item compact-toggle-item">
+                                    <span class="toggle-label">Dynamic Profile</span>
                                     <span class="toggle-value" id="setting-dynamic">-</span>
                                 </div>
-                                <div class="toggle-item">
-                                    <span class="toggle-label">Middleterm Memory:</span>
+                                <div class="toggle-item compact-toggle-item">
+                                    <span class="toggle-label">Middleterm Memory</span>
                                     <span class="toggle-value" id="setting-mtm">-</span>
                                 </div>
-                                <div class="toggle-item">
-                                    <span class="toggle-label">Auto Diary:</span>
+                                <div class="toggle-item compact-toggle-item">
+                                    <span class="toggle-label">Auto Diary</span>
                                     <span class="toggle-value" id="setting-diary">-</span>
                                 </div>
-                                <div class="toggle-item">
-                                    <span class="toggle-label">Auto Diary Wait:</span>
+                                <div class="toggle-item compact-toggle-item">
+                                    <span class="toggle-label">Auto Diary Wait</span>
                                     <span class="toggle-value" id="setting-diary-wait">-</span>
                                 </div>
-                                <div class="toggle-item">
-                                    <span class="toggle-label">Auto Salutations:</span>
+                                <div class="toggle-item compact-toggle-item">
+                                    <span class="toggle-label">Auto Salutations</span>
                                     <span class="toggle-value" id="setting-salutations">-</span>
                                 </div>
                             </div>
@@ -140,9 +123,9 @@
             </div>
         </div>
 
-        <!-- Biography Panel - Bottom Right (includes Relationships) -->
+        <!-- Biography Panel - Bottom -->
         <div class="bio-panel" id="bio-panel">
-            <div class="panel-section-header">Biography & Relationships</div>
+            <div class="panel-section-header">Roleplay Info</div>
             <div class="panel-content bio-content">
                 <!-- Loading State -->
                 <div id="loading-indicator-bio" class="loading-section">
@@ -160,8 +143,8 @@
                     <!-- Relationships Section (Full Width at Top) -->
                     <div class="bio-relationships">
                         <div class="bio-field">
-                            <div class="bio-label">Relationships</div>
-                            <div class="relationship-text" id="relationship-text">-</div>
+                            <div class="bio-label">Roleplay Info</div>
+                            <div class="roleplay-info-text" id="roleplay-info-text">-</div>
                             <div class="affinity-list" id="affinity-list"></div>
                         </div>
                     </div>

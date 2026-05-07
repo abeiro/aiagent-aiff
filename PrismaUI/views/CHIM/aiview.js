@@ -13,11 +13,7 @@
     const loadingLeft = document.getElementById('loading-indicator-left');
     const emptyLeft = document.getElementById('empty-message-left');
     const contentLeft = document.getElementById('content-left');
-    
-    const loadingRight = document.getElementById('loading-indicator-right');
-    const emptyRight = document.getElementById('empty-message-right');
-    const contentRight = document.getElementById('content-right');
-    
+
     const loadingBio = document.getElementById('loading-indicator-bio');
     const emptyBio = document.getElementById('empty-message-bio');
     const contentBio = document.getElementById('content-bio');
@@ -72,7 +68,6 @@
             hideLoading();
             hideEmpty();
             contentLeft.classList.remove('hidden');
-            contentRight.classList.remove('hidden');
             contentBio.classList.remove('hidden');
             
             console.log('AI View updated successfully');
@@ -229,43 +224,99 @@
      * Update the relationships section
      */
     function updateRelationships(relationshipsData) {
-        const textElement = document.getElementById('relationship-text');
+        const textElement = document.getElementById('roleplay-info-text');
         const affinityList = document.getElementById('affinity-list');
-        
-        // Update relationship text
-        if (relationshipsData.text && relationshipsData.text.trim() !== '') {
-            textElement.textContent = relationshipsData.text;
+
+        const normalizedAffinities = normalizeAffinities(relationshipsData.affinities);
+        const roleplayText = (relationshipsData.text || '').trim();
+
+        if (roleplayText !== '') {
+            textElement.textContent = roleplayText;
             textElement.style.color = '#ccc';
             textElement.style.fontStyle = 'normal';
         } else {
-            textElement.textContent = 'No relationship data available.';
+            textElement.textContent = '';
             textElement.style.color = '#666';
             textElement.style.fontStyle = 'italic';
         }
-        
-        // Update affinity list
+
         affinityList.innerHTML = '';
-        
-        if (relationshipsData.affinities && Object.keys(relationshipsData.affinities).length > 0) {
-            for (const [npcName, affinity] of Object.entries(relationshipsData.affinities)) {
+
+        if (normalizedAffinities.length > 0) {
+            for (const affinityData of normalizedAffinities) {
                 const item = document.createElement('div');
-                item.className = 'affinity-item';
-                
-                const affinityValue = parseInt(affinity) || 0;
+                const affinityValue = parseInt(affinityData.affinity, 10) || 0;
                 let valueClass = 'neutral';
                 if (affinityValue > 0) valueClass = 'positive';
                 else if (affinityValue < 0) valueClass = 'negative';
-                
+                item.className = `affinity-item ${valueClass}`;
+
+                const descriptionHtml = affinityData.description
+                    ? `<div class="affinity-description">${escapeHtml(affinityData.description)}</div>`
+                    : '';
+
                 item.innerHTML = `
-                    <span class="affinity-npc">${escapeHtml(npcName)}</span>
+                    <div class="affinity-copy">
+                        <div class="affinity-npc">${escapeHtml(affinityData.name)}</div>
+                        ${descriptionHtml}
+                    </div>
                     <span class="affinity-value ${valueClass}">${affinityValue > 0 ? '+' : ''}${affinityValue}</span>
                 `;
-                
+
                 affinityList.appendChild(item);
             }
         } else {
-            affinityList.innerHTML = '<div style="color: #666; font-style: italic; padding: 8px; text-align: center;">No relationship affinities tracked</div>';
+            affinityList.innerHTML = '<div class="affinity-empty">No relationship affinities tracked</div>';
         }
+    }
+
+    function normalizeAffinities(affinitiesData) {
+        if (!affinitiesData) {
+            return [];
+        }
+
+        const normalized = [];
+        const entries = Array.isArray(affinitiesData)
+            ? affinitiesData.entries()
+            : Object.entries(affinitiesData);
+
+        for (const [key, rawValue] of entries) {
+            const affinityData = normalizeAffinityEntry(key, rawValue);
+            if (affinityData) {
+                normalized.push(affinityData);
+            }
+        }
+
+        normalized.sort((a, b) => {
+            const affinityDelta = Math.abs(b.affinity) - Math.abs(a.affinity);
+            if (affinityDelta !== 0) {
+                return affinityDelta;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        return normalized;
+    }
+
+    function normalizeAffinityEntry(key, rawValue) {
+        let name = '';
+        let affinity = 0;
+        let description = '';
+
+        if (rawValue && typeof rawValue === 'object' && !Array.isArray(rawValue)) {
+            name = String(rawValue.name || rawValue.npc_name || rawValue.npc || key || '').trim();
+            affinity = parseInt(rawValue.affinity ?? rawValue.value ?? rawValue.score ?? rawValue.rank ?? 0, 10) || 0;
+            description = String(rawValue.description || rawValue.summary || '').trim();
+        } else {
+            name = String(key || '').trim();
+            affinity = parseInt(rawValue, 10) || 0;
+        }
+
+        if (!name) {
+            return null;
+        }
+
+        return { name, affinity, description };
     }
 
     /**
@@ -296,13 +347,10 @@
      */
     function showLoading() {
         loadingLeft.classList.remove('hidden');
-        loadingRight.classList.remove('hidden');
         loadingBio.classList.remove('hidden');
         emptyLeft.classList.add('hidden');
-        emptyRight.classList.add('hidden');
         emptyBio.classList.add('hidden');
         contentLeft.classList.add('hidden');
-        contentRight.classList.add('hidden');
         contentBio.classList.add('hidden');
     }
 
@@ -311,7 +359,6 @@
      */
     function hideLoading() {
         loadingLeft.classList.add('hidden');
-        loadingRight.classList.add('hidden');
         loadingBio.classList.add('hidden');
     }
 
@@ -321,10 +368,8 @@
     function showEmpty() {
         hideLoading();
         emptyLeft.classList.remove('hidden');
-        emptyRight.classList.remove('hidden');
         emptyBio.classList.remove('hidden');
         contentLeft.classList.add('hidden');
-        contentRight.classList.add('hidden');
         contentBio.classList.add('hidden');
         updateTargetBar(null);
     }
@@ -334,7 +379,6 @@
      */
     function hideEmpty() {
         emptyLeft.classList.add('hidden');
-        emptyRight.classList.add('hidden');
         emptyBio.classList.add('hidden');
     }
 
@@ -379,13 +423,10 @@
         
         // Show error in all panels
         emptyLeft.querySelector('p').textContent = message;
-        emptyRight.querySelector('p').textContent = message;
         emptyBio.querySelector('p').textContent = message;
         emptyLeft.classList.remove('hidden');
-        emptyRight.classList.remove('hidden');
         emptyBio.classList.remove('hidden');
         contentLeft.classList.add('hidden');
-        contentRight.classList.add('hidden');
         contentBio.classList.add('hidden');
         
         // Keep the target name in the header if we have one
@@ -395,7 +436,6 @@
     // Apply corner placement via shared layout manager
     if (window.chimLayout) {
         window.chimLayout.apply(document.getElementById('left-panel'),  'aiview_identity');
-        window.chimLayout.apply(document.getElementById('right-panel'), 'aiview_settings');
         window.chimLayout.apply(document.getElementById('bio-panel'),   'aiview_bio');
     }
 

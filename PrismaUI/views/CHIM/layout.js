@@ -15,7 +15,6 @@
         'overlay':          'top-right',
         'status_hud':       'top-right',
         'aiview_identity':  'top-left',
-        'aiview_settings':  'top-right',
         'aiview_bio':       'bottom-right'
     };
 
